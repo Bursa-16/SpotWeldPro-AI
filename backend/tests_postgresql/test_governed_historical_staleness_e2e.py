@@ -1,4 +1,4 @@
-"""Real-PostgreSQL governed historical staleness end-to-end integration test."""
+﻿"""Real-PostgreSQL governed historical staleness end-to-end integration test."""
 from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
@@ -77,7 +77,11 @@ def _identity(namespace: str, scope: str, key: str) -> CommandIdentity:
 
 
 def _request_hash(key: str) -> CanonicalRequestHash:
-    return CanonicalRequestHash(_digest({"key": key}))
+    return CanonicalRequestHash(
+        value=_digest({"key": key}),
+        hash_algorithm="sha256",
+        canonicalization_version="phase-6b1-canonical-v1",
+    )
 
 
 def _audit(event_id: str, actor: dict, actor_user_id: int, idempotency_key: str, reason: str) -> GovernedAuditMetadata:
@@ -225,12 +229,14 @@ def _create_evidence(
     verifier_role: str,
     grantor_uid: int,
 ) -> None:
+    delegation_id = f"phase-6b1-delegation-{ev_ref.id}"
+    verification_id = f"phase-6b1-verification-{ev_ref.id}"
     repo = EvidenceVerificationRepository(session)
     scope = VerificationScopeSnapshot(project=str(LIFECYCLE_SCOPE["project"]))
 
     delegation = repo.create_delegation_revision(
         draft=EvidenceVerificationDelegationDraft(
-            delegation_id="phase-6b1-verification-delegation",
+            delegation_id=delegation_id,
             revision_number=1,
             verifier_user_id=verifier_uid,
             granted_by_user_id=grantor_uid,
@@ -247,18 +253,12 @@ def _create_evidence(
             schema_version="phase-6b1-verification-v1",
             canonicalization_version="phase-6b1-canonical-v1",
             hash_algorithm="sha256",
-            content_hash=_digest(
-                {
-                    "delegation_id": "phase-6b1-verification-delegation",
-                    "verifier_user_id": verifier_uid,
-                    "scope": scope.as_dict(),
-                }
-            ),
+            content_hash=_digest({"delegation_id": delegation_id, "verifier_user_id": verifier_uid}),
             software_version="phase-6b1-test",
         )
     )
 
-    authority_without_hash = EvidenceVerificationAuthoritySnapshot(
+    authority = EvidenceVerificationAuthoritySnapshot(
         verifier_user_id=verifier_uid,
         verifier_role_snapshot=verifier_role,
         capability=VerificationCapability.EVIDENCE_VERIFICATION,
@@ -276,35 +276,13 @@ def _create_evidence(
         schema_version="evidence-verification-authority-snapshot-v1",
         canonicalization_version="phase-6b1-canonical-v1",
         hash_algorithm="sha256",
-        content_hash="",
+        content_hash=_digest({"verification_id": verification_id, "delegation_id": delegation.delegation_id}),
         software_version="phase-6b1-test",
-    )
-
-    authority = EvidenceVerificationAuthoritySnapshot(
-        verifier_user_id=authority_without_hash.verifier_user_id,
-        verifier_role_snapshot=authority_without_hash.verifier_role_snapshot,
-        capability=authority_without_hash.capability,
-        resource_scope=authority_without_hash.resource_scope,
-        delegation_id=authority_without_hash.delegation_id,
-        delegation_revision_number=authority_without_hash.delegation_revision_number,
-        delegation_status=authority_without_hash.delegation_status,
-        delegation_effective_from=authority_without_hash.delegation_effective_from,
-        delegation_expires_at=authority_without_hash.delegation_expires_at,
-        delegation_revoked_at=authority_without_hash.delegation_revoked_at,
-        policy_identifier=authority_without_hash.policy_identifier,
-        policy_version=authority_without_hash.policy_version,
-        decision_at=authority_without_hash.decision_at,
-        correlation_id=authority_without_hash.correlation_id,
-        schema_version=authority_without_hash.schema_version,
-        canonicalization_version=authority_without_hash.canonicalization_version,
-        hash_algorithm=authority_without_hash.hash_algorithm,
-        content_hash=_digest(authority_without_hash.as_dict()),
-        software_version=authority_without_hash.software_version,
     )
 
     repo.create_verification_decision(
         draft=EvidenceVerificationDecisionDraft(
-            verification_id="phase-6b1-evidence-verification",
+            verification_id=verification_id,
             revision_number=1,
             evidence_reference_id=ev_ref.id,
             evidence_verification_delegation_id=delegation.id,
@@ -321,14 +299,7 @@ def _create_evidence(
             schema_version="phase-6b1-verification-v1",
             canonicalization_version="phase-6b1-canonical-v1",
             hash_algorithm="sha256",
-            content_hash=_digest(
-                {
-                    "verification_id": "phase-6b1-evidence-verification",
-                    "evidence_reference_id": ev_ref.id,
-                    "delegation_id": delegation.id,
-                    "authority_hash": authority.content_hash,
-                }
-            ),
+            content_hash=_digest({"verification_id": verification_id, "evidence_reference_id": ev_ref.id}),
             software_version="phase-6b1-test",
         )
     )
@@ -661,6 +632,7 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
 
 def test_governed_supersession_chain(postgresql_engine) -> None:
     """Verify supersession chain is correctly established and queryable."""
+    CHAIN_RULE_ID = "PHASE_6B1_SUPERSESSION_CHAIN"
     assert postgresql_engine.dialect.name == "postgresql"
 
     with Session(postgresql_engine) as session:
@@ -671,7 +643,7 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
         with GovernedUnitOfWork(session) as unit_of_work:
             registry = RuleRegistryService(unit_of_work)
             registry.create_identity(
-                rule_id=RULE_ID,
+                rule_id=CHAIN_RULE_ID,
                 audit=_audit("phase-6b1-chain-id-audit", ACTORS["submitter"], user_ids["submitter"], "phase-6b1-chain-id", "Chain test identity"),
             )
             unit_of_work.commit()
@@ -680,11 +652,11 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
             with GovernedUnitOfWork(session) as unit_of_work:
                 registry = RuleRegistryService(unit_of_work)
                 rev1 = registry.create_draft_revision(
-                    rule_id=RULE_ID, revision=RULE_REVISION_1, name="Chain test rev1",
+                    rule_id=CHAIN_RULE_ID, revision=RULE_REVISION_1, name="Chain test rev1",
                     evidence_class=EvidenceClass.SOURCE_BACKED, category=RuleCategory.OTHER,
                     parameter="test_param", safe_default=SafeDefault.UNRESOLVED,
                     missing_handling=MissingHandling.DATA_INSUFFICIENT,
-                    reason_for_change="Chain test rev1", version_metadata=_version_metadata(RULE_ID, RULE_REVISION_1),
+                    reason_for_change="Chain test rev1", version_metadata=_version_metadata(CHAIN_RULE_ID, RULE_REVISION_1),
                     audit=_audit("phase-6b1-chain-rev1-audit", ACTORS["submitter"], user_ids["submitter"], "phase-6b1-chain-rev1", "Chain test rev1"),
                     allow_source_backed=True,
                 )
@@ -692,7 +664,7 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
 
             rev1_id = session.scalar(
                 select(EngineeringRuleRevision.id).where(
-                    EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID),
+                    EngineeringRuleRevision.engineering_rule.has(rule_id=CHAIN_RULE_ID),
                     EngineeringRuleRevision.revision == RULE_REVISION_1,
                 )
             )
@@ -709,9 +681,9 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
                     registry = RuleRegistryService(unit_of_work)
                     transition = registry.enable_source_backed if event_type is RuleLifecycleEventType.ENABLE else registry.activate_source_backed
                     transition(
-                        rule_id=RULE_ID, source_revision=RULE_REVISION_1,
+                        rule_id=CHAIN_RULE_ID, source_revision=RULE_REVISION_1,
                         receipt_id=f"phase-6b1-chain-{event_type.value.lower()}-receipt-1",
-                        command_identity=_identity(namespace, RULE_ID, key), request_hash=_request_hash(key),
+                        command_identity=_identity(namespace, CHAIN_RULE_ID, key), request_hash=_request_hash(key),
                         audit=_audit(f"phase-6b1-chain-{event_type.value.lower()}-audit-1", ACTORS["submitter"], user_ids["submitter"], key, f"Chain {event_type.value} 1"),
                         effective_from=BASE_TIME + timedelta(minutes=minute), expires_at=None,
                         completed_at=BASE_TIME + timedelta(minutes=minute, seconds=1),
@@ -723,11 +695,11 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
             with GovernedUnitOfWork(session) as unit_of_work:
                 registry = RuleRegistryService(unit_of_work)
                 rev2 = registry.create_draft_revision(
-                    rule_id=RULE_ID, revision=RULE_REVISION_2, name="Chain test rev2",
+                    rule_id=CHAIN_RULE_ID, revision=RULE_REVISION_2, name="Chain test rev2",
                     evidence_class=EvidenceClass.SOURCE_BACKED, category=RuleCategory.OTHER,
                     parameter="test_param", safe_default=SafeDefault.UNRESOLVED,
                     missing_handling=MissingHandling.DATA_INSUFFICIENT,
-                    reason_for_change="Chain test rev2", version_metadata=_version_metadata(RULE_ID, RULE_REVISION_2),
+                    reason_for_change="Chain test rev2", version_metadata=_version_metadata(CHAIN_RULE_ID, RULE_REVISION_2),
                     audit=_audit("phase-6b1-chain-rev2-audit", ACTORS["submitter"], user_ids["submitter"], "phase-6b1-chain-rev2", "Chain test rev2"),
                     allow_source_backed=True,
                 )
@@ -737,10 +709,10 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
             with GovernedUnitOfWork(session) as unit_of_work:
                 registry = RuleRegistryService(unit_of_work)
                 registry.promote_source_backed(
-                    rule_id=RULE_ID, source_revision=RULE_REVISION_1, revision=RULE_REVISION_2,
-                    version_metadata=_version_metadata(RULE_ID, RULE_REVISION_2),
+                    rule_id=CHAIN_RULE_ID, source_revision=RULE_REVISION_1, revision=RULE_REVISION_2,
+                    version_metadata=_version_metadata(CHAIN_RULE_ID, RULE_REVISION_2),
                     receipt_id="phase-6b1-chain-promote-receipt-2",
-                    command_identity=_identity(RuleRegistryService.COMMAND_NAMESPACE, RULE_ID, promote_key),
+                    command_identity=_identity(RuleRegistryService.COMMAND_NAMESPACE, CHAIN_RULE_ID, promote_key),
                     request_hash=_request_hash(promote_key),
                     audit=_audit("phase-6b1-chain-promote-audit-2", ACTORS["submitter"], user_ids["submitter"], promote_key, "Chain promote rev2"),
                     completed_at=BASE_TIME + timedelta(minutes=20),
@@ -748,7 +720,7 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
                 unit_of_work.commit()
 
             # Verify supersession chain
-            rev2_persisted = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_2))
+            rev2_persisted = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=CHAIN_RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_2))
             assert rev2_persisted is not None
             assert rev2_persisted.supersedes_revision_id == rev1_id
 
@@ -762,9 +734,9 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
                     registry = RuleRegistryService(unit_of_work)
                     transition = registry.enable_source_backed if event_type is RuleLifecycleEventType.ENABLE else registry.activate_source_backed
                     transition(
-                        rule_id=RULE_ID, source_revision=RULE_REVISION_2,
+                        rule_id=CHAIN_RULE_ID, source_revision=RULE_REVISION_2,
                         receipt_id=f"phase-6b1-chain-{event_type.value.lower()}-receipt-2",
-                        command_identity=_identity(namespace, RULE_ID, key), request_hash=_request_hash(key),
+                        command_identity=_identity(namespace, CHAIN_RULE_ID, key), request_hash=_request_hash(key),
                         audit=_audit(f"phase-6b1-chain-{event_type.value.lower()}-audit-2", ACTORS["submitter"], user_ids["submitter"], key, f"Chain {event_type.value} 2"),
                         effective_from=BASE_TIME + timedelta(minutes=minute), expires_at=None,
                         completed_at=BASE_TIME + timedelta(minutes=minute, seconds=1),
@@ -772,12 +744,12 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
                     unit_of_work.commit()
 
             # Verify Revision 2 is active
-            rev2_active = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_2))
+            rev2_active = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=CHAIN_RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_2))
             assert rev2_active is not None
             assert rev2_active.is_active()
 
             # Verify Revision 1 is still queryable but superseded
-            rev1_persisted = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_1))
+            rev1_persisted = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=CHAIN_RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_1))
             assert rev1_persisted is not None
             assert rev1_persisted.id == rev1_id
             assert rev1_persisted.superseded is True
