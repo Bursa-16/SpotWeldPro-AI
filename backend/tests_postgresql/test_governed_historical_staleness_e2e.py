@@ -218,44 +218,119 @@ def _comparison(rule_rev: EngineeringRuleRevision, res) -> RuleComparison:
     return result
 
 
-def _create_evidence(session: Session, ev_ref, verifier_uid: int, verifier_role: str, grantor_uid: int) -> None:
-    delegation = EvidenceVerificationDelegationDraft(
-        evidence_reference_id=ev_ref.id, grantor_user_id=grantor_uid, delegate_user_id=verifier_uid,
-        capability=VerificationCapability.EVIDENCE_VERIFICATION, status=VerificationDelegationStatus.ACTIVE,
-        granted_at=BASE_TIME, expires_at=None, scope_snapshot=LIFECYCLE_SCOPE, reason="Phase 6B1 delegation",
-    )
+def _create_evidence(
+    session: Session,
+    ev_ref,
+    verifier_uid: int,
+    verifier_role: str,
+    grantor_uid: int,
+) -> None:
     repo = EvidenceVerificationRepository(session)
-    delegation = repo.create_delegation(
-        evidence_reference_id=delegation.evidence_reference_id, grantor_user_id=delegation.grantor_user_id,
-        delegate_user_id=delegation.delegate_user_id, capability=delegation.capability,
-        status=delegation.status, granted_at=delegation.granted_at, expires_at=delegation.expires_at,
-        scope_snapshot=delegation.scope_snapshot, reason=delegation.reason,
+    scope = VerificationScopeSnapshot(project=str(LIFECYCLE_SCOPE["project"]))
+
+    delegation = repo.create_delegation_revision(
+        draft=EvidenceVerificationDelegationDraft(
+            delegation_id="phase-6b1-verification-delegation",
+            revision_number=1,
+            verifier_user_id=verifier_uid,
+            granted_by_user_id=grantor_uid,
+            scope_snapshot=scope,
+            effective_from=BASE_TIME - timedelta(days=1),
+            expires_at=None,
+            revoked_by_user_id=None,
+            revoked_at=None,
+            revoked_reason=None,
+            status=VerificationDelegationStatus.ACTIVE,
+            capability=VerificationCapability.EVIDENCE_VERIFICATION,
+            created_by_user_id=grantor_uid,
+            created_by_actor_id=str(ACTORS["approver"]["email"]),
+            schema_version="phase-6b1-verification-v1",
+            canonicalization_version="phase-6b1-canonical-v1",
+            hash_algorithm="sha256",
+            content_hash=_digest(
+                {
+                    "delegation_id": "phase-6b1-verification-delegation",
+                    "verifier_user_id": verifier_uid,
+                    "scope": scope.as_dict(),
+                }
+            ),
+            software_version="phase-6b1-test",
+        )
     )
-    authority = EvidenceVerificationAuthoritySnapshot(
-        actor_id=ACTORS["verifier"]["email"], actor_user_id=verifier_uid, actor_role=verifier_role,
-        authority_scope=LIFECYCLE_SCOPE, resource_scope=LIFECYCLE_SCOPE,
-        verification_basis="delegation", delegation_id=delegation.id,
-    )
-    decision = EvidenceVerificationDecisionDraft(
-        evidence_reference_id=ev_ref.id, evidence_verification_delegation_id=delegation.id,
-        verifier_user_id=verifier_uid, authority_snapshot=authority.as_dict(),
-        decision_reason="Verified Phase 6B1 evidence", decided_at=BASE_TIME,
-        policy_identifier="SDS-116", policy_version="0.1 Draft", correlation_id="phase-6b1-verification",
-        supersedes_verification_decision_id=None, created_by_user_id=verifier_uid,
-        created_by_actor_id=ACTORS["verifier"]["email"], schema_version="phase-6b1-verification-v1",
-        canonicalization_version="phase-6b1-canonical-v1", hash_algorithm="sha256",
-        content_hash=_digest({"verification_id": "phase-6b1-evidence-verification", "evidence_reference_id": ev_ref.id}),
+
+    authority_without_hash = EvidenceVerificationAuthoritySnapshot(
+        verifier_user_id=verifier_uid,
+        verifier_role_snapshot=verifier_role,
+        capability=VerificationCapability.EVIDENCE_VERIFICATION,
+        resource_scope=scope,
+        delegation_id=delegation.delegation_id,
+        delegation_revision_number=delegation.revision_number,
+        delegation_status=delegation.status,
+        delegation_effective_from=delegation.effective_from,
+        delegation_expires_at=delegation.expires_at,
+        delegation_revoked_at=delegation.revoked_at,
+        policy_identifier="SDS-115",
+        policy_version="0.1 Draft",
+        decision_at=BASE_TIME,
+        correlation_id="phase-6b1-verification",
+        schema_version="evidence-verification-authority-snapshot-v1",
+        canonicalization_version="phase-6b1-canonical-v1",
+        hash_algorithm="sha256",
+        content_hash="",
         software_version="phase-6b1-test",
     )
-    repo.create_decision(
-        evidence_reference_id=decision.evidence_reference_id, evidence_verification_delegation_id=decision.evidence_verification_delegation_id,
-        verifier_user_id=decision.verifier_user_id, authority_snapshot=decision.authority_snapshot,
-        decision_reason=decision.decision_reason, decided_at=decision.decided_at,
-        policy_identifier=decision.policy_identifier, policy_version=decision.policy_version,
-        correlation_id=decision.correlation_id, supersedes_verification_decision_id=decision.supersedes_verification_decision_id,
-        created_by_user_id=decision.created_by_user_id, created_by_actor_id=decision.created_by_actor_id,
-        schema_version=decision.schema_version, canonicalization_version=decision.canonicalization_version,
-        hash_algorithm=decision.hash_algorithm, content_hash=decision.content_hash, software_version=decision.software_version,
+
+    authority = EvidenceVerificationAuthoritySnapshot(
+        verifier_user_id=authority_without_hash.verifier_user_id,
+        verifier_role_snapshot=authority_without_hash.verifier_role_snapshot,
+        capability=authority_without_hash.capability,
+        resource_scope=authority_without_hash.resource_scope,
+        delegation_id=authority_without_hash.delegation_id,
+        delegation_revision_number=authority_without_hash.delegation_revision_number,
+        delegation_status=authority_without_hash.delegation_status,
+        delegation_effective_from=authority_without_hash.delegation_effective_from,
+        delegation_expires_at=authority_without_hash.delegation_expires_at,
+        delegation_revoked_at=authority_without_hash.delegation_revoked_at,
+        policy_identifier=authority_without_hash.policy_identifier,
+        policy_version=authority_without_hash.policy_version,
+        decision_at=authority_without_hash.decision_at,
+        correlation_id=authority_without_hash.correlation_id,
+        schema_version=authority_without_hash.schema_version,
+        canonicalization_version=authority_without_hash.canonicalization_version,
+        hash_algorithm=authority_without_hash.hash_algorithm,
+        content_hash=_digest(authority_without_hash.as_dict()),
+        software_version=authority_without_hash.software_version,
+    )
+
+    repo.create_verification_decision(
+        draft=EvidenceVerificationDecisionDraft(
+            verification_id="phase-6b1-evidence-verification",
+            revision_number=1,
+            evidence_reference_id=ev_ref.id,
+            evidence_verification_delegation_id=delegation.id,
+            verifier_user_id=verifier_uid,
+            authority_snapshot=authority.as_dict(),
+            decision_reason="Verified Phase 6B1 evidence",
+            decided_at=BASE_TIME,
+            policy_identifier="SDS-115",
+            policy_version="0.1 Draft",
+            correlation_id="phase-6b1-verification",
+            supersedes_verification_decision_id=None,
+            created_by_user_id=verifier_uid,
+            created_by_actor_id=str(ACTORS["verifier"]["email"]),
+            schema_version="phase-6b1-verification-v1",
+            canonicalization_version="phase-6b1-canonical-v1",
+            hash_algorithm="sha256",
+            content_hash=_digest(
+                {
+                    "verification_id": "phase-6b1-evidence-verification",
+                    "evidence_reference_id": ev_ref.id,
+                    "delegation_id": delegation.id,
+                    "authority_hash": authority.content_hash,
+                }
+            ),
+            software_version="phase-6b1-test",
+        )
     )
 
 
@@ -615,7 +690,14 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
                 )
                 unit_of_work.commit()
 
-            rev1_id = session.scalar(select(EngineeringRuleRevision.id).where(EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_1))
+            rev1_id = session.scalar(
+                select(EngineeringRuleRevision.id).where(
+                    EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID),
+                    EngineeringRuleRevision.revision == RULE_REVISION_1,
+                )
+            )
+            assert rev1_id is not None
+            session.commit()
 
             # Enable and activate Revision 1
             for event_type, namespace, minute in (
