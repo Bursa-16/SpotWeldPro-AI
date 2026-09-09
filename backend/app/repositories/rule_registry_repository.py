@@ -370,6 +370,53 @@ class RuleRegistryRepository:
         )
         return self.session.scalar(statement)
 
+    def lock_revision(
+        self,
+        *,
+        rule_id: str,
+        revision: str,
+    ) -> EngineeringRuleRevision | None:
+        """Lock one revision row ``SELECT ... FOR UPDATE`` for the exact rule identity.
+
+        Used by the governed active-revision supersession command so two
+        concurrent supersessions of the same incumbent cannot both pass the
+        successor re-check (no unique single-successor index exists on
+        ``engineering_rule_revisions.supersedes_revision_id`` in the Phase 6B2A
+        foundation).
+        """
+        rule = self.get_by_rule_id(rule_id)
+        if rule is None:
+            return None
+        statement = (
+            select(EngineeringRuleRevision)
+            .where(
+                EngineeringRuleRevision.engineering_rule_id == rule.id,
+                EngineeringRuleRevision.revision == revision,
+            )
+            .with_for_update()
+        )
+        return self.session.scalar(statement)
+
+    def find_successor(
+        self,
+        *,
+        incumbent_revision_id: int,
+    ) -> EngineeringRuleRevision | None:
+        """Return the single successor revision whose ``supersedes_revision_id``
+        pins the incumbent revision row (``None`` when the incumbent is still
+        current)..
+        """
+        statement = (
+            select(EngineeringRuleRevision)
+            .where(
+                EngineeringRuleRevision.supersedes_revision_id
+                == incumbent_revision_id,
+            )
+            .order_by(EngineeringRuleRevision.id)
+            .limit(1)
+        )
+        return self.session.scalar(statement)
+
     def list_revisions(self, rule_id: str) -> list[EngineeringRuleRevision]:
         statement = (
             select(EngineeringRuleRevision)

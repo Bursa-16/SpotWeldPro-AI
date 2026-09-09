@@ -70,6 +70,7 @@ class RuleRegistryService:
     COMMAND_NAMESPACE = "registry.rule.source_backed_promotion"
     ENABLEMENT_COMMAND_NAMESPACE = "registry.rule.enablement"
     ACTIVATION_COMMAND_NAMESPACE = "registry.rule.activation"
+    SUPERSESSION_COMMAND_NAMESPACE = "registry.rule.source_backed_supersession"
 
     def __init__(self, unit_of_work: GovernedUnitOfWork):
         self._unit_of_work = unit_of_work
@@ -1002,6 +1003,772 @@ class RuleRegistryService:
         }
         basis_snapshot["content_hash"] = self._hash(basis_snapshot)
         return basis_snapshot, verified_decisions
+
+    def supersede_active_source_backed(
+        self,
+        *,
+        rule_id: str,
+        incumbent_revision: str,
+        replacement_candidate_revision: str,
+        replacement_revision: str,
+        version_metadata: ContentVersionMetadata,
+        receipt_id: str,
+        command_identity: CommandIdentity,
+        request_hash: CanonicalRequestHash,
+        audit: GovernedAuditMetadata,
+        effective_from: datetime,
+        expires_at: datetime | None,
+        completed_at: datetime,
+    ) -> CommandResultReference:
+        """Governed supersession of an ACTIVE SOURCE_BACKED revision (Phase 6B2A).
+
+        Creates a NEW authoritative replacement revision whose
+        ``supersedes_revision_id`` pins the incumbent revision row at creation
+        time (revision rows are immutable), retires the incumbent with a
+        SUPERSEDE lifecycle event, and enables/activates the replacement in
+        the same transaction.  Neither the incumbent row nor the validated
+        draft candidate row is mutated.
+        """
+        self._unit_of_work.ensure_open()
+        if command_identity.command_namespace != self.SUPERSESSION_COMMAND_NAMESPACE:
+            raise ValueError("supersession command namespace mismatch")
+        if command_identity.command_scope != rule_id:
+            raise ValueError("supersession command scope must match rule_id")
+        decision = self._idempotency.reserve_or_inspect(
+            receipt_id=receipt_id,
+            identity=command_identity,
+            request_hash=request_hash,
+            correlation_id=audit.correlation_id,
+            schema_version=audit.schema_version,
+            software_version=audit.software_version,
+            created_at=audit.created_at,
+        )
+        if decision.disposition is IdempotencyDisposition.REPLAY:
+            if decision.result_reference is None:
+                raise RuntimeError("completed supersession replay has no durable result")
+            return decision.result_reference
+        if decision.disposition is IdempotencyDisposition.CONFLICT:
+            raise ValueError("idempotency conflict for supersession command")
+        if decision.disposition is IdempotencyDisposition.IN_PROGRESS:
+            raise RuntimeError("supersession command is already in progress")
+
+        actor = (
+            self._repository.session.get(User, audit.actor_user_id)
+            if audit.actor_user_id is not None
+            else None
+        )
+        if audit.actor_type != "user" or actor is None or not actor.is_active:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="NON_HUMAN_OR_INACTIVE_ACTOR",
+                denial_reason="active revision supersession requires an active durable human user",
+            )
+        rule = self._repository.get_by_rule_id(rule_id)
+        if rule is None:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="MISSING_RULE_IDENTITY",
+                denial_reason="engineering rule identity does not exist",
+            )
+        incumbent = self._repository.lock_revision(
+            rule_id=rule_id,
+            revision=incumbent_revision,
+        )
+        if incumbent is None:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="MISSING_INCUMBENT_REVISION",
+                denial_reason="incumbent revision does not exist",
+            )
+        if incumbent.engineering_rule_id != rule.id:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="MISSING_INCUMBENT_REVISION",
+                denial_reason="incumbent revision does not belong to the rule identity",
+            )
+        if incumbent.evidence_class is not EvidenceClass.SOURCE_BACKED:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="INCUMBENT_NOT_SOURCE_BACKED",
+                denial_reason="supersession requires a SOURCE_BACKED incumbent revision",
+            )
+        if incumbent.revision == replacement_revision:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="SOURCE_AND_TARGET_REVISION_MATCH",
+                denial_reason="replacement revision must differ from the incumbent revision",
+            )
+        successor = self._repository.find_successor(incumbent_revision_id=incumbent.id)
+        if successor is not None:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="INCUMBENT_ALREADY_SUPERSEDED",
+                denial_reason="incumbent revision is already superseded by a successor revision",
+            )
+        scope_snapshot = dict(audit.authority_scope) if audit.authority_scope is not None else None
+        if scope_snapshot is None or not any(value is not None for value in scope_snapshot.values()):
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="MISSING_SCOPE_SNAPSHOT",
+                denial_reason="supersession requires an explicit non-empty authority scope snapshot",
+            )
+        incumbent_latest = self._repository.get_latest_lifecycle_event(
+            engineering_rule_revision_id=incumbent.id,
+            scope_snapshot=scope_snapshot,
+        )
+        if (
+            incumbent_latest is None
+            or incumbent_latest.event_type is not RuleLifecycleEventType.ACTIVATE
+        ):
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="INCUMBENT_NOT_ACTIVE",
+                denial_reason="supersession requires an incumbent with a current ACTIVATE lifecycle event for the exact authority scope",
+            )
+        if incumbent_latest.expires_at is not None and incumbent_latest.expires_at <= completed_at:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="INCUMBENT_NOT_ACTIVE",
+                denial_reason="incumbent activation authority window has expired",
+            )
+        if incumbent.created_by_user_id is None:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="MISSING_INCUMBENT_SUBMITTER",
+                denial_reason="incumbent revision lacks durable human submitter identity",
+            )
+        if incumbent.created_by_user_id == actor.id:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="SEPARATION_OF_DUTIES_VIOLATION",
+                denial_reason="incumbent submitter must not execute the supersession",
+            )
+        replacement_candidate = self._repository.get_revision(
+            rule_id,
+            replacement_candidate_revision,
+        )
+        if replacement_candidate is None:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="MISSING_REPLACEMENT_CANDIDATE",
+                denial_reason="replacement draft candidate revision does not exist",
+            )
+        if replacement_candidate.id == incumbent.id:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="REPLACEMENT_CANDIDATE_INVALID",
+                denial_reason="replacement candidate must differ from the incumbent revision row",
+            )
+        if replacement_candidate.status is not RuleLifecycleStatus.DRAFT:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="REPLACEMENT_CANDIDATE_NOT_DRAFT",
+                denial_reason="only a DRAFT candidate can seed the superseding revision",
+            )
+        if replacement_candidate.evidence_class is not EvidenceClass.SOURCE_BACKED:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="REPLACEMENT_CANDIDATE_NOT_SOURCE_BACKED",
+                denial_reason="replacement candidate must follow the source-backed evidence workflow",
+            )
+        if replacement_candidate.created_by_user_id is None:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="MISSING_REPLACEMENT_SUBMITTER",
+                denial_reason="replacement candidate lacks durable human submitter identity",
+            )
+        if replacement_candidate.created_by_user_id == actor.id:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="SEPARATION_OF_DUTIES_VIOLATION",
+                denial_reason="replacement draft submitter must not execute the supersession",
+            )
+        replacement_candidate_evidence_references = list(
+            replacement_candidate.evidence_references
+        )
+        if not replacement_candidate_evidence_references:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="MISSING_EVIDENCE_REFERENCES",
+                denial_reason="replacement candidate carries no evidence references",
+            )
+        verified_decisions: list[
+            tuple[EvidenceReferenceDraft, EvidenceVerificationDecision]
+        ] = []
+        for evidence_reference in sorted(
+            replacement_candidate_evidence_references,
+            key=lambda reference: (
+                reference.evidence_id,
+                reference.evidence_revision,
+                reference.id,
+            ),
+        ):
+            verified_decision = self._repository.get_latest_verified_evidence_decision(
+                evidence_reference_id=evidence_reference.id
+            )
+            if verified_decision is None:
+                return self._deny_active_supersession(
+                    rule_id=rule_id,
+                    incumbent_revision=incumbent_revision,
+                    replacement_candidate_revision=replacement_candidate_revision,
+                    replacement_revision=replacement_revision,
+                    audit=audit,
+                    completed_at=completed_at,
+                    command_identity=command_identity,
+                    request_hash=request_hash,
+                    denial_code="UNVERIFIED_EVIDENCE_REFERENCE",
+                    denial_reason="replacement candidate evidence lacks a VERIFIED decision",
+                )
+            if verified_decision.decision_outcome is not VerificationDecisionOutcome.VERIFIED:
+                return self._deny_active_supersession(
+                    rule_id=rule_id,
+                    incumbent_revision=incumbent_revision,
+                    replacement_candidate_revision=replacement_candidate_revision,
+                    replacement_revision=replacement_revision,
+                    audit=audit,
+                    completed_at=completed_at,
+                    command_identity=command_identity,
+                    request_hash=request_hash,
+                    denial_code="INVALID_VERIFICATION_OUTCOME",
+                    denial_reason="replacement candidate evidence must have a VERIFIED decision",
+                )
+            if verified_decision.verifier_user_id == actor.id:
+                return self._deny_active_supersession(
+                    rule_id=rule_id,
+                    incumbent_revision=incumbent_revision,
+                    replacement_candidate_revision=replacement_candidate_revision,
+                    replacement_revision=replacement_revision,
+                    audit=audit,
+                    completed_at=completed_at,
+                    command_identity=command_identity,
+                    request_hash=request_hash,
+                    denial_code="VERIFIER_EXECUTED_SUPERSESSION",
+                    denial_reason="supersession executor must not be the evidence verifier",
+                )
+            verified_scope = verified_decision.authority_snapshot.get("resource_scope")
+            if verified_scope != scope_snapshot:
+                return self._deny_active_supersession(
+                    rule_id=rule_id,
+                    incumbent_revision=incumbent_revision,
+                    replacement_candidate_revision=replacement_candidate_revision,
+                    replacement_revision=replacement_revision,
+                    audit=audit,
+                    completed_at=completed_at,
+                    command_identity=command_identity,
+                    request_hash=request_hash,
+                    denial_code="AUTHORITY_SCOPE_MISMATCH",
+                    denial_reason="verified evidence scope must match the supersession scope",
+                )
+            verified_decisions.append((evidence_reference, verified_decision))
+        evidence_pins = [
+            {
+                "evidence_reference_id": evidence_reference.id,
+                "evidence_id": evidence_reference.evidence_id,
+                "evidence_revision": evidence_reference.evidence_revision,
+                "verification_decision_id": verified_decision.id,
+                "verification_revision_number": verified_decision.revision_number,
+                "verifier_user_id": verified_decision.verifier_user_id,
+            }
+            for evidence_reference, verified_decision in verified_decisions
+        ]
+        basis_content_hash = self._hash(
+            {
+                "rule_id": rule_id,
+                "incumbent_revision": incumbent.revision,
+                "incumbent_revision_id": incumbent.id,
+                "replacement_candidate_revision": replacement_candidate.revision,
+                "replacement_candidate_revision_id": replacement_candidate.id,
+                "replacement_revision": replacement_revision,
+                "scope_snapshot": scope_snapshot,
+                "evidence_pins": evidence_pins,
+            }
+        )
+        if version_metadata.content_hash != basis_content_hash:
+            return self._deny_active_supersession(
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                audit=audit,
+                completed_at=completed_at,
+                command_identity=command_identity,
+                request_hash=request_hash,
+                denial_code="CONTENT_HASH_MISMATCH",
+                denial_reason="replacement content hash must pin the verified supersession basis",
+            )
+        replacement = self._repository.create_revision(
+            engineering_rule=rule,
+            revision=replacement_revision,
+            name=replacement_candidate.name,
+            status=RuleLifecycleStatus.DRAFT,
+            evidence_class=EvidenceClass.SOURCE_BACKED,
+            category=replacement_candidate.category,
+            parameter=replacement_candidate.parameter,
+            operator=replacement_candidate.operator,
+            min_value=replacement_candidate.min_value,
+            max_value=replacement_candidate.max_value,
+            unit=replacement_candidate.unit,
+            applicability_metadata=replacement_candidate.applicability_metadata,
+            applicability_schema_version=replacement_candidate.applicability_schema_version,
+            effective_date=replacement_candidate.effective_date,
+            expiry_date=replacement_candidate.expiry_date,
+            supersedes_revision_id=incumbent.id,
+            source_type=replacement_candidate.source_type,
+            source_name=replacement_candidate.source_name,
+            source_document=replacement_candidate.source_document,
+            source_url=replacement_candidate.source_url,
+            safe_default=replacement_candidate.safe_default,
+            missing_handling=replacement_candidate.missing_handling,
+            conflict_handling=replacement_candidate.conflict_handling,
+            unit_mismatch_handling=replacement_candidate.unit_mismatch_handling,
+            description=replacement_candidate.description,
+            note=replacement_candidate.note,
+            enabled=False,
+            reason_for_change=f"Governed supersession of revision {incumbent.revision}",
+            version_metadata=version_metadata,
+            created_by_actor_id=audit.actor_id,
+            created_by_user_id=audit.actor_user_id,
+            evidence_references=tuple(
+                EvidenceReferenceDraft(
+                    evidence_id=evidence_reference.evidence_id,
+                    evidence_revision=evidence_reference.evidence_revision,
+                    evidence_class=evidence_reference.evidence_class,
+                    lifecycle_status=evidence_reference.lifecycle_status,
+                    created_by_actor_id=evidence_reference.created_by_actor_id,
+                    created_by_user_id=evidence_reference.created_by_user_id,
+                    source_type=evidence_reference.source_type,
+                    source_name=evidence_reference.source_name,
+                    source_document=evidence_reference.source_document,
+                    edition=evidence_reference.edition,
+                    section_reference=evidence_reference.section_reference,
+                    page_reference=evidence_reference.page_reference,
+                    table_reference=evidence_reference.table_reference,
+                    reference_uri=evidence_reference.reference_uri,
+                    reference_metadata=evidence_reference.reference_metadata,
+                    schema_version=evidence_reference.schema_version,
+                    hash_algorithm=evidence_reference.hash_algorithm,
+                    content_hash=evidence_reference.content_hash,
+                )
+                for evidence_reference, _verified_decision in verified_decisions
+            ),
+            allow_source_backed=True,
+        )
+        supersession_basis_snapshot = {
+            "rule_id": rule_id,
+            "incumbent_revision": incumbent.revision,
+            "incumbent_revision_id": incumbent.id,
+            "replacement_revision": replacement_revision,
+            "replacement_revision_id": replacement.id,
+            "scope_snapshot": scope_snapshot,
+            "evidence_pins": evidence_pins,
+            "content_hash": basis_content_hash,
+        }
+        supersede_authority_snapshot = self._lifecycle_authority_snapshot(
+            audit=audit,
+            event_type=RuleLifecycleEventType.SUPERSEDE,
+            scope_snapshot=scope_snapshot,
+            effective_from=effective_from,
+            expires_at=expires_at,
+            completed_at=completed_at,
+        )
+        supersede_content_hash = self._hash(
+            {
+                "lifecycle_event_id": incumbent_latest.lifecycle_event_id,
+                "event_type": RuleLifecycleEventType.SUPERSEDE.value,
+                "rule_id": rule_id,
+                "source_revision_id": incumbent.id,
+                "source_revision": incumbent.revision,
+                "scope_snapshot": scope_snapshot,
+                "basis_content_hash": basis_content_hash,
+                "authority_snapshot": supersede_authority_snapshot,
+                "effective_from": effective_from,
+                "expires_at": expires_at,
+            }
+        )
+        supersede_event = self._repository.create_lifecycle_event(
+            engineering_rule=rule,
+            engineering_rule_revision=incumbent,
+            lifecycle_event_id=incumbent_latest.lifecycle_event_id,
+            revision_number=incumbent_latest.revision_number + 1,
+            event_type=RuleLifecycleEventType.SUPERSEDE,
+            scope_snapshot=scope_snapshot,
+            basis_snapshot=supersession_basis_snapshot,
+            authority_snapshot=supersede_authority_snapshot,
+            effective_from=effective_from,
+            expires_at=expires_at,
+            created_by_actor_id=audit.actor_id,
+            created_by_user_id=audit.actor_user_id,
+            schema_version="rule-lifecycle-v1",
+            canonicalization_version="rule-lifecycle-canonical-v1",
+            hash_algorithm="sha256",
+            content_hash=supersede_content_hash,
+            software_version=audit.software_version,
+            correlation_id=audit.correlation_id,
+            supersedes_rule_lifecycle_event_id=incumbent_latest.id,
+        )
+        replacement_enable_event_id = self._lifecycle_event_identity(
+            rule_id=rule_id,
+            source_revision=replacement,
+            event_type=RuleLifecycleEventType.ENABLE,
+            scope_snapshot=scope_snapshot,
+        )
+        enable_authority_snapshot = self._lifecycle_authority_snapshot(
+            audit=audit,
+            event_type=RuleLifecycleEventType.ENABLE,
+            scope_snapshot=scope_snapshot,
+            effective_from=effective_from,
+            expires_at=expires_at,
+            completed_at=completed_at,
+        )
+        enable_content_hash = self._hash(
+            {
+                "lifecycle_event_id": replacement_enable_event_id,
+                "event_type": RuleLifecycleEventType.ENABLE.value,
+                "rule_id": rule_id,
+                "source_revision_id": replacement.id,
+                "source_revision": replacement.revision,
+                "scope_snapshot": scope_snapshot,
+                "basis_content_hash": basis_content_hash,
+                "authority_snapshot": enable_authority_snapshot,
+                "effective_from": effective_from,
+                "expires_at": expires_at,
+            }
+        )
+        replacement_enable_event = self._repository.create_lifecycle_event(
+            engineering_rule=rule,
+            engineering_rule_revision=replacement,
+            lifecycle_event_id=replacement_enable_event_id,
+            revision_number=1,
+            event_type=RuleLifecycleEventType.ENABLE,
+            scope_snapshot=scope_snapshot,
+            basis_snapshot=supersession_basis_snapshot,
+            authority_snapshot=enable_authority_snapshot,
+            effective_from=effective_from,
+            expires_at=expires_at,
+            created_by_actor_id=audit.actor_id,
+            created_by_user_id=audit.actor_user_id,
+            schema_version="rule-lifecycle-v1",
+            canonicalization_version="rule-lifecycle-canonical-v1",
+            hash_algorithm="sha256",
+            content_hash=enable_content_hash,
+            software_version=audit.software_version,
+            correlation_id=audit.correlation_id,
+        )
+        replacement_activation_event_id = self._lifecycle_event_identity(
+            rule_id=rule_id,
+            source_revision=replacement,
+            event_type=RuleLifecycleEventType.ACTIVATE,
+            scope_snapshot=scope_snapshot,
+        )
+        activation_authority_snapshot = self._lifecycle_authority_snapshot(
+            audit=audit,
+            event_type=RuleLifecycleEventType.ACTIVATE,
+            scope_snapshot=scope_snapshot,
+            effective_from=effective_from,
+            expires_at=expires_at,
+            completed_at=completed_at,
+        )
+        activation_content_hash = self._hash(
+            {
+                "lifecycle_event_id": replacement_activation_event_id,
+                "event_type": RuleLifecycleEventType.ACTIVATE.value,
+                "rule_id": rule_id,
+                "source_revision_id": replacement.id,
+                "source_revision": replacement.revision,
+                "scope_snapshot": scope_snapshot,
+                "basis_content_hash": basis_content_hash,
+                "authority_snapshot": activation_authority_snapshot,
+                "effective_from": effective_from,
+                "expires_at": expires_at,
+            }
+        )
+        replacement_activation_event = self._repository.create_lifecycle_event(
+            engineering_rule=rule,
+            engineering_rule_revision=replacement,
+            lifecycle_event_id=replacement_activation_event_id,
+            revision_number=1,
+            event_type=RuleLifecycleEventType.ACTIVATE,
+            scope_snapshot=scope_snapshot,
+            basis_snapshot=supersession_basis_snapshot,
+            authority_snapshot=activation_authority_snapshot,
+            effective_from=effective_from,
+            expires_at=expires_at,
+            created_by_actor_id=audit.actor_id,
+            created_by_user_id=audit.actor_user_id,
+            schema_version="rule-lifecycle-v1",
+            canonicalization_version="rule-lifecycle-canonical-v1",
+            hash_algorithm="sha256",
+            content_hash=activation_content_hash,
+            software_version=audit.software_version,
+            correlation_id=audit.correlation_id,
+        )
+        self._audit.record_event(
+            **self._common_audit_fields(audit),
+            entity_type="engineering_rule_lifecycle_event",
+            entity_id=rule_id,
+            entity_revision=incumbent.revision,
+            action="SUPERSEDE_SOURCE_BACKED_RULE_REVISION",
+            prior_content_hash=incumbent.content_hash,
+            new_content_hash=supersede_event.content_hash,
+            detail=self._audit_detail(
+                audit,
+                command="SUPERSEDE_SOURCE_BACKED_RULE_REVISION",
+                rule_id=rule_id,
+                incumbent_revision=incumbent.revision,
+                incumbent_revision_id=incumbent.id,
+                replacement_revision=replacement.revision,
+                replacement_revision_id=replacement.id,
+                superseded_lifecycle_event_id=incumbent_latest.id,
+                lifecycle_event_id=supersede_event.lifecycle_event_id,
+                lifecycle_event_revision_number=supersede_event.revision_number,
+                event_type=RuleLifecycleEventType.SUPERSEDE.value,
+                scope_snapshot=scope_snapshot,
+                basis_content_hash=basis_content_hash,
+                evidence_reference_ids=[
+                    pin["evidence_reference_id"] for pin in evidence_pins
+                ],
+                verification_decision_ids=[
+                    pin["verification_decision_id"] for pin in evidence_pins
+                ],
+            ),
+        )
+        self._audit.record_event(
+            **self._common_audit_fields(audit),
+            entity_type="engineering_rule_lifecycle_event",
+            entity_id=rule_id,
+            entity_revision=replacement.revision,
+            action="ENABLE_SOURCE_BACKED_RULE_REVISION",
+            prior_content_hash=replacement.content_hash,
+            new_content_hash=replacement_enable_event.content_hash,
+            detail=self._audit_detail(
+                audit,
+                command="ENABLE_SOURCE_BACKED_RULE_REVISION",
+                rule_id=rule_id,
+                source_revision=replacement.revision,
+                source_revision_id=replacement.id,
+                lifecycle_event_id=replacement_enable_event.lifecycle_event_id,
+                event_type=RuleLifecycleEventType.ENABLE.value,
+                scope_snapshot=scope_snapshot,
+                basis_content_hash=basis_content_hash,
+            ),
+        )
+        self._audit.record_event(
+            **self._common_audit_fields(audit),
+            entity_type="engineering_rule_lifecycle_event",
+            entity_id=rule_id,
+            entity_revision=replacement.revision,
+            action="ACTIVATE_SOURCE_BACKED_RULE_REVISION",
+            prior_content_hash=replacement.content_hash,
+            new_content_hash=replacement_activation_event.content_hash,
+            detail=self._audit_detail(
+                audit,
+                command="ACTIVATE_SOURCE_BACKED_RULE_REVISION",
+                rule_id=rule_id,
+                source_revision=replacement.revision,
+                source_revision_id=replacement.id,
+                lifecycle_event_id=replacement_activation_event.lifecycle_event_id,
+                event_type=RuleLifecycleEventType.ACTIVATE.value,
+                scope_snapshot=scope_snapshot,
+                basis_content_hash=basis_content_hash,
+            ),
+        )
+        result = CommandResultReference(
+            result_type="engineering_rule_lifecycle_event",
+            result_id=str(replacement_activation_event.id),
+            result_revision=str(replacement_activation_event.revision_number),
+        )
+        completed = self._idempotency.complete(
+            identity=command_identity,
+            request_hash=request_hash,
+            result_reference=result,
+            completed_at=completed_at,
+        )
+        if completed.result_reference != result:
+            raise RuntimeError("active supersession idempotency completion failed")
+        return result
+
+    def _deny_active_supersession(
+        self,
+        *,
+        rule_id: str,
+        incumbent_revision: str,
+        replacement_candidate_revision: str,
+        replacement_revision: str,
+        audit: GovernedAuditMetadata,
+        completed_at: datetime,
+        command_identity: CommandIdentity,
+        request_hash: CanonicalRequestHash,
+        denial_code: str,
+        denial_reason: str,
+    ) -> CommandResultReference:
+        denial_event = self._audit.record_event(
+            **self._common_audit_fields(audit),
+            entity_type="engineering_rule_supersession_denial",
+            entity_id=rule_id,
+            entity_revision=incumbent_revision,
+            action="SUPERSEDE_SOURCE_BACKED_RULE_REVISION_DENIED",
+            prior_content_hash=None,
+            new_content_hash=None,
+            detail=self._audit_detail(
+                audit,
+                command="SUPERSEDE_SOURCE_BACKED_RULE_REVISION_DENIED",
+                rule_id=rule_id,
+                incumbent_revision=incumbent_revision,
+                replacement_candidate_revision=replacement_candidate_revision,
+                replacement_revision=replacement_revision,
+                denial_code=denial_code,
+                denial_reason=denial_reason,
+            ),
+        )
+        result = CommandResultReference(
+            result_type="engineering_rule_supersession_denial",
+            result_id=str(denial_event.id),
+            result_revision="denied",
+        )
+        completed = self._idempotency.complete(
+            identity=command_identity,
+            request_hash=request_hash,
+            result_reference=result,
+            completed_at=completed_at,
+        )
+        if completed.result_reference != result:
+            raise RuntimeError(
+                "active supersession denial idempotency completion failed"
+            )
+        return result
 
     @staticmethod
     def _lifecycle_event_identity(
