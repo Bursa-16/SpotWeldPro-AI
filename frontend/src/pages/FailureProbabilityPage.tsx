@@ -26,9 +26,11 @@ type AnalysisResult = {
 export function FailureProbabilityPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   async function analyze() {
     setLoading(true)
+    setError('')
     try {
       const response = await client.post('/failure-probability/analyze', {
         material_family: 'Galvanizli / Kaplamalı Çelik',
@@ -60,68 +62,129 @@ export function FailureProbabilityPage() {
         minimum_nugget_mm: 4.2,
       })
       setResult(response.data)
+    } catch {
+      setError('Backend connection unavailable. Engineering data could not be loaded. Verify the API service and retry.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <main className="page">
-      <header>
-        <h1>Potential Failure Analysis</h1>
-        <p>Seçilen kaynak parametrelerinden potansiyel hata olasılıkları</p>
+    <div className="page active">
+      <div className="ws-kicker">Engineering · Spot Welding Parametre Analysis</div>
+      <header className="page-header">
+        <div>
+          <h1>Failure Analysis</h1>
+          <p className="subtitle">Backend risk-engineering evaluation — probabilities are shown only when returned by the API</p>
+        </div>
+        <div className="page-actions">
+          <button className="btn btn-primary" onClick={analyze} disabled={loading}>
+            {loading ? 'Hesaplanıyor…' : 'Hata Olasılıklarını Hesapla'}
+          </button>
+        </div>
       </header>
+      <div className="ws-context-bar" aria-label="Engineering context">
+        <span className="ctx-chip accent">Authority: <strong>backend failure model</strong></span>
+        <span className="ctx-chip">Output: <strong>only API-returned probabilities</strong></span>
+      </div>
+      {error && (
+        <div className="alert danger" role="alert">
+          <div>
+            <div className="alert-title">Backend connection unavailable</div>
+            <div className="alert-text">Engineering data could not be loaded. Verify the API service and retry.</div>
+          </div>
+        </div>
+      )}
 
-      <section className="panel">
-        <button onClick={analyze} disabled={loading}>
-          {loading ? 'Hesaplanıyor...' : 'Hata Olasılıklarını Hesapla'}
-        </button>
-
-        {result && (
-          <>
-            <h2>Öncelikli riskler</h2>
-            <div className="failure-grid">
-              {result.failure_modes.slice(0, 6).map((mode) => (
-                <article className="failure-card" key={mode.code}>
-                  <div className="failure-head">
-                    <h3>{mode.title}</h3>
-                    <strong>%{mode.probability_percent.toFixed(1)}</strong>
-                  </div>
-                  <p>{mode.severity} · Güven: {mode.confidence}</p>
-                  <div className="risk-bar">
-                    <span style={{ width: `${mode.probability_percent}%` }} />
-                  </div>
-
-                  <h4>Ana etkiler</h4>
-                  <ul>
-                    {mode.contributions.slice(0, 3).map((item) => (
-                      <li key={item.factor}>
-                        <strong>{item.factor}:</strong> {item.explanation}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <h4>Önerilen aksiyon</h4>
-                  <ol>
-                    {mode.recommended_actions.slice(0, 2).map((action) => (
-                      <li key={action}>{action}</li>
-                    ))}
-                  </ol>
-                </article>
-              ))}
+      {!result && !loading && (
+        <div className="ws-grid-main">
+          <section className="panel" aria-label="Engineering inputs">
+            <div className="panel-header"><h3>Engineering inputs</h3><span className="panel-meta">backend request context</span></div>
+            <div className="panel-body">
+            <div className="trace-block">
+              <div className="trace-row"><span className="label">Material</span><span className="value">coated steel · 2T · 1.0 + 1.0 mm</span></div>
+              <div className="trace-row"><span className="label">Process</span><span className="value">11.5 kA · 15 cyc · 2.2 kN · 6.0 mm tip</span></div>
+              <div className="trace-row"><span className="label">Recommendation window</span><span className="value">8.0 – 10.5 kA · 10 – 12 cyc · 2.5 – 3.5 kN</span></div>
             </div>
+            </div>
+            <div className="panel-footer">Request context only — probabilities come from backend.</div>
+          </section>
+          <section className="panel" aria-label="Risk result workspace">
+            <div className="panel-header"><h3>Risk result</h3><span className="panel-meta">result-ready</span></div>
+            <div className="panel-body">
+            <div className="ws-empty" role="status"><span className="empty-glyph" aria-hidden="true">RA</span><strong>Analysis not yet run</strong><span className="ws-empty-hint">Run the backend failure analysis to populate risk modes, probabilities and preventive actions.</span><span className="empty-action">Next action: run the backend failure analysis.</span></div>
+            </div>
+            <div className="panel-footer">Probabilities render only when returned by the API.</div>
+          </section>
+        </div>
+      )}
 
-            <h2>Genel öncelikli aksiyonlar</h2>
-            <ol>
-              {result.priority_actions.map((action) => (
-                <li key={action}>{action}</li>
+      {loading && (
+        <div className="state-msg" role="status">
+          <div className="spinner" aria-hidden="true" />
+          <span>Hata modelleri hesaplanıyor…</span>
+        </div>
+      )}
+
+      {result && !loading && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
+          <section className="panel" aria-label="Öncelikli Riskler">
+            <div className="panel-header">
+              <h3>Öncelikli Risk Modları</h3>
+              <span className="panel-meta">{result.failure_modes.length} mod değerlendirildi</span>
+            </div>
+            <div className="panel-body">
+            <div className="grid-3">
+              {result.failure_modes.slice(0, 6).map((mode) => {
+                const isHigh = mode.probability_percent > 40
+                return (
+                  <article key={mode.code} className={`metric-card ${isHigh ? 'state-warn' : ''}`}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span className="metric-label">{mode.title}</span>
+                      <span className={`badge ${isHigh ? 'warn' : 'ok'}`}>{mode.severity}</span>
+                    </div>
+                    <strong className="metric-value">%{mode.probability_percent.toFixed(1)}</strong>
+                    <span className="metric-sub">Güven Derecesi: {mode.confidence}</span>
+
+                    <div style={{ marginTop: 'var(--sp-2)' }}>
+                      <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)' }}>Ana Etkenler:</span>
+                      <ul className="action-list" style={{ marginTop: 'var(--sp-1)' }}>
+                        {mode.contributions.slice(0, 2).map((item) => (
+                          <li key={item.factor}>
+                            <strong>{item.factor}:</strong> {item.explanation}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+            </div>
+            <div className="panel-footer">API-returned probabilities only.</div>
+          </section>
+
+          <section className="panel" aria-label="Önerilen Aksiyonlar">
+            <div className="panel-header">
+              <h3>Genel Öncelikli Önleyici Aksiyonlar</h3>
+            </div>
+            <div className="panel-body">
+            <ul className="action-list">
+              {result.priority_actions.map((action, i) => (
+                <li key={i}>{action}</li>
               ))}
-            </ol>
-
-            <p className="notice">{result.disclaimer}</p>
-          </>
-        )}
-      </section>
-    </main>
+            </ul>
+            {result.disclaimer && (
+              <p className="notice" style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)' }}>
+                {result.disclaimer}
+              </p>
+            )}
+            </div>
+            <div className="panel-footer">Backend preventive actions only.</div>
+          </section>
+        </div>
+      )}
+    </div>
   )
 }
+
