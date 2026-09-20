@@ -39,5 +39,49 @@ export type WeldAnalysisResponse = {
   }
   risks: Array<{ title: string; detail: string }>
   actions: string[]
-  recommended_ranges?: Array<Record<string, unknown>>
+  recommended_ranges?: RecommendedRangeRow[]
+  notes?: unknown[]
+  model_results?: ModelResultRow[]
+  compliance_results?: ComplianceRuleRow[]
+  compliance_conflicts?: ComplianceConflictRow[]
+}
+
+export type RecommendedRangeRow = {
+  Parametre: string
+  'Önerilen Min': number
+  'Önerilen Maks': number
+  Birim: string
+  Mevcut: number
+  Durum: string
+}
+
+export type ComplianceRuleRow = {
+  rule_id: string | number
+  rule_name: string
+  source_type: string
+  source_name: string
+  priority: number
+  parameter: string
+  actual_value: number
+  expected: string
+  status: string
+  note?: string
+}
+
+export type ComplianceConflictRow = {
+  parameter: string
+  material_family: string
+  stack_count: string
+  winner_rule: string
+  winner_source: string
+  challenger_rule: string
+  challenger_source: string
+  decision: string
+}
+
+export type ModelResultRow = {
+  model_name?: string
+  prediction_mm?: number
+  validation_status?: string
+  [key: string]: unknown
 }
