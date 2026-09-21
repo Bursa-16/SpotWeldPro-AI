@@ -1,127 +1,378 @@
-# SpotWeld-AI — Spot Welding Parameter Analysis
+# Spot Welding Parameter Analysis
 
-Professional engineering decision-support software for **resistance spot welding parameter analysis, governed rule evaluation, machine readiness, and Digital Weld Passport traceability**.
+**SpotWeldPro AI** is a professional engineering decision-support platform for **resistance spot welding parameter analysis, governed rule evaluation, machine readiness, engineering traceability, and Digital Weld Passport workflows**.
 
-> **Product scope:** This repository contains the **Spot Welding Parameter Analysis** product.  
+> **Product name:** Spot Welding Parameter Analysis  
+> **Product brand:** SpotWeldPro AI
+
+> **Repository scope:** This repository contains the **Spot Welding Parameter Analysis** product.  
 > It does **not** contain image processing, camera inspection, OpenCV, YOLO, or visual defect classification. Those capabilities belong to the separate **Spot Welding Image Processing** product.
 
 ---
 
-## Release Status
+# Product Vision
 
-### v3.0.0-alpha.3 — Governed Cross-System E2E Validation
+Spot Welding Parameter Analysis is designed to support manufacturing, quality, industrialization, and welding engineering teams in making **faster, more systematic, traceable, and reproducible resistance spot welding decisions**.
 
-The `v3.0.0-alpha.3` alpha consolidates the Phase 6A governance validation milestone on top of the Phase 5 governed API integration. It strengthens the deterministic, revision-pinned, auditable, reproducible, and fail-closed engineering chain with real-PostgreSQL cross-system E2E coverage.
+The platform combines:
 
-### Current Verification
+- Deterministic engineering calculations
+- Governed engineering rules
+- Resistance spot welding parameter analysis
+- Weld quality engineering
+- Weld-lobe / process-window engineering
+- DOE and optimization workflows
+- Failure and risk analysis
+- Machine Readiness Check
+- Digital Weld Passport traceability
+- AI-assisted engineering explanation and context
 
-- Full backend suite: **361 passed**
-- Digital Weld Passport focused tests: **3 passed**
-- Migration tests: **11 passed**
-- Machine Readiness persistence tests: **8 passed**
-- Ruff: **PASS**
-- Alembic migration chain: through **`0010_digital_weld_passport`**
+The engineering principle is explicit:
 
-This is an **alpha prerelease**. The Phase 6A governance validation milestone is closed; broader production enablement of the deferred lifecycle items (see "Known Limitations" below) remains future work.
+> **AI provides explanation, engineering context, and evidence support; final engineering decisions remain based on deterministic engineering rules.**
 
----
-
-## What's New in v3.0.0-alpha.3
-
-Phase 6A1–6A4 strengthens the Phase 5 governed engineering chain with real-PostgreSQL cross-system end-to-end coverage:
-
-- **Phase 6A1 — Real-PostgreSQL CI/test foundation**
-  - Real-PostgreSQL test fixture (`tests_postgresql/conftest.py`)
-  - Alembic PostgreSQL identifier-length, URL-interpolation, and
-    revision-capacity compatibility fixes
-  - CI JWT environment and health-check fixes
-  - Local PostgreSQL remains CI-only; no SQLite fallback
-
-- **Phase 6A2 — Governed PostgreSQL happy-path E2E**
-  - Full cross-system happy path: identity → draft → source-backed →
-    verified evidence → `SOURCE_BACKED` enablement → activation →
-    rule evaluation → machine readiness → digital weld passport
-  - Canonical-scope repair for lifecycle audit metadata
-    (`VerificationScopeSnapshot.as_dict()` shape, structurally
-    identical to the verified evidence decision's `resource_scope`)
-
-- **Phase 6A3 — Lifecycle denial-path E2E**
-  - `SEPARATION_OF_DUTIES_VIOLATION` (submitter must not enable/activate)
-  - `MISSING_SCOPE_SNAPSHOT` (omission never grants authority)
-  - `UNRESOLVED_BASIS` via scope-mismatch between audit authority
-    scope and verified evidence `resource_scope`
-  - `UNRESOLVED_BASIS` when the source-backed revision lacks a
-    verified evidence decision
-  - `UNRESOLVED_BASIS` when the source-backed revision has no
-    evidence references
-
-- **Phase 6A4 — Evidence-verification denial-path E2E**
-  - `MISSING_EVIDENCE_REFERENCE`
-  - `MISSING_DURABLE_HUMAN_VERIFIER`
-  - `MISSING_SUBMITTER_IDENTITY`
-  - `SEPARATION_OF_DUTIES_VIOLATION` (verifier ≠ submitter)
-  - `NO_MATCHING_DELEGATION`
-  - `DELEGATION_REVOKED`
-  - `DELEGATION_EXPIRED`
-  - `DELEGATION_NOT_YET_EFFECTIVE`
-  - `SCOPE_MISMATCH` (requested ≠ delegation)
-  - `REVOCATION_METADATA_INCOMPLETE`
-  - Idempotency `CONFLICT` (same key + different request hash must
-    fail closed by raising `ValueError` without writing a second
-    receipt or audit event)
-
-Each negative-path assertion persists a deterministic
-`GovernedAuditEvent` with the exact `entity_type`
-(`evidence_verification_denial` or
-`engineering_rule_lifecycle_denial`) and the exact `denial_code`. No
-authority is silently granted on omission or mismatch.
-
-### Known Limitations
-
-- `EVIDENCE_VERIFICATION_AUTHORITY_FOUNDATION` remains `BLOCKED` per
-  SDS-115 §22. Phase 6A4 covers the foundation with regression tests
-  but does not declare it production-enabled.
-- `SOURCE_BACKED_PROMOTION`, `RULE_ENABLEMENT`, `RULE_ACTIVATION`,
-  `GOVERNED_APPLICABILITY`, and `RULE_EVALUATION_PERSISTENCE` remain
-  `DEFERRED` per SDS-115 §22.
-- `MIGRATION_0006_ALLOWED = NO` per SDS-115 §22. Migration 0006 is
-  present in the repository but the runtime foundation is not
-  declared production-enabled.
-- `IMPLEMENTATION_UNLOCKED = NO` per SDS-115 §22.
-- `INVALID_CAPABILITY` defensive branch in
-  `EvidenceVerificationService` is unreachable through the production
-  repository invariant and is therefore not covered by a negative-path
-  test.
-
-**Phase 7 and later — production enablement of the deferred lifecycle
-items, concession-based release workflows, full frontend integration,
-and external system integrations remain future work and are not part
-of v3.0.0-alpha.3.**
+AI does not override governed engineering calculations, thresholds, lifecycle controls, or human engineering authority.
 
 ---
 
-## Engineering Principles
+# Release Status
+
+## Current Development Status
+
+Spot Welding Parameter Analysis currently contains two major product layers:
+
+### Governed Engineering Backend
+
+The backend provides the deterministic and governed engineering foundation for:
+
+- Engineering Rule Registry
+- Evidence Verification Authority
+- Rule lifecycle governance
+- Applicability resolution
+- Rule evaluation
+- Machine Readiness Check
+- Digital Weld Passport
+- Auditability
+- Provenance
+- Revision pinning
+- Persistent governed idempotency
+
+### Public Frontend Experience
+
+The frontend now provides a complete public pre-login product experience:
+
+```text
+/               → Landing Page
+/features       → Engineering Features
+/how-it-works   → Engineering Workflow
+/packages       → Product Packages
+/demo           → Demo Experience
+/login          → Login
+/app            → Authenticated Engineering Application
+
+Current Verification
+Backend
+
+Current governed backend verification baseline:
+
+Full backend suite: 361 passed
+Digital Weld Passport focused tests: 3 passed
+Migration tests: 11 passed
+Machine Readiness persistence tests: 8 passed
+Ruff: PASS
+Alembic migration chain: through 0010_digital_weld_passport
+
+Real PostgreSQL integration remains environment-dependent where explicitly noted by the governed test stages.
+
+Frontend
+
+Current frontend verification:
+
+React + TypeScript build: PASS
+Public routing: PASS
+Public/app-shell separation: PASS
+Public page rendering: PASS
+Responsive public UI foundation: PASS
+No backend files modified by the public UI stages
+
+Public pages verified:
+
+Landing Page
+Features
+How It Works
+Packages
+Demo
+Login
+Public Product Experience
+Landing Page
+
+The public landing experience introduces:
+
+Spot Welding Parameter Analysis product scope
+SpotWeldPro AI brand
+Core engineering capabilities
+Target industries
+Engineering workflow
+Package overview
+Demo access
+Engineering trust principles
+
+The visual direction is designed around a premium industrial engineering software identity rather than a generic SaaS interface.
+
+Engineering Features
+Engineering Parameter Analysis
+
+Engineering analysis can include:
+
+Welding current
+Weld time
+Electrode force
+Squeeze time
+Hold time
+Cooling conditions
+Material context
+Sheet stack
+Electrode context
+Process context
+Weld Quality Analysis
+
+Supports engineering interpretation of welding conditions and quality-related process behavior.
+
+Focus areas include:
+
+Process stability
+Engineering result interpretation
+Quality-oriented evaluation
+Process-window understanding
+Parameter interaction analysis
+Weld Lobe / Process Window Engineering
+
+Supports understanding of the usable engineering process window.
+
+Capabilities include:
+
+Weld-lobe analysis
+Operating-window evaluation
+Parameter interaction analysis
+Engineering limit visualization
+Process robustness assessment
+DOE & Optimization
+
+Supports systematic exploration of engineering parameters.
+
+Typical workflow:
+
+Engineering Inputs
+        ↓
+Parameter Space
+        ↓
+DOE Exploration
+        ↓
+Engineering Evaluation
+        ↓
+Optimization
+        ↓
+Recommended Engineering Region
+
+Optimization does not replace deterministic engineering acceptance rules.
+
+Failure & Risk Analysis
+
+The parameter-analysis engine can support engineering assessment of potential failure modes such as:
+
+Expulsion / metal splash
+Insufficient fusion
+Small nugget
+Excessive indentation
+Electrode sticking
+Accelerated electrode wear
+LME / surface cracking risk
+Coating damage
+Shunt-related instability
+Cooling-related instability
+
+The platform may provide:
+
+Failure probability context
+Parameter sensitivity
+Dominant-factor explanation
+Engineering decision support
+Recommended corrective-action context
+How It Works
+
+The public engineering workflow is organized around six stages:
+
+01 — Project / Application Context
+
+Define the engineering context of the weld application.
+
+Examples:
+
+Project
+Component
+Weld point
+Application
+Machine / line context
+02 — Material & Sheet Information
+
+Define the material stack and sheet configuration.
+
+Examples:
+
+Material type
+Sheet thickness
+Coating
+Stack-up
+Surface condition
+03 — Welding Parameters
+
+Enter or evaluate the principal resistance spot welding parameters.
+
+Examples:
+
+Welding current
+Weld time
+Electrode force
+Squeeze time
+Hold time
+Cooling parameters
+04 — Analysis & Engineering Checks
+
+The deterministic engineering layer evaluates the available parameter and rule context.
+
+Possible outputs include:
+
+Engineering evaluation
+Quality context
+Applicable rule checks
+Failure context
+Engineering warnings
+Traceable decision evidence
+05 — Process Window & Optimization
+
+Engineering teams may explore:
+
+Weld-lobe behavior
+Process window
+DOE
+Sensitivity
+Optimization
+Failure-risk context
+06 — Result, Validation & Traceability
+
+Engineering outputs can be connected to:
+
+Governed rule evaluation
+Machine readiness
+Audit history
+Revision provenance
+Digital Weld Passport
+Engineering traceability
+Product Packages
+
+The public product structure currently presents three deployment levels.
+
+Starter
+
+Designed for focused resistance spot welding engineering analysis.
+
+Typical capability scope:
+
+Core parameter analysis
+Basic weld quality engineering
+Standard reporting
+Professional
+
+Recommended for engineering teams requiring broader process analysis.
+
+Typical capability scope:
+
+Full engineering analysis
+Weld-lobe / process-window tools
+DOE and optimization
+Failure analysis
+Project and weld-point traceability
+AI-assisted engineering explanation
+Enterprise
+
+Designed for organization-level engineering deployment.
+
+Typical capability scope:
+
+Professional capabilities
+Configurable standards and rules
+Enterprise traceability
+Governance
+Integration possibilities
+Organization-level deployment
+
+Commercial configuration is defined according to deployment scope and customer requirements.
+
+No commercial prices or contractual limits are hard-coded into the public product presentation.
+
+Demo Experience
+
+The /demo route provides a frontend-only illustrative product experience.
+
+Typical walkthrough:
+
+Select project / weld point
+Enter engineering inputs
+Run parameter analysis
+Review weld-quality / process-window context
+Explore optimization / failure context
+Review traceable engineering output
+
+The demo does not represent validated production data.
+
+It does not contain:
+
+Customer production measurements
+OEM-confidential data
+Fabricated production results
+Fabricated AI engineering decisions
+AI-Assisted Engineering
+
+AI is intentionally positioned as a supporting capability.
+
+AI may assist with:
+
+Engineering explanation
+Engineering context
+Evidence summary
+Knowledge workflows
+Interpretation support
+User guidance
+
+AI does not:
+
+Invent governed thresholds
+Override deterministic calculations
+Override engineering rules
+Grant lifecycle authority
+Activate rules
+Approve machine readiness
+Approve Digital Weld Passports
+
+AI explanation and engineering context support the user; final engineering decisions remain based on deterministic engineering rules.
+
+Engineering Principles
 
 SpotWeld-AI keeps deterministic engineering logic authoritative.
 
-- No hidden or implicit engineering authority
-- No automatically invented engineering thresholds
-- Exact revision and provenance pinning
-- Fail-closed handling of missing, stale, conflicting, or invalid inputs
-- Human-scoped authority
-- Separation of duties
-- Append-only corrections
-- Immutable historical records
-- Persistent governed idempotency
-- Atomic state + audit + receipt transactions
-- No silent “latest revision” authority
-- AI may assist with explanation and knowledge workflows but does not override governed deterministic engineering decisions
-
----
-
-## Governed Engineering Flow
-
-```text
+No hidden or implicit engineering authority
+No automatically invented engineering thresholds
+Exact revision and provenance pinning
+Fail-closed handling of missing, stale, conflicting, or invalid inputs
+Human-scoped authority
+Separation of duties
+Append-only corrections
+Immutable historical records
+Persistent governed idempotency
+Atomic state + audit + receipt transactions
+No silent “latest revision” authority
+AI may assist with explanation and knowledge workflows but does not override governed deterministic engineering decisions
+Governed Engineering Flow
 Engineering Rule Registry
         ↓
 Evidence + Verification Authority
@@ -134,289 +385,230 @@ ACTIVE
         ↓
 Deterministic Applicability Resolution
         ↓
-Pure Governed Rule Evaluation
+Governed Rule Evaluation
         ↓
 Persisted Rule Evaluation
         ↓
-Machine Readiness Check (MRC)
+Machine Readiness Check
         ↓
 Persisted MRC Assessment
         ↓
-Digital Weld Passport (DWP)
-```
+Digital Weld Passport
 
 Each governed stage pins the exact revisions and provenance required to reproduce the engineering decision later.
 
----
-
-# Core Capabilities
-
-## Spot Welding Engineering
-
-- Material and sheet-stack analysis
-- Welding current evaluation
-- Weld time evaluation
-- Electrode force evaluation
-- Squeeze and hold time analysis
-- Cooling assessment
-- Electrode evaluation
-- Nugget diameter estimation
-- Weld-lobe analysis
-- DOE optimization
-- Model-4 support
-- Ensemble model support
-- Parameter-based potential failure probabilities
-- Explanation of dominant factors
-- Recommended corrective actions
-
----
-
-# Engineering Rule Registry
+Engineering Rule Registry
 
 The governed Engineering Rule Registry provides:
 
-- Immutable engineering rule revisions
-- Evidence-to-rule traceability
-- Explicit `SOURCE_BACKED` classification
-- Revision-level provenance
-- Append-only lifecycle history
-- Governed promotion, enablement, and activation
+Immutable engineering rule revisions
+Evidence-to-rule traceability
+Explicit SOURCE_BACKED classification
+Revision-level provenance
+Append-only lifecycle history
+Governed promotion, enablement, and activation
 
-Governed lifecycle:
+Lifecycle:
 
-```text
-DRAFT → SOURCE_BACKED → ENABLED → ACTIVE
-```
+DRAFT
+  ↓
+SOURCE_BACKED
+  ↓
+ENABLED
+  ↓
+ACTIVE
 
 Important rules:
 
-- `SOURCE_BACKED` does not mean `ENABLED`
-- `SOURCE_BACKED` does not mean `ACTIVE`
-- No direct `SOURCE_BACKED → ACTIVE` transition
-- Activation requires a separate governed transition
-- Exact scope and effective-time rules apply
-- Legacy `DEFAULT_RULES` / `rules_engine` paths are not promoted into governed authority
-
----
-
-# Evidence Verification Authority
+SOURCE_BACKED does not mean ENABLED
+SOURCE_BACKED does not mean ACTIVE
+No direct SOURCE_BACKED → ACTIVE transition
+Activation requires a separate governed transition
+Exact scope and effective-time rules apply
+Legacy DEFAULT_RULES / rules_engine paths are not promoted into governed authority
+Evidence Verification Authority
 
 Evidence verification is governed by explicit human authority.
 
 Capabilities include:
 
-- Human-only authoritative evidence verification
-- Explicit scoped delegation
-- Exact EvidenceReference revision pinning
-- Creator / verifier separation of duties
-- No wildcard administrator authority
-- No implicit role-based authority
-- Immutable authority snapshots
-- Append-only verification corrections
-- Auditable authorization denials
-- Persistent idempotency
-- Atomic governed transactions
+Human-only authoritative evidence verification
+Explicit scoped delegation
+Exact EvidenceReference revision pinning
+Creator / verifier separation of duties
+No wildcard administrator authority
+No implicit role-based authority
+Immutable authority snapshots
+Append-only verification corrections
+Auditable authorization denials
+Persistent idempotency
+Atomic governed transactions
 
-Evidence verification does **not** automatically promote or activate an engineering rule.
+Evidence verification does not automatically promote or activate an engineering rule.
 
----
+SOURCE_BACKED Promotion
 
-# SOURCE_BACKED Promotion
-
-A rule revision may become `SOURCE_BACKED` only through a separate governed transition.
+A rule revision may become SOURCE_BACKED only through a separate governed transition.
 
 Requirements include:
 
-- Exact rule revision
-- Verified evidence
-- Exact evidence revision pinning
-- Governed promotion authority
-- Separation from evidence-verification authority where required
-- Audit traceability
-- Persistent idempotency
-- Atomic Unit of Work
+Exact rule revision
+Verified evidence
+Exact evidence revision pinning
+Governed promotion authority
+Separation from evidence-verification authority where required
+Audit traceability
+Persistent idempotency
+Atomic Unit of Work
 
-`SOURCE_BACKED` remains distinct from `ENABLED` and `ACTIVE`.
+SOURCE_BACKED remains distinct from ENABLED and ACTIVE.
 
----
-
-# Rule Enablement and Activation
+Rule Enablement and Activation
 
 Governed rule lifecycle transitions are explicit and append-only.
 
-```text
 SOURCE_BACKED
      ↓
   ENABLED
      ↓
    ACTIVE
-```
 
 Controls include:
 
-- Explicit human lifecycle authority
-- Exact customer / project / site / machine scope
-- Effective-time windows
-- Fail-closed lifecycle checks
-- No automatic activation
-- No direct `SOURCE_BACKED → ACTIVE`
-- Historical lifecycle events remain immutable
+Explicit human lifecycle authority
+Exact customer / project / site / machine scope
+Effective-time windows
+Fail-closed lifecycle checks
+No automatic activation
+No direct SOURCE_BACKED → ACTIVE
+Historical lifecycle events remain immutable
+Governed Applicability Resolution
 
----
-
-# Governed Applicability Resolution
-
-The applicability resolver determines which `ACTIVE` rule revision governs an explicit engineering context.
+The applicability resolver determines which ACTIVE rule revision governs an explicit engineering context.
 
 Key characteristics:
 
-- Exact customer / project / site / machine context matching
-- Explicit scopes only
-- No implicit wildcard fallback
-- Most-specific governed match precedence
-- Equal-specificity conflicts fail closed
-- Zero eligible matches return unresolved
-- Candidate-order permutation invariance
-- Deterministic provenance ordering
-- Immutable provenance-complete results
+Exact customer / project / site / machine context matching
+Explicit scopes only
+No implicit wildcard fallback
+Deterministic governed selection
+Conflict conditions fail closed
+Zero eligible matches remain unresolved
+Deterministic provenance
+Immutable provenance-complete results
+Governed Rule Evaluation
 
-The same candidate set produces the same result regardless of input ordering.
+Rule evaluation operates only on an explicitly governed rule revision.
 
----
+Supported deterministic operators include:
 
-# Governed Rule Evaluation
+MIN
+MAX
+RANGE
+EQUALS
 
-Rule evaluation operates only on the exact rule revision selected by governed applicability resolution.
+Supported outcomes include:
 
-Supported deterministic operators:
-
-- `MIN`
-- `MAX`
-- `RANGE`
-- `EQUALS`
-
-Supported outcomes:
-
-- `SATISFIED`
-- `NOT_SATISFIED`
-- `NOT_APPLICABLE`
-- `UNIT_MISMATCH`
-- `UNRESOLVED`
+SATISFIED
+NOT_SATISFIED
+NOT_APPLICABLE
+UNIT_MISMATCH
+UNRESOLVED
 
 Unit conversion is permitted only through an explicit governed Unit Policy.
 
 The evaluator does not use:
 
-- implicit unit coercion
-- hidden threshold lookup
-- invented epsilon/tolerance behavior
-- automatic evaluation of unselected rules
+Implicit unit coercion
+Hidden threshold lookup
+Invented tolerance behavior
+Automatic evaluation of unselected rules
 
 Unsupported or malformed inputs fail closed.
 
----
-
-# Rule Evaluation Persistence
+Rule Evaluation Persistence
 
 Persisted Rule Evaluations provide:
 
-- Stable evaluation identity
-- Append-only evaluation revisions
-- Exact rule revision pinning
-- Exact applicability-result pinning
-- Exact observation snapshot
-- Exact unit-policy and conversion provenance
-- Immutable result snapshot
-- Append-only correction and supersession
-- Governed audit
-- Persistent idempotency
-- Atomic evaluation + audit + receipt completion
+Stable evaluation identity
+Append-only evaluation revisions
+Exact rule revision pinning
+Exact applicability-result pinning
+Exact observation snapshot
+Unit-policy and conversion provenance
+Immutable result snapshots
+Append-only correction / supersession
+Governed audit
+Persistent idempotency
+Atomic completion
 
-The persistence layer **does not recompute** applicability, unit conversion, or engineering comparison.
+The persistence layer does not recompute applicability, unit conversion, or engineering comparison.
 
----
-
-# Machine Readiness Check — MRC
+Machine Readiness Check — MRC
 
 Machine Readiness Check deterministically aggregates governed engineering evaluations.
 
 Supported outcomes:
 
-- `READY`
-- `NOT_READY`
-- `ENGINEERING_REVIEW_REQUIRED`
-- `MANUAL_REVIEW_REQUIRED`
-- `NOT_EVALUATED`
+READY
+NOT_READY
+ENGINEERING_REVIEW_REQUIRED
+MANUAL_REVIEW_REQUIRED
+NOT_EVALUATED
 
 MRC includes:
 
-- Governed required / optional check definitions
-- Exact RuleEvaluation revision pins
-- Deterministic blocker precedence
-- Missing evidence handled fail-closed
-- Invalidated evidence handled fail-closed
-- Secondary blocker trace retention
-- Exact context matching
-- Permutation-invariant aggregation
+Governed required / optional check definitions
+Exact RuleEvaluation revision pins
+Deterministic blocker precedence
+Missing evidence handled fail-closed
+Invalidated evidence handled fail-closed
+Secondary blocker trace retention
+Exact context matching
+Permutation-invariant aggregation
 
-The MRC layer does **not** invent engineering requirements or thresholds.
+The MRC layer does not invent engineering requirements or thresholds.
 
----
-
-# Machine Readiness Persistence
+Machine Readiness Persistence
 
 Persisted Machine Readiness Assessments provide:
 
-- Stable `assessment_id`
-- Immutable `revision_number`
-- Exact RuleEvaluation revision pins
-- Immutable blocker snapshots
-- Immutable prerequisite snapshots
-- Append-only correction history
-- Governed audit
-- Persistent idempotency
-- Atomic transaction handling
+Stable assessment_id
+Immutable revision_number
+Exact RuleEvaluation revision pins
+Immutable blocker snapshots
+Immutable prerequisite snapshots
+Append-only correction history
+Governed audit
+Persistent idempotency
+Atomic transaction handling
 
-The persistence layer does not recompute MRC.
+Downstream consumers pin:
 
-Downstream consumers pin an exact:
-
-```text
 assessment_id + revision_number
-```
 
 There is no authoritative “latest MRC” lookup.
 
----
+Digital Weld Passport — DWP
 
-# Digital Weld Passport — DWP
+The Digital Weld Passport provides governed engineering traceability.
 
-The v3 alpha introduces the governed Digital Weld Passport foundation.
-
-## Passport Identity
-
-- Stable passport identity
-- Immutable passport revisions
-- Exact weld identity scope
-- Exact revision provenance
-- Append-only correction and supersession
-- No mutable “latest passport” authority
-
-## MRC Integration
+Passport Identity
+Stable passport identity
+Immutable passport revisions
+Exact weld identity scope
+Exact revision provenance
+Append-only correction and supersession
+No mutable “latest passport” authority
+MRC Integration
 
 DWP pins an exact Machine Readiness Assessment:
 
-```text
 assessment_id + revision_number
-```
 
 There is no “latest MRC” authority.
 
-A passport may exist as a draft with a non-READY MRC, but final governed states require READY.
-
-## DWP Lifecycle
-
-```text
+DWP Lifecycle
 CREATED
    ↓
 DRAFT
@@ -430,68 +622,42 @@ VALIDATED
 APPROVED
    ↓
 PRODUCTION_ACTIVE
-```
 
 Historical dispositions may include:
 
-```text
 SUPERSEDED
 RETIRED
 ARCHIVED
-```
+Readiness Gate
+DRAFT may exist with a non-READY MRC
+VALIDATED requires a pinned READY MRC
+APPROVED requires a pinned READY MRC
+PRODUCTION_ACTIVE requires a pinned READY MRC
 
-## Readiness Gate
+Non-READY states remain explicit blockers.
 
-- `DRAFT` may exist with a non-READY MRC
-- `VALIDATED` requires a pinned `READY` MRC
-- `APPROVED` requires a pinned `READY` MRC
-- `PRODUCTION_ACTIVE` requires a pinned `READY` MRC
-
-Non-READY states remain explicit blockers and are never coerced to READY.
-
-## Governance
+Governance
 
 DWP provides:
 
-- Explicit lifecycle transitions
-- Illegal lifecycle jumps rejected
-- Finalized revisions immutable
-- Corrections through new superseding revisions
-- Draft editor / engineering approver / production-release separation of duties
-- No wildcard authority
-- Exact engineering provenance
-- Governed audit
-- Persistent idempotency
-- Caller-owned atomic Unit of Work
-- No MRC or rule-evaluation recomputation
-
----
-
-# Potential Failure Modes
-
-The parameter-analysis engine includes engineering assessment of potential failure modes such as:
-
-- Expulsion / metal splash
-- Insufficient fusion
-- Small nugget
-- Excessive indentation
-- Electrode sticking
-- Accelerated electrode wear
-- LME / surface cracking risk
-- Coating damage
-- Shunt-related instability
-- Cooling-related instability
-
----
-
-# Architecture
-
-```text
-React + TypeScript
+Explicit lifecycle transitions
+Illegal lifecycle jumps rejected
+Finalized revisions immutable
+Corrections through new superseding revisions
+Separation of duties
+Exact engineering provenance
+Governed audit
+Persistent idempotency
+Caller-owned atomic Unit of Work
+No MRC or rule-evaluation recomputation
+Architecture
+Public React UI
         ↓
-       REST
+Authenticated React Application
         ↓
-FastAPI Application API
+REST API
+        ↓
+FastAPI Application Layer
         ↓
 Application Services
         ↓
@@ -507,180 +673,190 @@ Governed Engineering Domain
 └─────────────────────────────┘
         ↓
 SQLAlchemy / PostgreSQL
-```
 
 Governed write operations use caller-owned Unit of Work boundaries.
 
 Authoritative state, governed audit events, and persistent idempotency receipts are committed atomically.
 
----
+Frontend Architecture
 
-# Repository Structure
+Current frontend stack:
 
-```text
+React 18
+TypeScript
+Vite
+React Router
+Responsive public product UI
+Authenticated engineering application shell
+
+Public routes:
+
+/
+├── features
+├── how-it-works
+├── packages
+├── demo
+└── login
+
+Authenticated application:
+
+/app
+
+Public product pages do not depend on authenticated application state.
+
+Repository Structure
 backend/
   app/
-    application/      Governed application services
-    domain/           Deterministic engineering domain
-    models/           SQLAlchemy persistence models
-    repositories/     Persistence repositories
+    application/
+    domain/
+    models/
+    repositories/
 
   alembic/
-    versions/         Governed database migration chain
+    versions/
 
-  tests/              Backend and governance tests
+  tests/
+  tests_postgresql/
 
-frontend/              React + TypeScript application
+frontend/
+  src/
+    pages/
+    App.tsx
+    main.tsx
+    styles.css
 
-docs/                  Product, architecture, SDS and governance documents
+docs/
 
-.github/               CI and repository governance
+.github/
 
-docker-compose.yml     Local multi-service environment
-```
-
----
-
-# Database Evolution
+docker-compose.yml
+Database Evolution
 
 The governed backend migration chain currently extends through:
 
-```text
 0010_digital_weld_passport
-```
 
 Major governed migration stages include:
 
-- Engineering Rule Registry persistence
-- Evidence revision and applicability foundation
-- Evidence Verification Authority
-- Rule lifecycle events
-- Rule Evaluation persistence
-- Machine Readiness persistence
-- Digital Weld Passport persistence
-
----
-
-# Governance Documentation
+Engineering Rule Registry persistence
+Evidence revision and applicability foundation
+Evidence Verification Authority
+Rule lifecycle events
+Rule Evaluation persistence
+Machine Readiness persistence
+Digital Weld Passport persistence
+Governance Documentation
 
 Key governed-engineering documents include:
 
-1. `100_SDS_MASTER_INDEX.md`
-2. `docs/111_ENGINEERING_RULE_REGISTRY_DESIGN.md`
-3. `docs/112_MACHINE_READINESS_CHECK_DESIGN.md`
-4. `docs/113_DIGITAL_WELD_PASSPORT_DESIGN.md`
-5. `docs/114_REGISTRY_MRC_DWP_IMPLEMENTATION_PLAN.md`
-6. `docs/115_EVIDENCE_VERIFICATION_AUTHORITY_POLICY.md`
+100_SDS_MASTER_INDEX.md
+docs/111_ENGINEERING_RULE_REGISTRY_DESIGN.md
+docs/112_MACHINE_READINESS_CHECK_DESIGN.md
+docs/113_DIGITAL_WELD_PASSPORT_DESIGN.md
+docs/114_REGISTRY_MRC_DWP_IMPLEMENTATION_PLAN.md
+docs/115_EVIDENCE_VERIFICATION_AUTHORITY_POLICY.md
 
-`100_SDS_MASTER_INDEX.md` is the authoritative SDS registry.
+100_SDS_MASTER_INDEX.md remains the authoritative SDS registry.
 
----
-
-# Quick Start with Docker
-
-```powershell
+Quick Start with Docker
 copy .env.example .env
 docker compose up --build
-```
 
 Frontend:
 
-```text
 http://localhost:5173
-```
 
 API:
 
-```text
 http://localhost:8000
-```
 
 Swagger:
 
-```text
 http://localhost:8000/docs
-```
-
----
-
-# Backend Development
-
-```powershell
+Backend Development
 cd backend
 py -m pip install -r requirements.txt
 py -m pytest -q
 py -m uvicorn app.main:app --reload
-```
-
-The `v3.0.0-alpha.1` governed backend release was validated with Python 3.14.6 in the active development environment.
-
----
-
-# Frontend Development
-
-```powershell
+Frontend Development
 cd frontend
 npm install
 npm run dev
-```
 
----
+Development URL:
 
-# v3.0.0-alpha.1 Scope
+http://127.0.0.1:5173
 
-Included in this alpha prerelease:
+Production build:
 
-- Governed Engineering Rule Registry
-- Evidence revision foundation
-- Evidence Verification Authority
-- `SOURCE_BACKED` promotion
-- Governed Rule Enablement
-- Governed Rule Activation
-- Deterministic Applicability Resolution
-- Pure Governed Rule Evaluation
-- Rule Evaluation Persistence
-- Pure Machine Readiness Check
-- Machine Readiness Persistence
-- Digital Weld Passport foundation
+npm run build
+Known Limitations
 
-Not yet part of the complete governed application workflow:
+The project remains under active alpha development.
 
-- Full API exposure of all governed capabilities
-- Full frontend integration
-- Concession-based production-release workflows
-- Automatic machine-release actions
-- External system integrations
-- Expanded Digital Weld Passport visualization and reporting
-- New engineering thresholds
+Current limitations include:
 
----
+Some governed lifecycle capabilities remain under staged production enablement
+Real-PostgreSQL governed E2E validation requires an appropriate PostgreSQL test environment
+Full frontend-to-backend integration of every governed backend capability is not yet complete
+Concession-based production release workflows remain future work
+Automatic machine-release actions are not enabled
+External system integrations remain future work
+Expanded Digital Weld Passport visualization/reporting remains under development
 
-# Release
+No capability should be interpreted as production-authoritative unless explicitly enabled by the governed backend lifecycle.
 
-## v3.0.0-alpha.1 — Governed Engineering Foundation
+Current Alpha Scope
 
-This alpha prerelease establishes the backend architecture for traceable, deterministic, revision-pinned, auditable, and reproducible engineering decisions across the SpotWeld-AI engineering lifecycle.
+Included in the current alpha development line:
 
-The architecture deliberately separates:
+Governed Engineering Rule Registry
+Evidence revision foundation
+Evidence Verification Authority
+SOURCE_BACKED promotion
+Governed Rule Enablement
+Governed Rule Activation
+Deterministic Applicability Resolution
+Governed Rule Evaluation
+Rule Evaluation Persistence
+Machine Readiness Check
+Machine Readiness Persistence
+Digital Weld Passport foundation
+Public product landing experience
+Engineering features page
+Engineering workflow / How It Works
+Product package presentation
+Demo experience
+Public login
+Authenticated engineering application boundary
+Responsive industrial frontend design system
+Target Industries
 
-```text
-Evidence
-   ↓
-Rule Authority
-   ↓
-Applicability
-   ↓
-Evaluation
-   ↓
-Readiness
-   ↓
-Passport / Traceability
-```
+Spot Welding Parameter Analysis is designed for engineering use cases in sectors including:
 
-Future API, frontend, analytics, automation, and AI capabilities can build on this governed foundation without weakening deterministic engineering authority or traceability.
+Automotive OEMs
+Automotive Tier-1 suppliers
+White goods / appliances
+Defense
+Rail systems
+Machinery manufacturing
+Sheet-metal manufacturing
+Release Philosophy
 
----
+Alpha releases are intended for:
 
-# License
+Engineering validation
+Product demonstration
+Architecture verification
+User feedback
+OEM / Tier-1 technical evaluation
+Continued frontend and backend integration
 
-See `LICENSE` for repository licensing terms.
+They should not be interpreted as unrestricted production deployment approval.
+
+License
+
+See LICENSE for repository licensing terms.
+
+
+Bunu mevcut README’nin yerine geçirmenizi öneririm. Özellikle eski README’deki `v3.0.0-alpha.3` / `v3.0.0-alpha.1` kar
