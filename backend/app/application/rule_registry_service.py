@@ -22,6 +22,12 @@ from app.domain.idempotency_types import (
     CommandResultReference,
     IdempotencyDisposition,
 )
+from app.domain.rule_applicability import (
+    ApplicabilityResolutionOutcome,
+    GovernedApplicabilityCandidate,
+    GovernedApplicabilityContext,
+    resolve_governed_applicability,
+)
 from app.domain.rule_registry_types import (
     EvidenceReferenceDraft,
     MissingHandling,
@@ -33,6 +39,7 @@ from app.models.entities import User
 from app.models.rule_registry import (
     EngineeringRule,
     EngineeringRuleRevision,
+    RuleLifecycleEvent,
     RuleLifecycleEventType,
 )
 from app.models.verification import EvidenceVerificationDecision
@@ -588,6 +595,111 @@ class RuleRegistryService:
             event_type=RuleLifecycleEventType.ACTIVATE,
             audit_action="ACTIVATE_SOURCE_BACKED_RULE_REVISION",
             denial_action="AUTHORIZE_SOURCE_BACKED_ACTIVATION_DENIED",
+        )
+
+    def resolve_current_applicable_revision(
+        self,
+        *,
+        rule_id: str,
+        scope: GovernedApplicabilityContext,
+        as_of: datetime,
+    ) -> EngineeringRuleRevision:
+        """Resolve the single CURRENT authoritative revision for ``rule_id`` (read-only).
+
+        Deterministic read-only projection of governed lifecycle authority.
+        For every persisted revision of the rule the resolver derives the
+        current lifecycle state from that revision's latest committed
+        lifecycle event:
+
+        * ``ENABLE``       -> enabled, not yet active
+        * ``ACTIVATE``     -> enabled and active
+        * ``SUPERSEDE``    -> retired and superseded
+        * ``REVOKE``       -> retired and revoked
+        * ``SUSPEND``      -> retired and suspended
+        * ``EXPIRE``       -> retired by expiry
+        * ``DEPRECATE``    -> retired and deprecated
+        * ``CORRECT``      -> content basis invalidated
+
+        Candidate revisions are then matched against the explicit requested
+        ``scope`` and ``as_of`` window using the existing pure governed
+        resolver:
+
+        * exactly one winner        -> returns that ``EngineeringRuleRevision``
+        * zero winners              -> ``ValueError`` (no applicable revision)
+        * multiple equal winners    -> ``ValueError`` as explicit ambiguity;
+          a winner is NEVER selected silently.
+
+        The resolver never mutates revision rows, lifecycle events, or any
+        historical Evaluation / MRC / DWP records.
+        """
+        self._unit_of_work.ensure_open()
+        if as_of.tzinfo is None or as_of.utcoffset() is None:
+            raise ValueError("as_of must be timezone-aware")
+        rule = self._repository.get_by_rule_id(rule_id)
+        if rule is None:
+            raise ValueError(f"engineering rule identity does not exist: {rule_id}")
+        revisions = self._repository.list_revisions(rule_id)
+        latest_event_by_revision: dict[int, RuleLifecycleEvent] = {}
+        for lifecycle_event in self._repository.list_lifecycle_events(rule_id):
+            current = latest_event_by_revision.get(
+                lifecycle_event.engineering_rule_revision_id
+            )
+            if current is None or (
+                lifecycle_event.revision_number,
+                lifecycle_event.id,
+            ) > (current.revision_number, current.id):
+                latest_event_by_revision[
+                    lifecycle_event.engineering_rule_revision_id
+                ] = lifecycle_event
+
+        candidates: list[GovernedApplicabilityCandidate] = []
+        for revision in revisions:
+            lifecycle_event = latest_event_by_revision.get(revision.id)
+            if lifecycle_event is None:
+                continue
+            event_type = lifecycle_event.event_type
+            scope_snapshot = {
+                key: (value,) if isinstance(value, str) else tuple(value)
+                for key, value in (lifecycle_event.scope_snapshot or {}).items()
+            }
+            candidates.append(
+                GovernedApplicabilityCandidate(
+                    candidate_id=f"{rule_id}:{revision.revision}",
+                    rule_id=rule_id,
+                    revision=revision.revision,
+                    evidence_class=revision.evidence_class,
+                    enabled=event_type
+                    in {
+                        RuleLifecycleEventType.ENABLE,
+                        RuleLifecycleEventType.ACTIVATE,
+                    },
+                    active=event_type is RuleLifecycleEventType.ACTIVATE,
+                    scope_snapshot=scope_snapshot,
+                    effective_from=lifecycle_event.effective_from,
+                    expires_at=lifecycle_event.expires_at,
+                    suspended=event_type is RuleLifecycleEventType.SUSPEND,
+                    revoked=event_type is RuleLifecycleEventType.REVOKE,
+                    superseded=event_type is RuleLifecycleEventType.SUPERSEDE,
+                    basis_valid=event_type is not RuleLifecycleEventType.CORRECT,
+                )
+            )
+
+        resolution = resolve_governed_applicability(scope, as_of, candidates)
+        if resolution.outcome is ApplicabilityResolutionOutcome.CONFLICT:
+            raise ValueError(
+                "ambiguous governed applicability for rule "
+                f"{rule_id}: " + ", ".join(resolution.conflict_candidate_ids)
+            )
+        if resolution.outcome is not ApplicabilityResolutionOutcome.SELECTED:
+            raise ValueError(
+                f"no applicable governed revision for rule {rule_id} "
+                f"at {as_of.isoformat()}"
+            )
+        return next(
+            revision
+            for revision in revisions
+            if f"{rule_id}:{revision.revision}"
+            == resolution.selected_candidate_id
         )
 
     @staticmethod

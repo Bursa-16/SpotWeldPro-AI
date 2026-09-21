@@ -425,3 +425,27 @@ class RuleRegistryRepository:
             .order_by(EngineeringRuleRevision.created_at, EngineeringRuleRevision.id)
         )
         return list(self.session.scalars(statement))
+
+    def list_lifecycle_events(self, rule_id: str) -> list[RuleLifecycleEvent]:
+        """Return every lifecycle event committed for one rule's revisions (read-only).
+
+        Deterministic ordering by revision row, then by the event chain's own
+        ``revision_number`` and internal ``id``, so callers can derive the
+        current governed lifecycle state of each revision without ambiguity.
+        """
+        statement = (
+            select(RuleLifecycleEvent)
+            .join(
+                EngineeringRuleRevision,
+                RuleLifecycleEvent.engineering_rule_revision_id
+                == EngineeringRuleRevision.id,
+            )
+            .join(EngineeringRule)
+            .where(EngineeringRule.rule_id == rule_id)
+            .order_by(
+                RuleLifecycleEvent.engineering_rule_revision_id,
+                RuleLifecycleEvent.revision_number,
+                RuleLifecycleEvent.id,
+            )
+        )
+        return list(self.session.scalars(statement))
