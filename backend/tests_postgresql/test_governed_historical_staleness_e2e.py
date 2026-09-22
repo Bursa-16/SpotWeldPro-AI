@@ -461,7 +461,7 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                     effective_from=BASE_TIME + timedelta(minutes=minute), expires_at=None,
                     completed_at=BASE_TIME + timedelta(minutes=minute, seconds=1),
                 )
-                assert result.result_type == "engineering_rule_revision"
+                assert result.result_type == "engineering_rule_lifecycle_event"
                 unit_of_work.commit()
 
         # Verify Revision 1
@@ -643,6 +643,7 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
             candidate=candidate_persisted,
             replacement_revision=RULE_REVISION_2,
         )
+        session.commit()
 
         replacement_version_metadata = ContentVersionMetadata(
             schema_version="phase-6b1-content-schema-v1",
@@ -797,125 +798,305 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
 
 
 def test_governed_supersession_chain(postgresql_engine) -> None:
-    """Verify supersession chain is correctly established and queryable."""
-    CHAIN_RULE_ID = "PHASE_6B1_SUPERSESSION_CHAIN"
+    """Verify governed supersession establishes a durable queryable chain."""
+    chain_rule_id = "PHASE_6B1_SUPERSESSION_CHAIN"
+    candidate_revision = "2.0-draft"
+
     assert postgresql_engine.dialect.name == "postgresql"
 
     with Session(postgresql_engine) as session:
         user_ids = _seed_users(session)
         session.commit()
 
-        # Create identity and Revision 1
+        # Create rule identity and verified Rev1 incumbent.
         with GovernedUnitOfWork(session) as unit_of_work:
             registry = RuleRegistryService(unit_of_work)
+
             registry.create_identity(
-                rule_id=CHAIN_RULE_ID,
-                audit=_audit("phase-6b1-chain-id-audit", ACTORS["submitter"], user_ids["submitter"], "phase-6b1-chain-id", "Chain test identity"),
+                rule_id=chain_rule_id,
+                audit=_audit(
+                    "phase-6b1-chain-id-audit",
+                    ACTORS["submitter"],
+                    user_ids["submitter"],
+                    "phase-6b1-chain-id",
+                    "Chain test identity",
+                ),
             )
+
+            rev1 = registry.create_draft_revision(
+                rule_id=chain_rule_id,
+                revision=RULE_REVISION_1,
+                name="Chain test rev1",
+                evidence_class=EvidenceClass.SOURCE_BACKED,
+                category=RuleCategory.OTHER,
+                parameter="test_param",
+                safe_default=SafeDefault.UNRESOLVED,
+                missing_handling=MissingHandling.DATA_INSUFFICIENT,
+                reason_for_change="Chain test rev1",
+                version_metadata=_version_metadata(
+                    chain_rule_id,
+                    RULE_REVISION_1,
+                ),
+                audit=_audit(
+                    "phase-6b1-chain-rev1-audit",
+                    ACTORS["submitter"],
+                    user_ids["submitter"],
+                    "phase-6b1-chain-rev1",
+                    "Chain test rev1",
+                ),
+                evidence_references=(
+                    EvidenceReferenceDraft(
+                        evidence_id="PHASE_6B1_CHAIN_EVIDENCE_1",
+                        evidence_revision="1",
+                        evidence_class=EvidenceClass.UNRESOLVED,
+                        lifecycle_status=RuleLifecycleStatus.DRAFT,
+                        created_by_actor_id=ACTORS["submitter"]["email"],
+                        created_by_user_id=user_ids["submitter"],
+                        reference_uri=(
+                            "urn:spotweld:test:"
+                            "phase6b1-chain-rev1"
+                        ),
+                    ),
+                ),
+                allow_source_backed=True,
+            )
+
+            _create_evidence(
+                session,
+                rev1.evidence_references[0],
+                user_ids["verifier"],
+                ACTORS["verifier"]["role"],
+                user_ids["approver"],
+            )
+
+            rev1_id = rev1.id
             unit_of_work.commit()
 
-        with session:
-            with GovernedUnitOfWork(session) as unit_of_work:
-                registry = RuleRegistryService(unit_of_work)
-                registry.create_draft_revision(
-                    rule_id=CHAIN_RULE_ID, revision=RULE_REVISION_1, name="Chain test rev1",
-                    evidence_class=EvidenceClass.SOURCE_BACKED, category=RuleCategory.OTHER,
-                    parameter="test_param", safe_default=SafeDefault.UNRESOLVED,
-                    missing_handling=MissingHandling.DATA_INSUFFICIENT,
-                    reason_for_change="Chain test rev1", version_metadata=_version_metadata(CHAIN_RULE_ID, RULE_REVISION_1),
-                    audit=_audit("phase-6b1-chain-rev1-audit", ACTORS["submitter"], user_ids["submitter"], "phase-6b1-chain-rev1", "Chain test rev1"),
-                    allow_source_backed=True,
-                )
-                unit_of_work.commit()
-
-            rev1_id = session.scalar(
-                select(EngineeringRuleRevision.id).where(
-                    EngineeringRuleRevision.engineering_rule.has(rule_id=CHAIN_RULE_ID),
-                    EngineeringRuleRevision.revision == RULE_REVISION_1,
-                )
+        # Rev1 becomes active.
+        for event_type, namespace, minute in (
+            (
+                RuleLifecycleEventType.ENABLE,
+                RuleRegistryService.ENABLEMENT_COMMAND_NAMESPACE,
+                1,
+            ),
+            (
+                RuleLifecycleEventType.ACTIVATE,
+                RuleRegistryService.ACTIVATION_COMMAND_NAMESPACE,
+                2,
+            ),
+        ):
+            key = (
+                f"phase-6b1-chain-"
+                f"{event_type.value.lower()}-1"
             )
-            assert rev1_id is not None
-            session.commit()
 
-            # Enable and activate Revision 1
-            for event_type, namespace, minute in (
-                (RuleLifecycleEventType.ENABLE, RuleRegistryService.ENABLEMENT_COMMAND_NAMESPACE, 1),
-                (RuleLifecycleEventType.ACTIVATE, RuleRegistryService.ACTIVATION_COMMAND_NAMESPACE, 2),
-            ):
-                key = f"phase-6b1-chain-{event_type.value.lower()}-1"
-                with GovernedUnitOfWork(session) as unit_of_work:
-                    registry = RuleRegistryService(unit_of_work)
-                    transition = registry.enable_source_backed if event_type is RuleLifecycleEventType.ENABLE else registry.activate_source_backed
-                    transition(
-                        rule_id=CHAIN_RULE_ID, source_revision=RULE_REVISION_1,
-                        receipt_id=f"phase-6b1-chain-{event_type.value.lower()}-receipt-1",
-                        command_identity=_identity(namespace, CHAIN_RULE_ID, key), request_hash=_request_hash(key),
-                        audit=_audit(f"phase-6b1-chain-{event_type.value.lower()}-audit-1", ACTORS["submitter"], user_ids["submitter"], key, f"Chain {event_type.value} 1"),
-                        effective_from=BASE_TIME + timedelta(minutes=minute), expires_at=None,
-                        completed_at=BASE_TIME + timedelta(minutes=minute, seconds=1),
-                    )
-                    unit_of_work.commit()
-
-        # Create and promote Revision 2
-        with session:
             with GovernedUnitOfWork(session) as unit_of_work:
                 registry = RuleRegistryService(unit_of_work)
-                registry.create_draft_revision(
-                    rule_id=CHAIN_RULE_ID, revision=RULE_REVISION_2, name="Chain test rev2",
-                    evidence_class=EvidenceClass.SOURCE_BACKED, category=RuleCategory.OTHER,
-                    parameter="test_param", safe_default=SafeDefault.UNRESOLVED,
-                    missing_handling=MissingHandling.DATA_INSUFFICIENT,
-                    reason_for_change="Chain test rev2", version_metadata=_version_metadata(CHAIN_RULE_ID, RULE_REVISION_2),
-                    audit=_audit("phase-6b1-chain-rev2-audit", ACTORS["submitter"], user_ids["submitter"], "phase-6b1-chain-rev2", "Chain test rev2"),
-                    allow_source_backed=True,
+
+                transition = (
+                    registry.enable_source_backed
+                    if event_type
+                    is RuleLifecycleEventType.ENABLE
+                    else registry.activate_source_backed
                 )
+
+                result = transition(
+                    rule_id=chain_rule_id,
+                    source_revision=RULE_REVISION_1,
+                    receipt_id=(
+                        f"phase-6b1-chain-"
+                        f"{event_type.value.lower()}-receipt-1"
+                    ),
+                    command_identity=_identity(
+                        namespace,
+                        chain_rule_id,
+                        key,
+                    ),
+                    request_hash=_request_hash(key),
+                    audit=_audit(
+                        f"phase-6b1-chain-"
+                        f"{event_type.value.lower()}-audit-1",
+                        ACTORS["approver"],
+                        user_ids["approver"],
+                        key,
+                        f"Chain {event_type.value} Rev1",
+                    ),
+                    effective_from=(
+                        BASE_TIME
+                        + timedelta(minutes=minute)
+                    ),
+                    expires_at=None,
+                    completed_at=(
+                        BASE_TIME
+                        + timedelta(
+                            minutes=minute,
+                            seconds=1,
+                        )
+                    ),
+                )
+
+                assert (
+                    result.result_type
+                    == "engineering_rule_lifecycle_event"
+                )
+
                 unit_of_work.commit()
 
-            promote_key = "phase-6b1-chain-promote-2"
-            with GovernedUnitOfWork(session) as unit_of_work:
-                registry = RuleRegistryService(unit_of_work)
-                registry.promote_source_backed(
-                    rule_id=CHAIN_RULE_ID, source_revision=RULE_REVISION_1, revision=RULE_REVISION_2,
-                    version_metadata=_version_metadata(CHAIN_RULE_ID, RULE_REVISION_2),
-                    receipt_id="phase-6b1-chain-promote-receipt-2",
-                    command_identity=_identity(RuleRegistryService.COMMAND_NAMESPACE, CHAIN_RULE_ID, promote_key),
-                    request_hash=_request_hash(promote_key),
-                    audit=_audit("phase-6b1-chain-promote-audit-2", ACTORS["submitter"], user_ids["submitter"], promote_key, "Chain promote rev2"),
-                    completed_at=BASE_TIME + timedelta(minutes=20),
-                )
-                unit_of_work.commit()
+        # Create a distinct verified replacement candidate.
+        with GovernedUnitOfWork(session) as unit_of_work:
+            registry = RuleRegistryService(unit_of_work)
 
-            # Verify supersession chain
-            rev2_persisted = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=CHAIN_RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_2))
-            assert rev2_persisted is not None
-            assert rev2_persisted.supersedes_revision_id == rev1_id
+            candidate = registry.create_draft_revision(
+                rule_id=chain_rule_id,
+                revision=candidate_revision,
+                name="Chain test Rev2 candidate",
+                evidence_class=EvidenceClass.SOURCE_BACKED,
+                category=RuleCategory.OTHER,
+                parameter="test_param",
+                safe_default=SafeDefault.UNRESOLVED,
+                missing_handling=MissingHandling.DATA_INSUFFICIENT,
+                reason_for_change="Chain test Rev2 candidate",
+                version_metadata=_version_metadata(
+                    chain_rule_id,
+                    candidate_revision,
+                ),
+                audit=_audit(
+                    "phase-6b1-chain-candidate-audit",
+                    ACTORS["submitter"],
+                    user_ids["submitter"],
+                    "phase-6b1-chain-candidate",
+                    "Chain test Rev2 candidate",
+                ),
+                evidence_references=(
+                    EvidenceReferenceDraft(
+                        evidence_id="PHASE_6B1_CHAIN_EVIDENCE_2",
+                        evidence_revision="1",
+                        evidence_class=EvidenceClass.UNRESOLVED,
+                        lifecycle_status=RuleLifecycleStatus.DRAFT,
+                        created_by_actor_id=ACTORS["submitter"]["email"],
+                        created_by_user_id=user_ids["submitter"],
+                        reference_uri=(
+                            "urn:spotweld:test:"
+                            "phase6b1-chain-rev2"
+                        ),
+                    ),
+                ),
+                allow_source_backed=True,
+            )
 
-            # Enable and activate Revision 2
-            for event_type, namespace, minute in (
-                (RuleLifecycleEventType.ENABLE, RuleRegistryService.ENABLEMENT_COMMAND_NAMESPACE, 21),
-                (RuleLifecycleEventType.ACTIVATE, RuleRegistryService.ACTIVATION_COMMAND_NAMESPACE, 22),
-            ):
-                key = f"phase-6b1-chain-{event_type.value.lower()}-2"
-                with GovernedUnitOfWork(session) as unit_of_work:
-                    registry = RuleRegistryService(unit_of_work)
-                    transition = registry.enable_source_backed if event_type is RuleLifecycleEventType.ENABLE else registry.activate_source_backed
-                    transition(
-                        rule_id=CHAIN_RULE_ID, source_revision=RULE_REVISION_2,
-                        receipt_id=f"phase-6b1-chain-{event_type.value.lower()}-receipt-2",
-                        command_identity=_identity(namespace, CHAIN_RULE_ID, key), request_hash=_request_hash(key),
-                        audit=_audit(f"phase-6b1-chain-{event_type.value.lower()}-audit-2", ACTORS["submitter"], user_ids["submitter"], key, f"Chain {event_type.value} 2"),
-                        effective_from=BASE_TIME + timedelta(minutes=minute), expires_at=None,
-                        completed_at=BASE_TIME + timedelta(minutes=minute, seconds=1),
+            _create_evidence(
+                session,
+                candidate.evidence_references[0],
+                user_ids["verifier"],
+                ACTORS["verifier"]["role"],
+                user_ids["approver"],
+            )
+
+            unit_of_work.commit()
+
+        candidate_persisted = session.scalar(
+            select(EngineeringRuleRevision).where(
+                EngineeringRuleRevision.engineering_rule.has(
+                    rule_id=chain_rule_id
+                ),
+                EngineeringRuleRevision.revision
+                == candidate_revision,
+            )
+        )
+
+        assert candidate_persisted is not None
+
+        basis_content_hash = _supersession_basis_hash(
+            session,
+            rule_id=chain_rule_id,
+            incumbent_id=rev1_id,
+            incumbent_revision=RULE_REVISION_1,
+            candidate=candidate_persisted,
+            replacement_revision=RULE_REVISION_2,
+        )
+
+        # Close SQLAlchemy's implicit read transaction before
+        # entering the governed write UnitOfWork.
+        session.commit()
+
+        replacement_version_metadata = ContentVersionMetadata(
+            schema_version="phase-6b1-content-schema-v1",
+            canonicalization_version="phase-6b1-canonical-v1",
+            hash_algorithm="sha256",
+            content_hash=basis_content_hash,
+            software_version="phase-6b1-test",
+        )
+
+        supersede_key = "phase-6b1-chain-supersede-2"
+
+        with GovernedUnitOfWork(session) as unit_of_work:
+            registry = RuleRegistryService(unit_of_work)
+
+            result = registry.supersede_active_source_backed(
+                rule_id=chain_rule_id,
+                incumbent_revision=RULE_REVISION_1,
+                replacement_candidate_revision=candidate_revision,
+                replacement_revision=RULE_REVISION_2,
+                version_metadata=replacement_version_metadata,
+                receipt_id=(
+                    "phase-6b1-chain-"
+                    "supersede-receipt-2"
+                ),
+                command_identity=_identity(
+                    RuleRegistryService
+                    .SUPERSESSION_COMMAND_NAMESPACE,
+                    chain_rule_id,
+                    supersede_key,
+                ),
+                request_hash=_request_hash(
+                    supersede_key
+                ),
+                audit=_audit(
+                    "phase-6b1-chain-supersede-audit-2",
+                    ACTORS["releaser"],
+                    user_ids["releaser"],
+                    supersede_key,
+                    "Chain governed Rev1 to Rev2 supersession",
+                ),
+                effective_from=(
+                    BASE_TIME
+                    + timedelta(minutes=21)
+                ),
+                expires_at=None,
+                completed_at=(
+                    BASE_TIME
+                    + timedelta(
+                        minutes=21,
+                        seconds=1,
                     )
-                    unit_of_work.commit()
+                ),
+            )
 
-            # Verify Revision 2 is active
-            rev2_active = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=CHAIN_RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_2))
-            assert rev2_active is not None
-            assert rev2_active.is_active()
+            assert (
+                result.result_type
+                == "engineering_rule_lifecycle_event"
+            )
 
-            # Verify Revision 1 is still queryable but superseded
-            rev1_persisted = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=CHAIN_RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_1))
-            assert rev1_persisted is not None
-            assert rev1_persisted.id == rev1_id
-            assert rev1_persisted.superseded is True
+            unit_of_work.commit()
+
+        rev2_persisted = session.scalar(
+            select(EngineeringRuleRevision).where(
+                EngineeringRuleRevision.engineering_rule.has(
+                    rule_id=chain_rule_id
+                ),
+                EngineeringRuleRevision.revision
+                == RULE_REVISION_2,
+            )
+        )
+
+        assert rev2_persisted is not None
+        assert rev2_persisted.supersedes_revision_id == rev1_id
+        assert rev2_persisted.is_active()
+
+        rev1_persisted = session.get(
+            EngineeringRuleRevision,
+            rev1_id,
+        )
+
+        assert rev1_persisted is not None
+        assert rev1_persisted.superseded is True

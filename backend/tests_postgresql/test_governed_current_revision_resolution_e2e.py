@@ -380,8 +380,9 @@ def _create_revision(
             f"{rule_id}-{revision}",
             project,
         )
+        created_id = created.id
         unit_of_work.commit()
-        return created.id
+        return created_id
 def _transition(
     session: Session,
     *,
