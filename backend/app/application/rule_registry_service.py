@@ -1778,7 +1778,7 @@ class RuleRegistryService:
             ),
         )
         self._audit.record_event(
-            **self._common_audit_fields(audit),
+            **{**self._common_audit_fields(audit), "event_id": f"{audit.event_id}:enable-source-backed"},
             entity_type="engineering_rule_lifecycle_event",
             entity_id=rule_id,
             entity_revision=replacement.revision,
@@ -1798,7 +1798,7 @@ class RuleRegistryService:
             ),
         )
         self._audit.record_event(
-            **self._common_audit_fields(audit),
+            **{**self._common_audit_fields(audit), "event_id": f"{audit.event_id}:activate-source-backed"},
             entity_type="engineering_rule_lifecycle_event",
             entity_id=rule_id,
             entity_revision=replacement.revision,

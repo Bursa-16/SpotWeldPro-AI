@@ -1,8 +1,15 @@
-﻿"""Real-PostgreSQL governed historical staleness end-to-end integration test."""
+"""Real-PostgreSQL governed historical staleness end-to-end integration test."""
 from __future__ import annotations
+
+import hashlib
+import json
 from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+import app.domain.readiness as readiness_domain
+import app.domain.rule_evaluation as rule_evaluation_domain
 from app.application.digital_weld_passport_service import (
     DigitalWeldPassportLifecycleTransitionDraft,
     DigitalWeldPassportRevisionDraft,
@@ -21,27 +28,64 @@ from app.application.rule_registry_service import (
     GovernedAuditMetadata,
     RuleRegistryService,
 )
-from app.domain.governance_types import ContentVersionMetadata, EvidenceClass, RuleLifecycleStatus
+from app.domain.governance_types import (
+    ContentVersionMetadata,
+    EvidenceClass,
+    RuleLifecycleStatus,
+)
 from app.domain.idempotency_types import CanonicalRequestHash, CommandIdentity
-from app.domain.readiness import GovernedMachineReadinessCheck, GovernedRuleEvaluationSnapshot, ReadinessState
-from app.domain.rule_applicability import GovernedApplicabilityCandidate, GovernedApplicabilityContext, resolve_governed_applicability
-from app.domain.rule_evaluation import Observation, RuleComparison, RuleComparisonOutcome, RuleRequirement, compare_rule
-from app.domain.rule_registry_types import EvidenceReferenceDraft, MissingHandling, RuleCategory, RuleOperator, SafeDefault
+from app.domain.readiness import (
+    GovernedMachineReadinessCheck,
+    GovernedRuleEvaluationSnapshot,
+    ReadinessState,
+)
+from app.domain.rule_applicability import (
+    GovernedApplicabilityCandidate,
+    GovernedApplicabilityContext,
+    resolve_governed_applicability,
+)
+from app.domain.rule_evaluation import (
+    Observation,
+    RuleComparison,
+    RuleComparisonOutcome,
+    RuleRequirement,
+    compare_rule,
+)
+from app.domain.rule_registry_types import (
+    EvidenceReferenceDraft,
+    MissingHandling,
+    RuleCategory,
+    RuleOperator,
+    SafeDefault,
+)
 from app.domain.unit_policy import UnitPolicyContext
-from app.domain.verification_types import EvidenceVerificationAuthoritySnapshot, EvidenceVerificationDecisionDraft, EvidenceVerificationDelegationDraft, VerificationCapability, VerificationDelegationStatus, VerificationScopeSnapshot
-from app.models.digital_weld_passport import DigitalWeldPassportLifecycleEvent, DigitalWeldPassportLifecycleState, DigitalWeldPassportRevision
+from app.domain.verification_types import (
+    EvidenceVerificationAuthoritySnapshot,
+    EvidenceVerificationDecisionDraft,
+    EvidenceVerificationDelegationDraft,
+    VerificationCapability,
+    VerificationDecisionOutcome,
+    VerificationDelegationStatus,
+    VerificationScopeSnapshot,
+)
+from app.models.digital_weld_passport import (
+    DigitalWeldPassportLifecycleEvent,
+    DigitalWeldPassportLifecycleState,
+    DigitalWeldPassportRevision,
+)
 from app.models.entities import User
 from app.models.machine_readiness import MachineReadinessAssessmentRevision
 from app.models.rule_evaluation import RuleEvaluation
 from app.models.rule_registry import EngineeringRuleRevision, RuleLifecycleEventType
-from app.repositories.evidence_verification_repository import EvidenceVerificationRepository
-import app.domain.readiness as readiness_domain
-import app.domain.rule_evaluation as rule_evaluation_domain
-import hashlib
-import json
+from app.models.verification import EvidenceVerificationDecision
+from app.repositories.evidence_verification_repository import (
+    EvidenceVerificationRepository,
+)
+
 RULE_ID = "PHASE_6B1_HISTORICAL_STALENESS"
 RULE_REVISION_1 = "1.0"
 RULE_REVISION_2 = "2.0"
+RULE_REVISION_2_CANDIDATE = "2.0-draft"
 EVALUATION_ID = "phase-6b1-evaluation-1"
 ASSESSMENT_ID = "phase-6b1-assessment-1"
 PASSPORT_ID = "phase-6b1-passport-1"
@@ -87,7 +131,7 @@ def _request_hash(key: str) -> CanonicalRequestHash:
 def _audit(event_id: str, actor: dict, actor_user_id: int, idempotency_key: str, reason: str) -> GovernedAuditMetadata:
     return GovernedAuditMetadata(
         event_id=event_id, actor_id=actor["email"], actor_user_id=actor_user_id,
-        actor_type="human", actor_role=actor["role"], reason=reason,
+        actor_type="user", actor_role=actor["role"], reason=reason,
         authority_scope=LIFECYCLE_SCOPE, correlation_id="phase-6b1-staleness",
         schema_version="phase-6b1-audit-v1", canonicalization_version="phase-6b1-canonical-v1",
         hash_algorithm="sha256", software_version="phase-6b1-test",
@@ -305,6 +349,68 @@ def _create_evidence(
     )
 
 
+
+def _supersession_basis_hash(
+    session: Session,
+    *,
+    rule_id: str,
+    incumbent_id: int,
+    incumbent_revision: str,
+    candidate: EngineeringRuleRevision,
+    replacement_revision: str,
+) -> str:
+    ordered_references = sorted(
+        candidate.evidence_references,
+        key=lambda reference: (
+            reference.evidence_id,
+            reference.evidence_revision,
+            reference.id,
+        ),
+    )
+
+    evidence_pins = []
+
+    for reference in ordered_references:
+        decision = session.scalar(
+            select(EvidenceVerificationDecision)
+            .where(
+                EvidenceVerificationDecision.evidence_reference_id == reference.id,
+                EvidenceVerificationDecision.decision_outcome
+                == VerificationDecisionOutcome.VERIFIED,
+            )
+            .order_by(
+                EvidenceVerificationDecision.revision_number.desc(),
+                EvidenceVerificationDecision.id.desc(),
+            )
+        )
+
+        assert decision is not None
+
+        evidence_pins.append(
+            {
+                "evidence_reference_id": reference.id,
+                "evidence_id": reference.evidence_id,
+                "evidence_revision": reference.evidence_revision,
+                "verification_decision_id": decision.id,
+                "verification_revision_number": decision.revision_number,
+                "verifier_user_id": decision.verifier_user_id,
+            }
+        )
+
+    return _digest(
+        {
+            "rule_id": rule_id,
+            "incumbent_revision": incumbent_revision,
+            "incumbent_revision_id": incumbent_id,
+            "replacement_candidate_revision": candidate.revision,
+            "replacement_candidate_revision_id": candidate.id,
+            "replacement_revision": replacement_revision,
+            "scope_snapshot": dict(LIFECYCLE_SCOPE),
+            "evidence_pins": evidence_pins,
+        }
+    )
+
+
 def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypatch) -> None:
     """Verify historical pins remain stable when a new rule revision supersedes an active one."""
     assert postgresql_engine.dialect.name == "postgresql"
@@ -351,7 +457,7 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                     rule_id=RULE_ID, source_revision=RULE_REVISION_1,
                     receipt_id=f"phase-6b1-{event_type.value.lower()}-receipt-1",
                     command_identity=_identity(namespace, RULE_ID, key), request_hash=_request_hash(key),
-                    audit=_audit(f"phase-6b1-{event_type.value.lower()}-audit-1", ACTORS["submitter"], user_ids["submitter"], key, f"Phase 6B1 {event_type.value} Rev1"),
+                    audit=_audit(f"phase-6b1-{event_type.value.lower()}-audit-1", ACTORS["approver"], user_ids["approver"], key, f"Phase 6B1 {event_type.value} Rev1"),
                     effective_from=BASE_TIME + timedelta(minutes=minute), expires_at=None,
                     completed_at=BASE_TIME + timedelta(minutes=minute, seconds=1),
                 )
@@ -423,8 +529,7 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
         mrc_snapshot = {"assessment_id": ASSESSMENT_ID, "revision_number": 1, "state": ReadinessState.READY.value}
         eval_snapshot = {"evaluation_id": EVALUATION_ID, "revision_number": 1, "rule_id": RULE_ID, "rule_revision": RULE_REVISION_1, "outcome": "PASS"}
 
-        with session:
-            with GovernedUnitOfWork(session) as unit_of_work:
+        with session, GovernedUnitOfWork(session) as unit_of_work:
                 dwp_service = DigitalWeldPassportService(unit_of_work)
                 dwp_result = dwp_service.create_draft_revision(
                     draft=DigitalWeldPassportRevisionDraft(
@@ -471,77 +576,138 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                     assert result.result_type == "digital_weld_passport"
                     unit_of_work.commit()
 
-        # === PHASE 2: Create Rule Revision 2 via promote_source_backed ===
-        with session:
-            rev1 = session.get(EngineeringRuleRevision, rev1_id)
+        # === PHASE 2: Governed active supersession Rev1 -> Rev2 ===
 
-            with GovernedUnitOfWork(session) as unit_of_work:
-                registry = RuleRegistryService(unit_of_work)
-                rev2 = registry.create_draft_revision(
-                    rule_id=RULE_ID, revision=RULE_REVISION_2,
-                    name="Historical staleness updated", evidence_class=EvidenceClass.SOURCE_BACKED,
-                    category=RuleCategory.OTHER, parameter="governed_input_present",
-                    safe_default=SafeDefault.UNRESOLVED, missing_handling=MissingHandling.DATA_INSUFFICIENT,
-                    reason_for_change="Phase 6B1 Revision 2 supersedes Revision 1",
-                    version_metadata=_version_metadata(RULE_ID, RULE_REVISION_2),
-                    audit=_audit("phase-6b1-rev2-audit", ACTORS["submitter"], user_ids["submitter"], "phase-6b1-rev2", "Phase 6B1 Rev2"),
-                    evidence_references=(EvidenceReferenceDraft(
-                        evidence_id="PHASE_6B1_EVIDENCE_2", evidence_revision="1",
-                        evidence_class=EvidenceClass.UNRESOLVED, lifecycle_status=RuleLifecycleStatus.DRAFT,
-                        created_by_actor_id=ACTORS["submitter"]["email"], created_by_user_id=user_ids["submitter"],
-                        reference_uri="urn:spotweld:test:phase6b1-rev2"),),
-                    allow_source_backed=True,
-                )
-                _create_evidence(session, rev2.evidence_references[0], user_ids["verifier"], ACTORS["verifier"]["role"], user_ids["approver"])
-                unit_of_work.commit()
+        with GovernedUnitOfWork(session) as unit_of_work:
+            registry = RuleRegistryService(unit_of_work)
 
-            # Promote Revision 2 via source-backed mechanism
-            promote_key = "phase-6b1-promote-rev2"
-            with GovernedUnitOfWork(session) as unit_of_work:
-                registry = RuleRegistryService(unit_of_work)
-                promote_result = registry.promote_source_backed(
-                    rule_id=RULE_ID, source_revision=RULE_REVISION_1, revision=RULE_REVISION_2,
-                    version_metadata=_version_metadata(RULE_ID, RULE_REVISION_2),
-                    receipt_id="phase-6b1-promote-receipt-2",
-                    command_identity=_identity(RuleRegistryService.COMMAND_NAMESPACE, RULE_ID, promote_key),
-                    request_hash=_request_hash(promote_key),
-                    audit=_audit("phase-6b1-promote-audit-2", ACTORS["submitter"], user_ids["submitter"], promote_key, "Phase 6B1 promote Rev2"),
-                    completed_at=BASE_TIME + timedelta(minutes=20),
-                )
-                assert promote_result.result_type == "engineering_rule_revision"
-                unit_of_work.commit()
+            candidate = registry.create_draft_revision(
+                rule_id=RULE_ID,
+                revision=RULE_REVISION_2_CANDIDATE,
+                name="Historical staleness updated candidate",
+                evidence_class=EvidenceClass.SOURCE_BACKED,
+                category=RuleCategory.OTHER,
+                parameter="governed_input_present",
+                safe_default=SafeDefault.UNRESOLVED,
+                missing_handling=MissingHandling.DATA_INSUFFICIENT,
+                reason_for_change="Phase 6B1 Revision 2 candidate",
+                version_metadata=_version_metadata(
+                    RULE_ID,
+                    RULE_REVISION_2_CANDIDATE,
+                ),
+                audit=_audit(
+                    "phase-6b1-rev2-candidate-audit",
+                    ACTORS["submitter"],
+                    user_ids["submitter"],
+                    "phase-6b1-rev2-candidate",
+                    "Phase 6B1 Rev2 candidate",
+                ),
+                evidence_references=(
+                    EvidenceReferenceDraft(
+                        evidence_id="PHASE_6B1_EVIDENCE_2",
+                        evidence_revision="1",
+                        evidence_class=EvidenceClass.UNRESOLVED,
+                        lifecycle_status=RuleLifecycleStatus.DRAFT,
+                        created_by_actor_id=ACTORS["submitter"]["email"],
+                        created_by_user_id=user_ids["submitter"],
+                        reference_uri="urn:spotweld:test:phase6b1-rev2",
+                    ),
+                ),
+                allow_source_backed=True,
+            )
 
-        # Verify Revision 2 properties
-        with session:
-            rev2_persisted = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_2))
-            assert rev2_persisted is not None
-            rev2_id = rev2_persisted.id
+            _create_evidence(
+                session,
+                candidate.evidence_references[0],
+                user_ids["verifier"],
+                ACTORS["verifier"]["role"],
+                user_ids["approver"],
+            )
 
-            # Core assertions: same rule_id, different IDs
-            assert rev2_persisted.engineering_rule.rule_id == RULE_ID  # SAME_RULE_ID_USED = YES
-            assert rev2_persisted.id != rev1_id  # REV1_ID != REV2_ID
-            assert rev2_persisted.supersedes_revision_id == rev1_id  # REV2_SUPERSEDES_REV1 = YES
-            assert rev2_persisted.evidence_class is EvidenceClass.SOURCE_BACKED
+            unit_of_work.commit()
 
-        # Enable and activate Revision 2
-        for event_type, namespace, minute in (
-            (RuleLifecycleEventType.ENABLE, RuleRegistryService.ENABLEMENT_COMMAND_NAMESPACE, 21),
-            (RuleLifecycleEventType.ACTIVATE, RuleRegistryService.ACTIVATION_COMMAND_NAMESPACE, 22),
-        ):
-            key = f"phase-6b1-{event_type.value.lower()}-rev2"
-            with GovernedUnitOfWork(session) as unit_of_work:
-                registry = RuleRegistryService(unit_of_work)
-                transition = registry.enable_source_backed if event_type is RuleLifecycleEventType.ENABLE else registry.activate_source_backed
-                result = transition(
-                    rule_id=RULE_ID, source_revision=RULE_REVISION_2,
-                    receipt_id=f"phase-6b1-{event_type.value.lower()}-receipt-2",
-                    command_identity=_identity(namespace, RULE_ID, key), request_hash=_request_hash(key),
-                    audit=_audit(f"phase-6b1-{event_type.value.lower()}-audit-2", ACTORS["submitter"], user_ids["submitter"], key, f"Phase 6B1 {event_type.value} Rev2"),
-                    effective_from=BASE_TIME + timedelta(minutes=minute), expires_at=None,
-                    completed_at=BASE_TIME + timedelta(minutes=minute, seconds=1),
-                )
-                assert result.result_type == "engineering_rule_revision"
-                unit_of_work.commit()
+        candidate_persisted = session.scalar(
+            select(EngineeringRuleRevision).where(
+                EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID),
+                EngineeringRuleRevision.revision
+                == RULE_REVISION_2_CANDIDATE,
+            )
+        )
+        assert candidate_persisted is not None
+
+        basis_content_hash = _supersession_basis_hash(
+            session,
+            rule_id=RULE_ID,
+            incumbent_id=rev1_id,
+            incumbent_revision=RULE_REVISION_1,
+            candidate=candidate_persisted,
+            replacement_revision=RULE_REVISION_2,
+        )
+
+        replacement_version_metadata = ContentVersionMetadata(
+            schema_version="phase-6b1-content-schema-v1",
+            canonicalization_version="phase-6b1-canonical-v1",
+            hash_algorithm="sha256",
+            content_hash=basis_content_hash,
+            software_version="phase-6b1-test",
+        )
+
+        supersede_key = "phase-6b1-supersede-rev2"
+
+        with GovernedUnitOfWork(session) as unit_of_work:
+            registry = RuleRegistryService(unit_of_work)
+
+            supersede_result = registry.supersede_active_source_backed(
+                rule_id=RULE_ID,
+                incumbent_revision=RULE_REVISION_1,
+                replacement_candidate_revision=RULE_REVISION_2_CANDIDATE,
+                replacement_revision=RULE_REVISION_2,
+                version_metadata=replacement_version_metadata,
+                receipt_id="phase-6b1-supersede-receipt-2",
+                command_identity=_identity(
+                    RuleRegistryService.SUPERSESSION_COMMAND_NAMESPACE,
+                    RULE_ID,
+                    supersede_key,
+                ),
+                request_hash=_request_hash(supersede_key),
+                audit=_audit(
+                    "phase-6b1-supersede-audit-2",
+                    ACTORS["releaser"],
+                    user_ids["releaser"],
+                    supersede_key,
+                    "Phase 6B1 governed Rev1 to Rev2 supersession",
+                ),
+                effective_from=BASE_TIME + timedelta(minutes=21),
+                expires_at=None,
+                completed_at=BASE_TIME + timedelta(
+                    minutes=21,
+                    seconds=1,
+                ),
+            )
+
+            assert (
+                supersede_result.result_type
+                == "engineering_rule_lifecycle_event"
+            )
+
+            unit_of_work.commit()
+
+        rev2_persisted = session.scalar(
+            select(EngineeringRuleRevision).where(
+                EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID),
+                EngineeringRuleRevision.revision == RULE_REVISION_2,
+            )
+        )
+
+        assert rev2_persisted is not None
+
+        rev2_id = rev2_persisted.id
+
+        assert rev2_persisted.engineering_rule.rule_id == RULE_ID
+        assert rev2_persisted.id != rev1_id
+        assert rev2_persisted.supersedes_revision_id == rev1_id
+        assert rev2_persisted.evidence_class is EvidenceClass.SOURCE_BACKED
+        assert rev2_persisted.is_active()
 
         # === PHASE 3: Verify Historical Pins ===
         with session:
@@ -651,7 +817,7 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
         with session:
             with GovernedUnitOfWork(session) as unit_of_work:
                 registry = RuleRegistryService(unit_of_work)
-                rev1 = registry.create_draft_revision(
+                registry.create_draft_revision(
                     rule_id=CHAIN_RULE_ID, revision=RULE_REVISION_1, name="Chain test rev1",
                     evidence_class=EvidenceClass.SOURCE_BACKED, category=RuleCategory.OTHER,
                     parameter="test_param", safe_default=SafeDefault.UNRESOLVED,
@@ -694,7 +860,7 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
         with session:
             with GovernedUnitOfWork(session) as unit_of_work:
                 registry = RuleRegistryService(unit_of_work)
-                rev2 = registry.create_draft_revision(
+                registry.create_draft_revision(
                     rule_id=CHAIN_RULE_ID, revision=RULE_REVISION_2, name="Chain test rev2",
                     evidence_class=EvidenceClass.SOURCE_BACKED, category=RuleCategory.OTHER,
                     parameter="test_param", safe_default=SafeDefault.UNRESOLVED,
