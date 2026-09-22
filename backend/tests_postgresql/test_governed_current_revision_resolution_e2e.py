@@ -565,11 +565,18 @@ def _resolve_current(
 ) -> EngineeringRuleRevision:
     with GovernedUnitOfWork(session) as unit_of_work:
         registry = RuleRegistryService(unit_of_work)
-        return registry.resolve_current_applicable_revision(
+        resolved = registry.resolve_current_applicable_revision(
             rule_id=rule_id,
             scope=GovernedApplicabilityContext(project=project),
             as_of=as_of,
         )
+
+        # Detach the fully loaded read result before rolling back the
+        # read-only transaction. This prevents later scalar access from
+        # implicitly beginning a new transaction on the caller's session.
+        session.expunge(resolved)
+        unit_of_work.rollback()
+        return resolved
 
 
 def _active_rev1(
@@ -1009,6 +1016,7 @@ def _evaluation_materials(
     scope_snapshot = {
         key: (value,) if isinstance(value, str) else tuple(value)
         for key, value in (activate_event.scope_snapshot or {}).items()
+        if value is not None
     }
     candidate = GovernedApplicabilityCandidate(
         candidate_id=f"{rule_id}:{revision}",

@@ -244,7 +244,7 @@ def _create_resolution(
     rule_rev: EngineeringRuleRevision,
     dt: datetime,
 ):
-    ctx = GovernedApplicabilityContext.from_mapping(_ctx_snapshot())
+    ctx = GovernedApplicabilityContext(**_ctx_snapshot())
     event = _latest_lifecycle_event(session, rule_rev.id)
 
     cand = GovernedApplicabilityCandidate(
@@ -273,9 +273,9 @@ def _create_resolution(
         scope_snapshot={"project": (PROJECT_SCOPE["project"],)},
     )
     return resolve_governed_applicability(
-        ctx.as_mapping(),
-        (cand,),
+        ctx,
         dt,
+        (cand,),
     )
 
 
@@ -1155,4 +1155,12 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
         )
 
         assert rev1_persisted is not None
-        assert rev1_persisted.superseded is True
+
+        rev1_latest_event = _latest_lifecycle_event(
+            session,
+            rev1_id,
+        )
+        assert (
+            rev1_latest_event.event_type
+            is RuleLifecycleEventType.SUPERSEDE
+        )
