@@ -1,4 +1,4 @@
-﻿# Spot Welding Parameter Analysis
+# Spot Welding Parameter Analysis
 
 **SpotWeldPro AI** is a professional engineering decision-support platform for **resistance spot welding parameter analysis, governed rule evaluation, machine readiness, engineering traceability, and Digital Weld Passport workflows**.
 
@@ -883,4 +883,3 @@ See LICENSE for repository licensing terms.
 
 
 Bunu mevcut READMEâ€™nin yerine geÃ§irmenizi Ã¶neririm. Ã–zellikle eski READMEâ€™deki `v3.0.0-alpha.3` / `v3.0.0-alpha.1` kar
-

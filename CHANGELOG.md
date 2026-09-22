@@ -1,4 +1,4 @@
-﻿## [3.0.0-alpha.4] - 2026-09-22
+## [3.0.0-alpha.4] - 2026-09-22
 
 ### Added
 - Public product experience: Landing, Features, How It Works, Packages, Demo and Login.
@@ -177,4 +177,3 @@ Phase 6 â€” Cross-system E2E Validation is not included in v3.0.0-alpha.2.
 - FastAPI + React professional architecture.
 - Model-4, DOE optimization, ensemble prediction, weld-lobe support,
   authentication, projects, weld points, revisions, approvals, and tests.
-
