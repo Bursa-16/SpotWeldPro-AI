@@ -319,7 +319,11 @@ def _comparison(rule_rev: EngineeringRuleRevision, res) -> RuleComparison:
         min_value=1.0,
         max_value=1.0,
     )
-    result = compare_rule(req, obs, res)
+    result = compare_rule(
+        req,
+        obs,
+        applicability_result=res,
+    )
     assert result.outcome is RuleComparisonOutcome.PASS
     return result
 
