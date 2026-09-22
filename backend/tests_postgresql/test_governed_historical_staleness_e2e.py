@@ -539,6 +539,10 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
             comp1 = _comparison(rev1, res1)
             unit_policy = UnitPolicyContext(expected_unit="1")
 
+            # The reads above autobegin a SQLAlchemy transaction.
+            # GovernedUnitOfWork requires a clean session boundary.
+            session.commit()
+
             with GovernedUnitOfWork(session) as unit_of_work:
                 eval_service = RuleEvaluationService(unit_of_work)
                 eval_result = eval_service.persist_evaluation(
