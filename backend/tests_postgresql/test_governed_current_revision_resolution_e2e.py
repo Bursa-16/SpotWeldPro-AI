@@ -479,7 +479,7 @@ def _supersession_basis_hash(
             "replacement_candidate_revision": candidate.revision,
             "replacement_candidate_revision_id": candidate.id,
             "replacement_revision": replacement_revision,
-            "scope_snapshot": {"project": project},
+            "scope_snapshot": VerificationScopeSnapshot(project=project).as_dict(),
             "evidence_pins": evidence_pins,
         }
     )

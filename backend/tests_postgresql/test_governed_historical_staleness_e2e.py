@@ -76,7 +76,11 @@ from app.models.digital_weld_passport import (
 from app.models.entities import User
 from app.models.machine_readiness import MachineReadinessAssessmentRevision
 from app.models.rule_evaluation import RuleEvaluation
-from app.models.rule_registry import EngineeringRuleRevision, RuleLifecycleEventType
+from app.models.rule_registry import (
+    EngineeringRuleRevision,
+    RuleLifecycleEvent,
+    RuleLifecycleEventType,
+)
 from app.models.verification import EvidenceVerificationDecision
 from app.repositories.evidence_verification_repository import (
     EvidenceVerificationRepository,
@@ -217,38 +221,93 @@ def _ctx_snapshot() -> dict:
     return {"project": PROJECT_SCOPE["project"], "site": "phase-6b1-site", "machine": "phase-6b1-machine"}
 
 
-def _create_resolution(rule_rev: EngineeringRuleRevision, dt: datetime):
+def _latest_lifecycle_event(
+    session: Session,
+    revision_id: int,
+) -> RuleLifecycleEvent:
+    event = session.scalar(
+        select(RuleLifecycleEvent)
+        .where(
+            RuleLifecycleEvent.engineering_rule_revision_id == revision_id
+        )
+        .order_by(
+            RuleLifecycleEvent.revision_number.desc(),
+            RuleLifecycleEvent.id.desc(),
+        )
+    )
+    assert event is not None
+    return event
+
+
+def _create_resolution(
+    session: Session,
+    rule_rev: EngineeringRuleRevision,
+    dt: datetime,
+):
     ctx = GovernedApplicabilityContext.from_mapping(_ctx_snapshot())
+    event = _latest_lifecycle_event(session, rule_rev.id)
+
     cand = GovernedApplicabilityCandidate(
-        candidate_id=f"{rule_rev.engineering_rule.rule_id}:{rule_rev.revision}", rule_id=rule_rev.engineering_rule.rule_id,
-        revision=rule_rev.revision, evidence_class=rule_rev.evidence_class,
-        enabled=rule_rev.enabled, active=rule_rev.status is RuleLifecycleStatus.ACTIVE, suspended=False,
-        revoked=False, superseded=rule_rev.superseded, basis_valid=not rule_rev.is_expired(),
-        effective_from=rule_rev.effective_from or dt, expires_at=rule_rev.expires_at,
+        candidate_id=(
+            f"{rule_rev.engineering_rule.rule_id}:{rule_rev.revision}"
+        ),
+        rule_id=rule_rev.engineering_rule.rule_id,
+        revision=rule_rev.revision,
+        evidence_class=rule_rev.evidence_class,
+        enabled=event.event_type
+        in {
+            RuleLifecycleEventType.ENABLE,
+            RuleLifecycleEventType.ACTIVATE,
+        },
+        active=event.event_type is RuleLifecycleEventType.ACTIVATE,
+        suspended=event.event_type is RuleLifecycleEventType.SUSPEND,
+        revoked=event.event_type is RuleLifecycleEventType.REVOKE,
+        superseded=event.event_type is RuleLifecycleEventType.SUPERSEDE,
+        basis_valid=event.event_type is not RuleLifecycleEventType.CORRECT,
+        effective_from=event.effective_from,
+        expires_at=event.expires_at,
         applicability_metadata=rule_rev.applicability_metadata or {},
-        applicability_schema_version=rule_rev.applicability_schema_version or "1.0",
+        applicability_schema_version=(
+            rule_rev.applicability_schema_version or "1.0"
+        ),
         scope_snapshot={"project": (PROJECT_SCOPE["project"],)},
     )
-    return resolve_governed_applicability(ctx.as_mapping(), (cand,), dt)
+    return resolve_governed_applicability(
+        ctx.as_mapping(),
+        (cand,),
+        dt,
+    )
 
 
-def _load_applicability_candidate(rev: EngineeringRuleRevision, dt: datetime) -> GovernedApplicabilityCandidate:
-    """Load a GovernedApplicabilityCandidate from a persisted EngineeringRuleRevision."""
+def _load_applicability_candidate(
+    session: Session,
+    rev: EngineeringRuleRevision,
+    dt: datetime,
+) -> GovernedApplicabilityCandidate:
+    """Build applicability state from append-only lifecycle events."""
+    event = _latest_lifecycle_event(session, rev.id)
+
     return GovernedApplicabilityCandidate(
         candidate_id=f"{rev.engineering_rule.rule_id}:{rev.revision}",
         rule_id=rev.engineering_rule.rule_id,
         revision=rev.revision,
         evidence_class=rev.evidence_class,
-        enabled=rev.enabled,
-        active=rev.status is RuleLifecycleStatus.ACTIVE,
-        suspended=False,
-        revoked=False,
-        superseded=rev.superseded,
-        basis_valid=not rev.is_expired(),
-        effective_from=rev.effective_from or dt,
-        expires_at=rev.expires_at,
+        enabled=event.event_type
+        in {
+            RuleLifecycleEventType.ENABLE,
+            RuleLifecycleEventType.ACTIVATE,
+        },
+        active=event.event_type is RuleLifecycleEventType.ACTIVATE,
+        suspended=event.event_type is RuleLifecycleEventType.SUSPEND,
+        revoked=event.event_type is RuleLifecycleEventType.REVOKE,
+        superseded=event.event_type is RuleLifecycleEventType.SUPERSEDE,
+        basis_valid=event.event_type is not RuleLifecycleEventType.CORRECT,
+        effective_from=event.effective_from or dt,
+        expires_at=event.expires_at,
         applicability_metadata=rev.applicability_metadata or {},
-        applicability_schema_version=rev.applicability_schema_version or "1.0",
+        applicability_schema_version=(
+            rev.applicability_schema_version or "1.0"
+        ),
         scope_snapshot={"project": (PROJECT_SCOPE["project"],)},
     )
 
@@ -468,13 +527,12 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
         with session:
             rev1_persisted = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_1))
             assert rev1_persisted is not None
-            assert rev1_persisted.status is RuleLifecycleStatus.ACTIVE
             rev1_id = rev1_persisted.id
 
         # === Create Evaluation1 against Rule Revision 1 ===
         with session:
             rev1 = session.get(EngineeringRuleRevision, rev1_id)
-            res1 = _create_resolution(rev1, DECISION_TIME)
+            res1 = _create_resolution(session, rev1, DECISION_TIME)
             comp1 = _comparison(rev1, res1)
             unit_policy = UnitPolicyContext(project=PROJECT_SCOPE["project"])
 
@@ -708,7 +766,6 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
         assert rev2_persisted.id != rev1_id
         assert rev2_persisted.supersedes_revision_id == rev1_id
         assert rev2_persisted.evidence_class is EvidenceClass.SOURCE_BACKED
-        assert rev2_persisted.status is RuleLifecycleStatus.ACTIVE
 
         # === PHASE 3: Verify Historical Pins ===
         with session:
@@ -731,8 +788,8 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
             assert rev1_persisted is not None
             ctx = GovernedApplicabilityContext.from_mapping(_ctx_snapshot())
             candidates = (
-                _load_applicability_candidate(rev1_persisted, DECISION_TIME + timedelta(minutes=30)),
-                _load_applicability_candidate(rev2_after, DECISION_TIME + timedelta(minutes=30)),
+                _load_applicability_candidate(session, rev1_persisted, DECISION_TIME + timedelta(minutes=30)),
+                _load_applicability_candidate(session, rev2_after, DECISION_TIME + timedelta(minutes=30)),
             )
             resolution = resolve_governed_applicability(
                 ctx.as_mapping(),
@@ -1091,7 +1148,6 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
 
         assert rev2_persisted is not None
         assert rev2_persisted.supersedes_revision_id == rev1_id
-        assert rev2_persisted.status is RuleLifecycleStatus.ACTIVE
 
         rev1_persisted = session.get(
             EngineeringRuleRevision,

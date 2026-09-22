@@ -661,6 +661,7 @@ class RuleRegistryService:
             scope_snapshot = {
                 key: (value,) if isinstance(value, str) else tuple(value)
                 for key, value in (lifecycle_event.scope_snapshot or {}).items()
+                if value is not None
             }
             candidates.append(
                 GovernedApplicabilityCandidate(
