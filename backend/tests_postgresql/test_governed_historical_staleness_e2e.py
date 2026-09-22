@@ -222,7 +222,7 @@ def _create_resolution(rule_rev: EngineeringRuleRevision, dt: datetime):
     cand = GovernedApplicabilityCandidate(
         candidate_id=f"{rule_rev.engineering_rule.rule_id}:{rule_rev.revision}", rule_id=rule_rev.engineering_rule.rule_id,
         revision=rule_rev.revision, evidence_class=rule_rev.evidence_class,
-        enabled=rule_rev.enabled, active=rule_rev.is_active(), suspended=False,
+        enabled=rule_rev.enabled, active=rule_rev.status is RuleLifecycleStatus.ACTIVE, suspended=False,
         revoked=False, superseded=rule_rev.superseded, basis_valid=not rule_rev.is_expired(),
         effective_from=rule_rev.effective_from or dt, expires_at=rule_rev.expires_at,
         applicability_metadata=rule_rev.applicability_metadata or {},
@@ -240,7 +240,7 @@ def _load_applicability_candidate(rev: EngineeringRuleRevision, dt: datetime) ->
         revision=rev.revision,
         evidence_class=rev.evidence_class,
         enabled=rev.enabled,
-        active=rev.is_active(),
+        active=rev.status is RuleLifecycleStatus.ACTIVE,
         suspended=False,
         revoked=False,
         superseded=rev.superseded,
@@ -468,7 +468,7 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
         with session:
             rev1_persisted = session.scalar(select(EngineeringRuleRevision).where(EngineeringRuleRevision.engineering_rule.has(rule_id=RULE_ID), EngineeringRuleRevision.revision == RULE_REVISION_1))
             assert rev1_persisted is not None
-            assert rev1_persisted.is_active()
+            assert rev1_persisted.status is RuleLifecycleStatus.ACTIVE
             rev1_id = rev1_persisted.id
 
         # === Create Evaluation1 against Rule Revision 1 ===
@@ -708,7 +708,7 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
         assert rev2_persisted.id != rev1_id
         assert rev2_persisted.supersedes_revision_id == rev1_id
         assert rev2_persisted.evidence_class is EvidenceClass.SOURCE_BACKED
-        assert rev2_persisted.is_active()
+        assert rev2_persisted.status is RuleLifecycleStatus.ACTIVE
 
         # === PHASE 3: Verify Historical Pins ===
         with session:
@@ -1091,7 +1091,7 @@ def test_governed_supersession_chain(postgresql_engine) -> None:
 
         assert rev2_persisted is not None
         assert rev2_persisted.supersedes_revision_id == rev1_id
-        assert rev2_persisted.is_active()
+        assert rev2_persisted.status is RuleLifecycleStatus.ACTIVE
 
         rev1_persisted = session.get(
             EngineeringRuleRevision,

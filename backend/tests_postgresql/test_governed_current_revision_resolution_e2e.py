@@ -162,7 +162,7 @@ def _audit(
         actor_type="user",
         actor_role=actor["role"],
         reason=reason,
-        authority_scope={"project": project},
+        authority_scope=VerificationScopeSnapshot(project=project).as_dict(),
         correlation_id="phase-6b2b",
         schema_version="phase-6b2b-audit-v1",
         canonicalization_version="phase-6b2b-canonical-v1",
