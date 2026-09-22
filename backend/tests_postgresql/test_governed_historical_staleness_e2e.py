@@ -324,7 +324,7 @@ def _comparison(rule_rev: EngineeringRuleRevision, res) -> RuleComparison:
         obs,
         applicability_result=res,
     )
-    assert result.outcome is RuleComparisonOutcome.PASS
+    assert result.outcome is RuleComparisonOutcome.SATISFIED
     return result
 
 
