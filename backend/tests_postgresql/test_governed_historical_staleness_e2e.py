@@ -537,14 +537,20 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
             rev1 = session.get(EngineeringRuleRevision, rev1_id)
             res1 = _create_resolution(session, rev1, DECISION_TIME)
             comp1 = _comparison(rev1, res1)
-            unit_policy = UnitPolicyContext(project=PROJECT_SCOPE["project"])
+            unit_policy = UnitPolicyContext(expected_unit="1")
 
             with GovernedUnitOfWork(session) as unit_of_work:
                 eval_service = RuleEvaluationService(unit_of_work)
                 eval_result = eval_service.persist_evaluation(
                     draft=RuleEvaluationPersistenceDraft(
                         evaluation_id=EVALUATION_ID, revision_number=1, comparison=comp1,
-                        applicability_result=res1, observation=comp1.observation, unit_context=unit_policy,
+                        applicability_result=res1,
+                        observation=Observation(
+                            parameter="governed_input_present",
+                            value=1.0,
+                            unit="1",
+                        ),
+                        unit_context=unit_policy,
                     ),
                     receipt_id="phase-6b1-eval-receipt-1",
                     command_identity=_identity(RuleEvaluationService.COMMAND_NAMESPACE, EVALUATION_ID, "phase-6b1-eval-1"),
