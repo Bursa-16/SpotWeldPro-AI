@@ -880,6 +880,3 @@ They should not be interpreted as unrestricted production deployment approval.
 License
 
 See LICENSE for repository licensing terms.
-
-
-Bunu mevcut READMEâ€™nin yerine geÃ§irmenizi Ã¶neririm. Ã–zellikle eski READMEâ€™deki `v3.0.0-alpha.3` / `v3.0.0-alpha.1` kar
