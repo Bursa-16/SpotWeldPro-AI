@@ -572,6 +572,10 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
             rev1 = session.get(EngineeringRuleRevision, rev1_id)
             eval1 = session.scalar(select(RuleEvaluation).where(RuleEvaluation.evaluation_id == EVALUATION_ID, RuleEvaluation.revision_number == 1))
 
+            # Read operations above autobegin a transaction.
+            # GovernedUnitOfWork requires a clean session boundary.
+            session.commit()
+
             with GovernedUnitOfWork(session) as unit_of_work:
                 mrc_service = MachineReadinessService(unit_of_work)
                 mrc_result_ref = mrc_service.persist_assessment(
