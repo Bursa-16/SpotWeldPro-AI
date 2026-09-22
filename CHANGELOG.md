@@ -1,3 +1,32 @@
+﻿## [3.0.0-alpha.4] - 2026-09-22
+
+### Added
+- Public product experience: Landing, Features, How It Works, Packages, Demo and Login.
+- Premium authenticated engineering workstation shell.
+- Expanded weld-quality engineering input model and sheet-stack workspace.
+- Refined DOE optimization engineering workspace.
+- Governed current-revision resolution with PostgreSQL E2E coverage.
+
+### Changed
+- Login now uses real backend authentication.
+- Frontend development CORS support includes localhost:5180.
+- Public/product and authenticated engineering experiences are separated more clearly.
+
+### Governance
+- Deterministic engineering authority remains authoritative.
+- AI remains explanatory/supportive only.
+- Governed rule resolution remains fail-closed.
+- No new engineering thresholds are introduced by this release.
+
+### Validation
+- Frontend build: PASS.
+- Backend standard tests: PASS.
+- Python compileall: PASS.
+- Targeted Ruff validation for changed backend files: PASS.
+- Repository-wide Ruff has 239 pre-existing findings and is not claimed as PASS.
+
+### Classification
+Alpha / pre-release. Not production deployment approval.
 # Changelog
 
 ## [3.0.0-alpha.3] - 2026-09-04
@@ -7,8 +36,8 @@
   (Alembic identifier-length, URL-interpolation, and revision-capacity
   compatibility; CI JWT environment and CI health checks).
 - Phase 6A2: governed PostgreSQL happy-path E2E covering the full
-  identity → draft → source-backed → verified evidence → SOURCE_BACKED
-  enablement → activation → evaluation → machine readiness → digital
+  identity â†’ draft â†’ source-backed â†’ verified evidence â†’ SOURCE_BACKED
+  enablement â†’ activation â†’ evaluation â†’ machine readiness â†’ digital
   weld passport chain.
 - Phase 6A2: canonical-scope repair for lifecycle audit metadata
   (lifecycle authority scope now uses the canonical 4-dimension
@@ -36,7 +65,7 @@
 - Phase 6A1: PostgreSQL foundation test fixture and CI health checks
   established.
 - Phase 6A2: full real-PostgreSQL happy-path E2E passes end-to-end
-  (identity → DWP).
+  (identity â†’ DWP).
 - Phase 6A3: 5 lifecycle denial-path assertions pass under real
   PostgreSQL.
 - Phase 6A4: 10 evidence-verification denial-path assertions plus
@@ -59,19 +88,19 @@
 - Idempotency `CONFLICT` raises `ValueError` and does not silently
   re-evaluate.
 - No application code, no migration, no schema, and no engineering
-  threshold values were introduced or modified by Phase 6A1–6A4.
+  threshold values were introduced or modified by Phase 6A1â€“6A4.
 
 ### Known Limitations
 - `EVIDENCE_VERIFICATION_AUTHORITY_FOUNDATION` remains
-  `BLOCKED` per SDS-115 §22 (the foundation is now covered by
+  `BLOCKED` per SDS-115 Â§22 (the foundation is now covered by
   regression tests but is not yet declared production-enabled).
 - `SOURCE_BACKED_PROMOTION`, `RULE_ENABLEMENT`, `RULE_ACTIVATION`,
   `GOVERNED_APPLICABILITY`, and `RULE_EVALUATION_PERSISTENCE` remain
-  `DEFERRED` per SDS-115 §22.
-- `MIGRATION_0006_ALLOWED = NO` per SDS-115 §22. Migration 0006 is
+  `DEFERRED` per SDS-115 Â§22.
+- `MIGRATION_0006_ALLOWED = NO` per SDS-115 Â§22. Migration 0006 is
   present in the repository but the runtime foundation is not
   declared production-enabled.
-- `IMPLEMENTATION_UNLOCKED = NO` per SDS-115 §22.
+- `IMPLEMENTATION_UNLOCKED = NO` per SDS-115 Â§22.
 - `INVALID_CAPABILITY` defensive branch in
   `EvidenceVerificationService` is unreachable through the production
   repository invariant (the repository refuses to insert
@@ -112,7 +141,7 @@ engineering threshold values.
 
 ### Scope
 This is an **alpha prerelease**.
-Phase 6 — Cross-system E2E Validation is not included in v3.0.0-alpha.2.
+Phase 6 â€” Cross-system E2E Validation is not included in v3.0.0-alpha.2.
 
 
 ## [1.3.0] - 2026-07-17
@@ -148,3 +177,4 @@ Phase 6 — Cross-system E2E Validation is not included in v3.0.0-alpha.2.
 - FastAPI + React professional architecture.
 - Model-4, DOE optimization, ensemble prediction, weld-lobe support,
   authentication, projects, weld points, revisions, approvals, and tests.
+

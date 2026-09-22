@@ -1,4 +1,4 @@
-# Spot Welding Parameter Analysis
+﻿# Spot Welding Parameter Analysis
 
 **SpotWeldPro AI** is a professional engineering decision-support platform for **resistance spot welding parameter analysis, governed rule evaluation, machine readiness, engineering traceability, and Digital Weld Passport workflows**.
 
@@ -36,6 +36,29 @@ AI does not override governed engineering calculations, thresholds, lifecycle co
 ---
 
 # Release Status
+### v3.0.0-alpha.4 — Engineering UI & Public Demo
+
+Highlights:
+- Complete public product experience
+- Landing / Features / How It Works / Packages / Demo / Login
+- Authenticated engineering application retained
+- Premium industrial UI refinement
+- Responsive desktop/mobile foundation
+- Deterministic engineering authority preserved
+- AI remains explanatory/supportive only
+
+Validation:
+- Frontend build: PASS
+- Backend standard tests: PASS
+- Python compileall: PASS
+- Targeted Ruff check for changed backend files: PASS
+- Alembic migration chain remains through 0010_digital_weld_passport
+- Repository-wide Ruff contains pre-existing technical debt: 239 findings
+
+Classification:
+Alpha / Pre-release
+
+Not production deployment approval.
 
 ## Current Development Status
 
@@ -62,13 +85,13 @@ The backend provides the deterministic and governed engineering foundation for:
 The frontend now provides a complete public pre-login product experience:
 
 ```text
-/               → Landing Page
-/features       → Engineering Features
-/how-it-works   → Engineering Workflow
-/packages       → Product Packages
-/demo           → Demo Experience
-/login          → Login
-/app            → Authenticated Engineering Application
+/               â†’ Landing Page
+/features       â†’ Engineering Features
+/how-it-works   â†’ Engineering Workflow
+/packages       â†’ Product Packages
+/demo           â†’ Demo Experience
+/login          â†’ Login
+/app            â†’ Authenticated Engineering Application
 
 Current Verification
 Backend
@@ -163,15 +186,15 @@ Supports systematic exploration of engineering parameters.
 Typical workflow:
 
 Engineering Inputs
-        ↓
+        â†“
 Parameter Space
-        ↓
+        â†“
 DOE Exploration
-        ↓
+        â†“
 Engineering Evaluation
-        ↓
+        â†“
 Optimization
-        ↓
+        â†“
 Recommended Engineering Region
 
 Optimization does not replace deterministic engineering acceptance rules.
@@ -202,7 +225,7 @@ How It Works
 
 The public engineering workflow is organized around six stages:
 
-01 — Project / Application Context
+01 â€” Project / Application Context
 
 Define the engineering context of the weld application.
 
@@ -213,7 +236,7 @@ Component
 Weld point
 Application
 Machine / line context
-02 — Material & Sheet Information
+02 â€” Material & Sheet Information
 
 Define the material stack and sheet configuration.
 
@@ -224,7 +247,7 @@ Sheet thickness
 Coating
 Stack-up
 Surface condition
-03 — Welding Parameters
+03 â€” Welding Parameters
 
 Enter or evaluate the principal resistance spot welding parameters.
 
@@ -236,7 +259,7 @@ Electrode force
 Squeeze time
 Hold time
 Cooling parameters
-04 — Analysis & Engineering Checks
+04 â€” Analysis & Engineering Checks
 
 The deterministic engineering layer evaluates the available parameter and rule context.
 
@@ -248,7 +271,7 @@ Applicable rule checks
 Failure context
 Engineering warnings
 Traceable decision evidence
-05 — Process Window & Optimization
+05 â€” Process Window & Optimization
 
 Engineering teams may explore:
 
@@ -258,7 +281,7 @@ DOE
 Sensitivity
 Optimization
 Failure-risk context
-06 — Result, Validation & Traceability
+06 â€” Result, Validation & Traceability
 
 Engineering outputs can be connected to:
 
@@ -370,29 +393,29 @@ Append-only corrections
 Immutable historical records
 Persistent governed idempotency
 Atomic state + audit + receipt transactions
-No silent “latest revision” authority
+No silent â€œlatest revisionâ€ authority
 AI may assist with explanation and knowledge workflows but does not override governed deterministic engineering decisions
 Governed Engineering Flow
 Engineering Rule Registry
-        ↓
+        â†“
 Evidence + Verification Authority
-        ↓
+        â†“
 SOURCE_BACKED Promotion
-        ↓
+        â†“
 ENABLED
-        ↓
+        â†“
 ACTIVE
-        ↓
+        â†“
 Deterministic Applicability Resolution
-        ↓
+        â†“
 Governed Rule Evaluation
-        ↓
+        â†“
 Persisted Rule Evaluation
-        ↓
+        â†“
 Machine Readiness Check
-        ↓
+        â†“
 Persisted MRC Assessment
-        ↓
+        â†“
 Digital Weld Passport
 
 Each governed stage pins the exact revisions and provenance required to reproduce the engineering decision later.
@@ -411,18 +434,18 @@ Governed promotion, enablement, and activation
 Lifecycle:
 
 DRAFT
-  ↓
+  â†“
 SOURCE_BACKED
-  ↓
+  â†“
 ENABLED
-  ↓
+  â†“
 ACTIVE
 
 Important rules:
 
 SOURCE_BACKED does not mean ENABLED
 SOURCE_BACKED does not mean ACTIVE
-No direct SOURCE_BACKED → ACTIVE transition
+No direct SOURCE_BACKED â†’ ACTIVE transition
 Activation requires a separate governed transition
 Exact scope and effective-time rules apply
 Legacy DEFAULT_RULES / rules_engine paths are not promoted into governed authority
@@ -468,9 +491,9 @@ Rule Enablement and Activation
 Governed rule lifecycle transitions are explicit and append-only.
 
 SOURCE_BACKED
-     ↓
+     â†“
   ENABLED
-     ↓
+     â†“
    ACTIVE
 
 Controls include:
@@ -480,7 +503,7 @@ Exact customer / project / site / machine scope
 Effective-time windows
 Fail-closed lifecycle checks
 No automatic activation
-No direct SOURCE_BACKED → ACTIVE
+No direct SOURCE_BACKED â†’ ACTIVE
 Historical lifecycle events remain immutable
 Governed Applicability Resolution
 
@@ -544,7 +567,7 @@ Atomic completion
 
 The persistence layer does not recompute applicability, unit conversion, or engineering comparison.
 
-Machine Readiness Check — MRC
+Machine Readiness Check â€” MRC
 
 Machine Readiness Check deterministically aggregates governed engineering evaluations.
 
@@ -587,9 +610,9 @@ Downstream consumers pin:
 
 assessment_id + revision_number
 
-There is no authoritative “latest MRC” lookup.
+There is no authoritative â€œlatest MRCâ€ lookup.
 
-Digital Weld Passport — DWP
+Digital Weld Passport â€” DWP
 
 The Digital Weld Passport provides governed engineering traceability.
 
@@ -599,28 +622,28 @@ Immutable passport revisions
 Exact weld identity scope
 Exact revision provenance
 Append-only correction and supersession
-No mutable “latest passport” authority
+No mutable â€œlatest passportâ€ authority
 MRC Integration
 
 DWP pins an exact Machine Readiness Assessment:
 
 assessment_id + revision_number
 
-There is no “latest MRC” authority.
+There is no â€œlatest MRCâ€ authority.
 
 DWP Lifecycle
 CREATED
-   ↓
+   â†“
 DRAFT
-   ↓
+   â†“
 ENGINEERING_DEFINED
-   ↓
+   â†“
 VALIDATION_PENDING
-   ↓
+   â†“
 VALIDATED
-   ↓
+   â†“
 APPROVED
-   ↓
+   â†“
 PRODUCTION_ACTIVE
 
 Historical dispositions may include:
@@ -652,26 +675,26 @@ Caller-owned atomic Unit of Work
 No MRC or rule-evaluation recomputation
 Architecture
 Public React UI
-        ↓
+        â†“
 Authenticated React Application
-        ↓
+        â†“
 REST API
-        ↓
+        â†“
 FastAPI Application Layer
-        ↓
+        â†“
 Application Services
-        ↓
+        â†“
 Governed Engineering Domain
-        ↓
-┌─────────────────────────────┐
-│ Engineering Rule Registry   │
-│ Evidence Verification       │
-│ Applicability Resolution    │
-│ Rule Evaluation             │
-│ Machine Readiness           │
-│ Digital Weld Passport       │
-└─────────────────────────────┘
-        ↓
+        â†“
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Engineering Rule Registry   â”‚
+â”‚ Evidence Verification       â”‚
+â”‚ Applicability Resolution    â”‚
+â”‚ Rule Evaluation             â”‚
+â”‚ Machine Readiness           â”‚
+â”‚ Digital Weld Passport       â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+        â†“
 SQLAlchemy / PostgreSQL
 
 Governed write operations use caller-owned Unit of Work boundaries.
@@ -692,11 +715,11 @@ Authenticated engineering application shell
 Public routes:
 
 /
-├── features
-├── how-it-works
-├── packages
-├── demo
-└── login
+â”œâ”€â”€ features
+â”œâ”€â”€ how-it-works
+â”œâ”€â”€ packages
+â”œâ”€â”€ demo
+â””â”€â”€ login
 
 Authenticated application:
 
@@ -859,4 +882,5 @@ License
 See LICENSE for repository licensing terms.
 
 
-Bunu mevcut README’nin yerine geçirmenizi öneririm. Özellikle eski README’deki `v3.0.0-alpha.3` / `v3.0.0-alpha.1` kar
+Bunu mevcut READMEâ€™nin yerine geÃ§irmenizi Ã¶neririm. Ã–zellikle eski READMEâ€™deki `v3.0.0-alpha.3` / `v3.0.0-alpha.1` kar
+
