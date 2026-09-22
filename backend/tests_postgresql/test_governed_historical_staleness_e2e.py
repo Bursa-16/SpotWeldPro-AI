@@ -266,10 +266,6 @@ def _create_resolution(
         basis_valid=event.event_type is not RuleLifecycleEventType.CORRECT,
         effective_from=event.effective_from,
         expires_at=event.expires_at,
-        applicability_metadata=rule_rev.applicability_metadata or {},
-        applicability_schema_version=(
-            rule_rev.applicability_schema_version or "1.0"
-        ),
         scope_snapshot={"project": (PROJECT_SCOPE["project"],)},
     )
     return resolve_governed_applicability(
@@ -304,10 +300,6 @@ def _load_applicability_candidate(
         basis_valid=event.event_type is not RuleLifecycleEventType.CORRECT,
         effective_from=event.effective_from or dt,
         expires_at=event.expires_at,
-        applicability_metadata=rev.applicability_metadata or {},
-        applicability_schema_version=(
-            rev.applicability_schema_version or "1.0"
-        ),
         scope_snapshot={"project": (PROJECT_SCOPE["project"],)},
     )
 

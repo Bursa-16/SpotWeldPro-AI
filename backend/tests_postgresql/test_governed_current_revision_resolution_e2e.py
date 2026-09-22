@@ -1184,7 +1184,6 @@ def _persist_dwp(
             draft=DigitalWeldPassportRevisionDraft(
                 passport_id=passport_id,
                 revision_number=1,
-                reason="Phase 6B2B historical DWP",
                 supersedes_revision_id=None,
                 context_snapshot={
                     "passport_id": passport_id,
