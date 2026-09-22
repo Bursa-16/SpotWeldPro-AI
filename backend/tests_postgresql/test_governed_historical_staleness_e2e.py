@@ -584,7 +584,7 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                         supersedes_assessment_revision_id=None,
                         checks=(GovernedMachineReadinessCheck(
                             check_id="phase-6b1-check-1", required=True, description="Phase 6B1 check",
-                            condition=readiness_domain.CheckCondition.PASS, reason="Governed input present",
+                            condition=readiness_domain.CheckCondition.PASSED, reason="Governed input present",
                             rule_evaluation_snapshot=GovernedRuleEvaluationSnapshot(
                                 evaluation_id=eval1.evaluation_id, revision_number=eval1.revision_number,
                                 rule_id=eval1.rule_id, rule_revision=eval1.rule_revision, outcome=eval1.outcome,
