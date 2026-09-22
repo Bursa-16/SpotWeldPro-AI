@@ -305,12 +305,19 @@ def _load_applicability_candidate(
 
 
 def _comparison(rule_rev: EngineeringRuleRevision, res) -> RuleComparison:
-    obs = Observation(parameter="governed_input_present", value="true", unit=None)
+    obs = Observation(
+        parameter="governed_input_present",
+        value=1.0,
+        unit="1",
+    )
     req = RuleRequirement(
-        rule_id=rule_rev.engineering_rule.rule_id, revision=rule_rev.revision,
-        parameter="governed_input_present", operator=RuleOperator.EQUALS,
-        compared_value="true", safe_default=SafeDefault.UNRESOLVED,
-        missing_handling=MissingHandling.DATA_INSUFFICIENT,
+        rule_id=rule_rev.engineering_rule.rule_id,
+        revision=rule_rev.revision,
+        parameter="governed_input_present",
+        operator=RuleOperator.EQUALS,
+        unit="1",
+        min_value=1.0,
+        max_value=1.0,
     )
     result = compare_rule(req, obs, res)
     assert result.outcome is RuleComparisonOutcome.PASS

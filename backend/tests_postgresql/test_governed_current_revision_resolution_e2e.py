@@ -1187,10 +1187,16 @@ def _persist_dwp(
                 supersedes_revision_id=None,
                 context_snapshot={
                     "passport_id": passport_id,
-                    "scope_snapshot": {"project": project},
+                    "scope_snapshot": VerificationScopeSnapshot(
+                        project=project
+                    ).as_dict(),
                 },
                 provenance_snapshot={"rule_evaluations": [eval_snapshot]},
-                authority_snapshot={"scope_snapshot": {"project": project}},
+                authority_snapshot={
+                    "scope_snapshot": VerificationScopeSnapshot(
+                        project=project
+                    ).as_dict()
+                },
                 mrc_snapshot=mrc_snapshot,
             ),
             receipt_id=f"{rule_id}-dwp-receipt-1",
