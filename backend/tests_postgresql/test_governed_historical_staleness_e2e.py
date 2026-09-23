@@ -37,7 +37,6 @@ from app.domain.idempotency_types import CanonicalRequestHash, CommandIdentity
 from app.domain.readiness import (
     GovernedMachineReadinessCheck,
     GovernedRuleEvaluationSnapshot,
-    ReadinessState,
 )
 from app.domain.rule_applicability import (
     GovernedApplicabilityCandidate,
@@ -618,8 +617,27 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                 unit_of_work.commit()
 
         # === Create DWP1 referencing MRC1 ===
-        mrc_snapshot = {"assessment_id": ASSESSMENT_ID, "revision_number": 1, "state": ReadinessState.READY.value}
-        eval_snapshot = {"evaluation_id": EVALUATION_ID, "revision_number": 1, "rule_id": RULE_ID, "rule_revision": RULE_REVISION_1, "outcome": "PASS"}
+        mrc_row = session.scalar(
+            select(MachineReadinessAssessmentRevision).where(
+                MachineReadinessAssessmentRevision.assessment_id == ASSESSMENT_ID,
+                MachineReadinessAssessmentRevision.revision_number == 1,
+            )
+        )
+        eval_row = session.scalar(
+            select(RuleEvaluation).where(
+                RuleEvaluation.evaluation_id == EVALUATION_ID,
+                RuleEvaluation.revision_number == 1,
+            )
+        )
+        assert mrc_row is not None
+        assert eval_row is not None
+
+        mrc_snapshot = DigitalWeldPassportService._mrc_snapshot(mrc_row)
+        eval_snapshot = DigitalWeldPassportService._rule_evaluation_snapshot(eval_row)
+
+        # Snapshot reads autobegin a transaction; DWP governed UOW requires
+        # a clean session boundary.
+        session.commit()
 
         with session, GovernedUnitOfWork(session) as unit_of_work:
                 dwp_service = DigitalWeldPassportService(unit_of_work)
