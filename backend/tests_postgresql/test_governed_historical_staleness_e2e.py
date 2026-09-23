@@ -857,7 +857,7 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                 _load_applicability_candidate(session, rev2_after, DECISION_TIME + timedelta(minutes=30)),
             )
             resolution = resolve_governed_applicability(
-                ctx.as_mapping(),
+                ctx,
                 DECISION_TIME + timedelta(minutes=30),
                 candidates,
             )
