@@ -271,7 +271,7 @@ def test_weld_schedule_revision_and_pulse_constraints_exist() -> None:
     } <= revision_checks
 
     assert (
-        "fk_engineering_weld_schedule_revisions_same_schedule_supersession"
+        "fk_eng_weld_sched_rev_same_sched_supersession"
         in revision_fks
     )
 
