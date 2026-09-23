@@ -566,11 +566,33 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                 unit_of_work.commit()
 
         # === Create MRC1 referencing Evaluation1 ===
-        mrc_result = {"state": ReadinessState.READY, "decision_time": DECISION_TIME + timedelta(minutes=1), "context": _ctx_snapshot(), "prerequisites": [], "validated_applicable_basis_count": 1}
+        evaluation_snapshot = GovernedRuleEvaluationSnapshot(
+            evaluation_id=EVALUATION_ID,
+            revision_number=1,
+            comparison=comp1,
+        )
+        mrc_checks = (
+            GovernedMachineReadinessCheck(
+                check_id="phase-6b1-check-1",
+                required=True,
+                evaluations=(evaluation_snapshot,),
+                description="Phase 6B1 check",
+            ),
+        )
+        mrc_result = readiness_domain.evaluate_machine_readiness(
+            res1.context,
+            DECISION_TIME,
+            mrc_checks,
+        )
 
         with session:
-            rev1 = session.get(EngineeringRuleRevision, rev1_id)
-            eval1 = session.scalar(select(RuleEvaluation).where(RuleEvaluation.evaluation_id == EVALUATION_ID, RuleEvaluation.revision_number == 1))
+            eval1 = session.scalar(
+                select(RuleEvaluation).where(
+                    RuleEvaluation.evaluation_id == EVALUATION_ID,
+                    RuleEvaluation.revision_number == 1,
+                )
+            )
+            assert eval1 is not None
 
             # Read operations above autobegin a transaction.
             # GovernedUnitOfWork requires a clean session boundary.
@@ -580,17 +602,11 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                 mrc_service = MachineReadinessService(unit_of_work)
                 mrc_result_ref = mrc_service.persist_assessment(
                     draft=MachineReadinessPersistenceDraft(
-                        assessment_id=ASSESSMENT_ID, revision_number=1, result=mrc_result,
+                        assessment_id=ASSESSMENT_ID,
+                        revision_number=1,
+                        result=mrc_result,
                         supersedes_assessment_revision_id=None,
-                        checks=(GovernedMachineReadinessCheck(
-                            check_id="phase-6b1-check-1", required=True, description="Phase 6B1 check",
-                            condition=readiness_domain.CheckCondition.PASSED, reason="Governed input present",
-                            rule_evaluation_snapshot=GovernedRuleEvaluationSnapshot(
-                                evaluation_id=eval1.evaluation_id,
-                                revision_number=eval1.revision_number,
-                                comparison=eval1.comparison,
-                            ),
-                        ),),
+                        checks=mrc_checks,
                     ),
                     receipt_id="phase-6b1-mrc-receipt-1",
                     command_identity=_identity(MachineReadinessService.COMMAND_NAMESPACE, ASSESSMENT_ID, "phase-6b1-mrc-1"),
