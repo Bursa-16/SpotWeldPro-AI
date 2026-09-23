@@ -773,7 +773,7 @@ class EngineeringWeldScheduleRevision(Base):
                 "engineering_weld_schedule_revisions.engineering_weld_schedule_id",
                 "engineering_weld_schedule_revisions.id",
             ],
-            name="fk_engineering_weld_schedule_revisions_same_schedule_supersession",
+            name="fk_eng_weld_sched_rev_same_sched_supersession",
             ondelete="RESTRICT",
         ),
         CheckConstraint(

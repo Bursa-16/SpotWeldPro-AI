@@ -150,7 +150,7 @@ def upgrade():
     sa.CheckConstraint('squeeze_cycles >= 0', name='ck_engineering_weld_schedule_revisions_non_negative_squeeze'),
     sa.CheckConstraint('supersedes_revision_id IS NULL OR supersedes_revision_id != id', name='ck_engineering_weld_schedule_revisions_not_self_superseding'),
     sa.ForeignKeyConstraint(['created_by_user_id'], ['users.id'], ondelete='RESTRICT'),
-    sa.ForeignKeyConstraint(['engineering_weld_schedule_id', 'supersedes_revision_id'], ['engineering_weld_schedule_revisions.engineering_weld_schedule_id', 'engineering_weld_schedule_revisions.id'], name='fk_engineering_weld_schedule_revisions_same_schedule_supersession', ondelete='RESTRICT'),
+    sa.ForeignKeyConstraint(['engineering_weld_schedule_id', 'supersedes_revision_id'], ['engineering_weld_schedule_revisions.engineering_weld_schedule_id', 'engineering_weld_schedule_revisions.id'], name='fk_eng_weld_sched_rev_same_sched_supersession', ondelete='RESTRICT'),
     sa.ForeignKeyConstraint(['engineering_weld_schedule_id'], ['engineering_weld_schedules.id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('engineering_weld_schedule_id', 'id', name='uq_engineering_weld_schedule_revisions_context_internal_id'),
