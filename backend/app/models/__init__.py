@@ -4,6 +4,15 @@ from app.models.digital_weld_passport import (  # noqa: F401
     DigitalWeldPassportLifecycleState,
     DigitalWeldPassportRevision,
 )
+from app.models.engineering_library import (  # noqa: F401
+    EngineeringCoating,
+    EngineeringCoatingRevision,
+    EngineeringMaterial,
+    EngineeringMaterialRevision,
+    EngineeringStackLayer,
+    EngineeringStackUp,
+    EngineeringStackUpRevision,
+)
 from app.models.entities import *
 from app.models.governance import GovernedAuditEvent  # noqa: F401
 from app.models.machine_readiness import (  # noqa: F401
