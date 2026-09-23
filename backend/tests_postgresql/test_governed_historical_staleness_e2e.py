@@ -673,6 +673,10 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                 revision = session.scalar(select(DigitalWeldPassportRevision).where(DigitalWeldPassportRevision.passport_id == PASSPORT_ID, DigitalWeldPassportRevision.revision_number == 1))
                 current_event = session.scalar(select(DigitalWeldPassportLifecycleEvent).where(DigitalWeldPassportLifecycleEvent.passport_revision_id == revision.id).order_by(DigitalWeldPassportLifecycleEvent.revision_number.desc()))
 
+                # Read operations above autobegin a transaction.
+                # GovernedUnitOfWork requires a clean session boundary.
+                session.commit()
+
                 with GovernedUnitOfWork(session) as unit_of_work:
                     result = DigitalWeldPassportService(unit_of_work).transition_revision(
                         transition=DigitalWeldPassportLifecycleTransitionDraft(
