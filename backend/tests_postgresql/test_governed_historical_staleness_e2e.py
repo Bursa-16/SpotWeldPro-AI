@@ -626,7 +626,10 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                 dwp_result = dwp_service.create_draft_revision(
                     draft=DigitalWeldPassportRevisionDraft(
                         passport_id=PASSPORT_ID, revision_number=1,
-                        supersedes_revision_id=None, context_snapshot=_ctx_snapshot(),
+                        supersedes_revision_id=None, context_snapshot={
+                            "passport_id": PASSPORT_ID,
+                            "scope_snapshot": LIFECYCLE_SCOPE,
+                        },
                         provenance_snapshot={"rule_evaluations": [eval_snapshot]},
                         authority_snapshot={"scope_snapshot": PROJECT_SCOPE}, mrc_snapshot=mrc_snapshot,
                     ),
