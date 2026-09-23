@@ -614,7 +614,7 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                     audit=_audit("phase-6b1-mrc-audit-1", ACTORS["submitter"], user_ids["submitter"], "phase-6b1-mrc-1", "Phase 6B1 MRC 1"),
                     completed_at=DECISION_TIME + timedelta(minutes=2),
                 )
-                assert mrc_result_ref.result_type == "machine_readiness_assessment"
+                assert mrc_result_ref.result_type == "machine_readiness"
                 unit_of_work.commit()
 
         # === Create DWP1 referencing MRC1 ===
