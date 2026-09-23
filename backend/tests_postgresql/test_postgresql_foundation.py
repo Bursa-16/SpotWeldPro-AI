@@ -26,7 +26,7 @@ from app.repositories.idempotency_repository import IdempotencyRepository
 
 NOW = datetime(2032, 3, 4, 5, 6, 7, tzinfo=timezone.utc)
 LATER = datetime(2032, 3, 4, 5, 7, 8, tzinfo=timezone.utc)
-EXPECTED_HEAD = '0010_digital_weld_passport'
+EXPECTED_HEAD = '0011_engineering_library_foundation'
 EARLIER_REVISION = '0004_persistent_idempotency'
 LONG_REVISION = '0005_registry_evidence_applicability'
 EXPECTED_GOVERNED_TABLES = {
