@@ -69,6 +69,15 @@ ENGINEERING_LIBRARY_TABLES = {
     "engineering_stack_up_revisions",
     "engineering_stack_layers",
 }
+ENGINEERING_LIBRARY_CE02B2_TABLES = {
+    "engineering_electrodes",
+    "engineering_electrode_revisions",
+    "engineering_weld_guns",
+    "engineering_weld_gun_revisions",
+    "engineering_weld_schedules",
+    "engineering_weld_schedule_revisions",
+    "engineering_weld_pulses",
+}
 CORE_GOVERNED_TABLES = BASE_REGISTRY_TABLES | LIFECYCLE_TABLES | VERIFICATION_TABLES
 ALL_GOVERNED_TABLES = CORE_GOVERNED_TABLES | EVALUATION_TABLES | MRC_TABLES | DWP_TABLES
 
@@ -266,7 +275,7 @@ def test_sqlite_registry_migration_upgrades_empty_and_downgrades_cleanly(
         assert ALL_GOVERNED_TABLES <= migrated_tables
         with migrated_engine.connect() as connection:
             assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-                "0011_engineering_library_foundation"
+                "0012_electrode_weldgun_weldschedule_persistence"
             )
             for table_name in ALL_GOVERNED_TABLES:
                 assert connection.scalar(text(f"SELECT COUNT(*) FROM {table_name}")) == 0
@@ -607,7 +616,7 @@ def test_rule_evaluation_persistence_migration_round_trip(
         _assert_registry_schema_matches_models(upgraded_engine, ALL_GOVERNED_TABLES)
         with upgraded_engine.connect() as connection:
             assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-                "0011_engineering_library_foundation"
+                "0012_electrode_weldgun_weldschedule_persistence"
             )
 
     _run_downgrade(monkeypatch, database_url, "0007_rule_lifecycle_events")
@@ -639,7 +648,7 @@ def test_machine_readiness_persistence_migration_round_trip(
         _assert_registry_schema_matches_models(upgraded_engine, ALL_GOVERNED_TABLES)
         with upgraded_engine.connect() as connection:
             assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-                "0011_engineering_library_foundation"
+                "0012_electrode_weldgun_weldschedule_persistence"
             )
 
     _run_downgrade(monkeypatch, database_url, "0008_rule_evaluation_persistence")
@@ -690,3 +699,46 @@ def test_engineering_library_foundation_migration_round_trip(
         inspector = inspect(engine)
         tables = set(inspector.get_table_names())
         assert ENGINEERING_LIBRARY_TABLES <= tables
+
+
+def test_electrode_weldgun_weldschedule_persistence_migration_round_trip(
+    monkeypatch,
+    migration_database_dir,
+):
+    database_path = migration_database_dir / "electrode_weldgun_weldschedule_persistence.db"
+    database_url = _sqlite_url(database_path)
+
+    _run_upgrade(
+        monkeypatch,
+        database_url,
+        "0012_electrode_weldgun_weldschedule_persistence",
+    )
+
+    with _sqlite_engine(database_url) as engine:
+        inspector = inspect(engine)
+        tables = set(inspector.get_table_names())
+        assert ENGINEERING_LIBRARY_TABLES <= tables
+        assert ENGINEERING_LIBRARY_CE02B2_TABLES <= tables
+
+    _run_downgrade(
+        monkeypatch,
+        database_url,
+        "0011_engineering_library_foundation",
+    )
+
+    with _sqlite_engine(database_url) as engine:
+        inspector = inspect(engine)
+        tables = set(inspector.get_table_names())
+        assert ENGINEERING_LIBRARY_CE02B2_TABLES.isdisjoint(tables)
+        assert ENGINEERING_LIBRARY_TABLES <= tables
+
+    _run_upgrade(
+        monkeypatch,
+        database_url,
+        "0012_electrode_weldgun_weldschedule_persistence",
+    )
+
+    with _sqlite_engine(database_url) as engine:
+        inspector = inspect(engine)
+        tables = set(inspector.get_table_names())
+        assert ENGINEERING_LIBRARY_CE02B2_TABLES <= tables

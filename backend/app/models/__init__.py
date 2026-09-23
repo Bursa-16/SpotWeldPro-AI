@@ -7,11 +7,18 @@ from app.models.digital_weld_passport import (  # noqa: F401
 from app.models.engineering_library import (  # noqa: F401
     EngineeringCoating,
     EngineeringCoatingRevision,
+    EngineeringElectrode,
+    EngineeringElectrodeRevision,
     EngineeringMaterial,
     EngineeringMaterialRevision,
     EngineeringStackLayer,
     EngineeringStackUp,
     EngineeringStackUpRevision,
+    EngineeringWeldGun,
+    EngineeringWeldGunRevision,
+    EngineeringWeldPulse,
+    EngineeringWeldSchedule,
+    EngineeringWeldScheduleRevision,
 )
 from app.models.entities import *
 from app.models.governance import GovernedAuditEvent  # noqa: F401
