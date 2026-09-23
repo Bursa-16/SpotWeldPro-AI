@@ -845,7 +845,13 @@ def test_governed_historical_staleness_on_postgresql(postgresql_engine, monkeypa
                 )
             )
             assert rev1_persisted is not None
-            ctx = GovernedApplicabilityContext.from_mapping(_ctx_snapshot())
+            ctx_data = _ctx_snapshot()
+            ctx = GovernedApplicabilityContext(
+                customer=ctx_data.get("customer"),
+                project=ctx_data.get("project"),
+                site=ctx_data.get("site"),
+                machine=ctx_data.get("machine"),
+            )
             candidates = (
                 _load_applicability_candidate(session, rev1_persisted, DECISION_TIME + timedelta(minutes=30)),
                 _load_applicability_candidate(session, rev2_after, DECISION_TIME + timedelta(minutes=30)),
