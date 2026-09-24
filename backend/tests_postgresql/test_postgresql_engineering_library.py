@@ -25,8 +25,8 @@ from sqlalchemy.orm import Session
 def _insert_user(session: Session, email: str) -> int:
     result = session.execute(
         text(
-            "INSERT INTO users (email, full_name, password_hash, role, is_active) "
-            "VALUES (:email, 'Test User', 'x', 'Engineer', TRUE) RETURNING id"
+            "INSERT INTO users (email, full_name, password_hash, role, is_active, created_at, updated_at) "
+            "VALUES (:email, 'Test User', 'x', 'Engineer', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id"
         ),
         {"email": email},
     )
