@@ -12,6 +12,7 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.digital_weld_passport import router as digital_weld_passport_router
 from app.api.v1.engineering import router as engineering_router
+from app.api.v1.engineering_library import router as engineering_library_router
 from app.api.v1.evidence_verification import router as evidence_verification_router
 from app.api.v1.failure_probability import router as failure_probability_router
 from app.api.v1.health import router as health_router
@@ -70,3 +71,4 @@ app.include_router(evidence_verification_router, prefix="/api/v1")
 app.include_router(weld_analysis_router, prefix="/api/v1")
 app.include_router(projects_router, prefix="/api/v1")
 app.include_router(tests_router, prefix="/api/v1")
+app.include_router(engineering_library_router, prefix="/api/v1")
