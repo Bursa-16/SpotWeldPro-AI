@@ -153,7 +153,7 @@ class TestMaterialRevisionLifecycleCheckConstraint:
             with pytest.raises(IntegrityError):
                 _insert_material_revision(
                     session, identity_pk, 1, user_id,
-                    lifecycle_status="INVALID_STATUS",
+                    lifecycle_status="INVALID",
                 )
                 session.flush()
 
