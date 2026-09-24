@@ -37,10 +37,10 @@ def _insert_material_identity(session: Session, material_id: str, user_id: int) 
     result = session.execute(
         text(
             "INSERT INTO engineering_materials "
-            "(material_id, created_by_user_id) "
-            "VALUES (:material_id, :uid) RETURNING id"
+            "(material_id, created_by_user_id, created_by_actor_id, created_at) "
+            "VALUES (:material_id, :uid, :actor, CURRENT_TIMESTAMP) RETURNING id"
         ),
-        {"material_id": material_id, "uid": user_id},
+        {"material_id": material_id, "uid": user_id, "actor": f"user:{user_id}"},
     )
     return result.scalar_one()
 
@@ -55,20 +55,28 @@ def _insert_material_revision(
     result = session.execute(
         text(
             "INSERT INTO engineering_material_revisions "
-            "(engineering_material_id, revision_number, name, specification, "
-            " material_type, content_hash, software_version, schema_version, "
-            " canonicalization_version, hash_algorithm, "
-            " lifecycle_status, source_class, actor_id, reason) "
+            "(engineering_material_id, revision_number, "
+            " lifecycle_status, source_class, "
+            " family, grade, "
+            " properties_snapshot, evidence_reference_ids, "
+            " schema_version, canonicalization_version, hash_algorithm, "
+            " content_hash, software_version, "
+            " created_by_user_id, created_by_actor_id, created_at) "
             "VALUES "
-            "(:eid, :rev, 'Steel', 'ASTM A36', 'STEEL', 'abc123', "
-            " 'CE-02C', '1', '1', 'sha256', "
-            " :status, 'MEASURED', :actor, 'initial') "
+            "(:eid, :rev, "
+            " :status, 'SOURCE_BACKED', "
+            " 'Steel', 'ASTM A36', "
+            " '{}', '[]', "
+            " '1', '1', 'sha256', "
+            " 'abc123', 'CE-02C', "
+            " :uid, :actor, CURRENT_TIMESTAMP) "
             "RETURNING id"
         ),
         {
             "eid": identity_pk,
             "rev": revision_number,
             "status": lifecycle_status,
+            "uid": user_id,
             "actor": f"user:{user_id}",
         },
     )
@@ -162,10 +170,10 @@ class TestCoatingUniqueConstraint:
             session.execute(
                 text(
                     "INSERT INTO engineering_coatings "
-                    "(coating_id, created_by_user_id) "
-                    "VALUES (:cid, :uid)"
+                    "(coating_id, created_by_user_id, created_by_actor_id, created_at) "
+                    "VALUES (:cid, :uid, :actor, CURRENT_TIMESTAMP)"
                 ),
-                {"cid": "COAT-PG-DUP-001", "uid": user_id},
+                {"cid": "COAT-PG-DUP-001", "uid": user_id, "actor": f"user:{user_id}"},
             )
             session.flush()
 
@@ -173,10 +181,10 @@ class TestCoatingUniqueConstraint:
                 session.execute(
                     text(
                         "INSERT INTO engineering_coatings "
-                        "(coating_id, created_by_user_id) "
-                        "VALUES (:cid, :uid)"
+                        "(coating_id, created_by_user_id, created_by_actor_id, created_at) "
+                        "VALUES (:cid, :uid, :actor, CURRENT_TIMESTAMP)"
                     ),
-                    {"cid": "COAT-PG-DUP-001", "uid": user_id},
+                    {"cid": "COAT-PG-DUP-001", "uid": user_id, "actor": f"user:{user_id}"},
                 )
                 session.flush()
 
