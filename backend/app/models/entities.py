@@ -19,7 +19,7 @@ class Project(Base):
     project_name: Mapped[str] = mapped_column(String(200))
     customer: Mapped[str] = mapped_column(String(200), default="")
     vehicle_platform: Mapped[str] = mapped_column(String(200), default="")
-    status: Mapped[str] = mapped_column(String(40), default="Aktif")
+    status: Mapped[str] = mapped_column(String(40), default="ACTIVE")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
@@ -41,8 +41,8 @@ class WeldPoint(Base):
     robot: Mapped[str] = mapped_column(String(100), default="")
     gun: Mapped[str] = mapped_column(String(100), default="")
     operation_no: Mapped[str] = mapped_column(String(100), default="")
-    criticality: Mapped[str] = mapped_column(String(50), default="Standart")
-    approval_status: Mapped[str] = mapped_column(String(50), default="Taslak")
+    criticality: Mapped[str] = mapped_column(String(50), default="STANDARD")
+    approval_status: Mapped[str] = mapped_column(String(50), default="DRAFT")
 
     analysis_input: Mapped[dict] = mapped_column(JSON)
     analysis_result: Mapped[dict] = mapped_column(JSON)
