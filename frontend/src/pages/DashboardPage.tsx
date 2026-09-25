@@ -13,6 +13,19 @@ type DashboardData = {
   recent_audit_events: number
 }
 
+// Isolated mapping from canonical role codes to display labels.
+// Structure is intentionally flat so it can be moved into TR/EN i18n later.
+const ROLE_LABELS: Record<string, string> = {
+  SYSTEM_ADMIN:           'System Admin',
+  PROCESS_ENGINEER:       'Process Engineer',
+  QUALITY_ENGINEER:       'Quality Engineer',
+  MANUFACTURING_ENGINEER: 'Manufacturing Engineer',
+  MAINTENANCE:            'Maintenance',
+  OPERATOR:               'Operator',
+  READ_ONLY:              'Read Only',
+  CUSTOMER:               'Customer',
+}
+
 export function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [user, setUser] = useState<{ full_name: string; role: string } | null>(null)
@@ -76,7 +89,7 @@ export function DashboardPage() {
         <div>
           <h1>Command Center</h1>
           <p className="subtitle">
-            {user ? `${user.full_name} — ${user.role}` : '…'} · production quality &amp; engineering overview
+            {user ? `${user.full_name} — ${ROLE_LABELS[user.role] ?? user.role}` : '…'} · production quality &amp; engineering overview
           </p>
         </div>
       </header>

@@ -555,7 +555,7 @@ def test_persisted_evaluation_returns_explicit_outcome_and_exact_pins(
             session,
             email=actor_email,
             full_name="Evaluation Engineer",
-            role="Process Engineer",
+            role="PROCESS_ENGINEER",
         )
         session.commit()
         actor_id = actor.id
@@ -604,7 +604,7 @@ def test_persisted_evaluation_returns_explicit_outcome_and_exact_pins(
         )
         assert audit_event is not None
         assert audit_event.actor_user_id == actor_id
-        assert audit_event.actor_role == "Process Engineer"
+        assert audit_event.actor_role == "PROCESS_ENGINEER"
         after_counts = _governed_counts(session)
     assert after_counts == (before_counts[0] + 1, before_counts[1] + 1, before_counts[2] + 1)
 

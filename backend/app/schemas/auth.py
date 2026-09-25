@@ -1,6 +1,8 @@
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.models.enums import UserRole
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -21,7 +23,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     full_name: str = Field(min_length=2, max_length=200)
     password: str = Field(min_length=8)
-    role: str = "Read Only"
+    role: str = UserRole.READ_ONLY
 
 
 class UserResponse(BaseModel):

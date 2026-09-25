@@ -17,7 +17,7 @@ def database():
  Base.metadata.create_all(bind=engine)
  with SessionLocal() as db:
   if not db.query(User).filter(User.email=='admin@spotwelding.example').first():
-   db.add(User(email='admin@spotwelding.example',full_name='System Administrator',password_hash=hash_password('ChangeMe123!'),role='System Admin',is_active=True)); db.commit()
+   db.add(User(email='admin@spotwelding.example',full_name='System Administrator',password_hash=hash_password('ChangeMe123!'),role='SYSTEM_ADMIN',is_active=True)); db.commit()
  yield
  Base.metadata.drop_all(bind=engine); engine.dispose()
  for _ in range(10):

@@ -26,6 +26,7 @@ from app.api.v1.weld_analysis import router as weld_analysis_router
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models.entities import User
+from app.models.enums import UserRole
 
 
 @asynccontextmanager
@@ -36,7 +37,7 @@ async def lifespan(_app: FastAPI):
         if admin_email and admin_password:
             admin = db.scalar(select(User).where(User.email == admin_email))
             if not admin:
-                db.add(User(email=admin_email, full_name="System Administrator", password_hash=hash_password(admin_password), role="System Admin"))
+                db.add(User(email=admin_email, full_name="System Administrator", password_hash=hash_password(admin_password), role=UserRole.SYSTEM_ADMIN))
                 db.commit()
     yield
 

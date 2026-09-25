@@ -11,6 +11,7 @@ from app.core.security import (
 )
 from app.db.session import get_db
 from app.models.entities import User
+from app.models.role_policy import canonicalize_role
 from app.schemas.auth import (
     LoginRequest, RefreshRequest, TokenResponse, UserCreate, UserResponse,
 )
@@ -65,11 +66,16 @@ def create_user(
     if existing:
         raise HTTPException(status_code=409, detail="Email already exists")
 
+    try:
+        canonical_role = canonicalize_role(payload.role)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+
     user = User(
         email=payload.email,
         full_name=payload.full_name,
         password_hash=hash_password(payload.password),
-        role=payload.role,
+        role=canonical_role,
     )
     db.add(user)
     db.commit()

@@ -9,18 +9,20 @@ from sqlalchemy.orm import Session
 from app.core.security import decode_token
 from app.db.session import get_db
 from app.models.entities import User
+from app.models.enums import UserRole
+from app.models.role_policy import normalize_user_role
 
 bearer = HTTPBearer(auto_error=True)
 
 ROLE_PERMISSIONS = {
-    "System Admin": {"*"},
-    "Process Engineer": {"project:read", "project:write", "weld:read", "weld:write", "approval:read", "test:read"},
-    "Quality Engineer": {"project:read", "weld:read", "approval:read", "approval:write", "test:read", "test:write"},
-    "Manufacturing Engineer": {"project:read", "weld:read", "weld:write", "test:read"},
-    "Maintenance": {"project:read", "weld:read", "test:read"},
-    "Operator": {"project:read", "weld:read", "test:read"},
-    "Read Only": {"project:read", "weld:read", "approval:read", "test:read"},
-    "Customer": {"project:read", "weld:read", "approval:read", "test:read"},
+    UserRole.SYSTEM_ADMIN:           {"*"},
+    UserRole.PROCESS_ENGINEER:       {"project:read", "project:write", "weld:read", "weld:write", "approval:read", "test:read"},
+    UserRole.QUALITY_ENGINEER:       {"project:read", "weld:read", "approval:read", "approval:write", "test:read", "test:write"},
+    UserRole.MANUFACTURING_ENGINEER: {"project:read", "weld:read", "weld:write", "test:read"},
+    UserRole.MAINTENANCE:            {"project:read", "weld:read", "test:read"},
+    UserRole.OPERATOR:               {"project:read", "weld:read", "test:read"},
+    UserRole.READ_ONLY:              {"project:read", "weld:read", "approval:read", "test:read"},
+    UserRole.CUSTOMER:               {"project:read", "weld:read", "approval:read", "test:read"},
 }
 
 
@@ -52,7 +54,8 @@ def get_governed_actor_user(user: User = Depends(get_current_user)) -> User:  # 
 
 def require_permission(permission: str):
     def dependency(user: User = Depends(get_current_user)) -> User:  # noqa: B008
-        permissions = ROLE_PERMISSIONS.get(user.role, set())
+        normalized = normalize_user_role(user.role)
+        permissions = ROLE_PERMISSIONS.get(normalized, set())
         if "*" not in permissions and permission not in permissions:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
         return user
