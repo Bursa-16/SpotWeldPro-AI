@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import { createWeldPoint, listWeldPoints } from '../api/client'
 import type { Project, WeldPoint } from '../types/project'
 import type { WeldAnalysisRequest } from '../types/weld'
+import { RISK_LEVEL_LABELS } from '../constants/riskLevel'
 
 const baseInput: WeldAnalysisRequest = {
   material_family: 'Düşük / Orta Karbonlu Çelik',
@@ -97,7 +98,7 @@ export function WeldPointWizard({ project, onBack }: { project: Project; onBack:
                     <td className="mono">{p.point_code}</td>
                     <td>{p.part_no || '—'}</td>
                     <td className="mono">%{p.analysis_result.score.toFixed(0)}</td>
-                    <td><span className={`badge ${p.analysis_result.risk_level.toLowerCase().includes('düşük') ? 'ok' : 'warn'}`}>{p.analysis_result.risk_level}</span></td>
+                    <td><span className={`badge ${p.analysis_result.risk_level === 'LOW' ? 'ok' : 'warn'}`}>{RISK_LEVEL_LABELS[p.analysis_result.risk_level] ?? p.analysis_result.risk_level}</span></td>
                     <td className="mono">{p.version_no}</td>
                   </tr>
                 ))}

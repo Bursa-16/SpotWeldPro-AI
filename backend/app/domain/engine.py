@@ -1,5 +1,6 @@
 import math
 from app.domain.materials import MATERIAL_FAMILIES
+from app.models.enums import RiskLevel
 TABLE=[(0.5,3.0,3.9),(0.6,3.2,4.3),(0.7,3.5,4.6),(0.8,3.8,4.9),(0.9,4.0,5.2),(1.0,4.2,5.5),(1.2,4.6,6.0),(1.5,5.2,6.7),(1.75,5.6,7.3),(2.0,6.0,7.8),(2.25,6.4,8.3),(2.5,6.6,8.7),(2.75,7.0,9.1)]
 def interp(t):
     if t<=TABLE[0][0]: return TABLE[0][1],TABLE[0][2]
@@ -25,5 +26,5 @@ def evaluate_weld(i):
     if any(x.get("coated") for x in i["layers"]): pen+=5; risks.append({"title":"Kaplama etkisi","detail":"Elektrot aşınması ve yüzey direnci değişebilir."})
     if MATERIAL_FAMILIES[fam]["status"]=="unsupported": pen+=30; risks.append({"title":"Desteklenmeyen motor","detail":"Doğrulanmış kural seti yok."})
     if not actions: actions=["En az 30 numune ile doğrulayın.","Peel/chisel veya kesit testi yapın."]
-    score=max(0,100-pen); level="Düşük" if score>=80 else ("Orta" if score>=60 else "Yüksek")
+    score=max(0,100-pen); level=RiskLevel.LOW if score>=80 else (RiskLevel.MEDIUM if score>=60 else RiskLevel.HIGH)
     return {"score":score,"risk_level":level,"nugget_min_mm":round(dmin,2),"nugget_opt_mm":round(dopt,2),"recommended_ranges":rr,"risks":risks,"actions":actions}

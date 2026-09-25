@@ -2,20 +2,21 @@ import { useMemo, useState } from 'react'
 import { analyzeWeld } from '../api/client'
 import type { WeldAnalysisRequest, WeldAnalysisResponse, LayerInput } from '../types/weld'
 import type { ReactNode } from 'react'
+import { RISK_LEVEL_LABELS } from '../constants/riskLevel'
 const baseLayer: LayerInput = { material_family: 'Düşük / Orta Karbonlu Çelik', material_subtype: 'Düşük karbonlu çelik', thickness_mm: 1, coated: false }
 const base: WeldAnalysisRequest = { ...baseLayer, stack_count: '2T', layers: [{ ...baseLayer }, { ...baseLayer }], current_ka: 8, weld_cycles: 12, force_kn: 3, tip_diameter_mm: 6, squeeze_cycles: 15, hold_cycles: 15, cooling_flow_lpm: 6, cooling_temp_c: 20, dc_current: true, adhesive: false, shunt_risk: false }
 
 function riskState(risk: string): 'ok' | 'warn' | 'danger' {
   const r = risk.toLowerCase()
-  if (r.includes('yüksek') || r.includes('high')) return 'danger'
-  if (r.includes('orta') || r.includes('medium') || r.includes('review')) return 'warn'
+  if (r === 'HIGH' || r.includes('high')) return 'danger'
+  if (r === 'MEDIUM' || r.includes('medium') || r.includes('review')) return 'warn'
   return 'ok'
 }
 
 function statusBadge(status: string): 'ok' | 'warn' | 'danger' | 'neutral' {
   const s = status.toLowerCase()
   if (s.includes('uygun de') || s.includes('not compliant') || s.includes('fail')) return 'danger'
-  if (s.includes('düşük') || s.includes('yüksek') || s.includes('review')) return 'warn'
+  if (s === 'LOW' || s === 'HIGH' || s.includes('review')) return 'warn'
   if (s.includes('uygun')) return 'ok'
   return 'neutral'
 }
@@ -159,7 +160,7 @@ export function AnalysisPage() {
         <div className="panel-footer">Inputs are evaluated by backend deterministic rules only. Top-level material follows Sheet 1.</div>
       </section>
       <section className="panel" aria-label="Engineering result">
-        <div className="panel-header"><h3>Engineering result</h3>{r && <span className={`badge ${riskState(r.risk_level)}`}>{r.risk_level}</span>}</div>
+        <div className="panel-header"><h3>Engineering result</h3>{r && <span className={`badge ${riskState(r.risk_level)}`}>{RISK_LEVEL_LABELS[r.risk_level] ?? r.risk_level}</span>}</div>
         <div className="panel-body">
         <div className="ws-zone-label">Engineering evaluation · result · traceability</div>
         {!r && !busy && <div className="ws-empty" role="status"><span className="empty-glyph" aria-hidden="true">RQ</span><strong>No analysis result yet</strong><span className="ws-empty-hint">Run analysis to generate the governed engineering result. Empty state is expected before the first backend evaluation.</span><span className="empty-action">Next action: Run analysis with the current parameter set.</span></div>}

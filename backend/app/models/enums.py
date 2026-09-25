@@ -12,3 +12,8 @@ class UserRole(StrEnum):
     OPERATOR               = "OPERATOR"
     READ_ONLY              = "READ_ONLY"
     CUSTOMER               = "CUSTOMER"
+
+class RiskLevel(StrEnum):
+    HIGH   = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW    = "LOW"

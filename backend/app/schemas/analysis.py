@@ -1,5 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field, model_validator
+from app.models.enums import RiskLevel
 
 class LayerInput(BaseModel):
     material_family: str
@@ -34,7 +35,7 @@ class WeldAnalysisRequest(BaseModel):
 
 class WeldAnalysisResponse(BaseModel):
     score: float
-    risk_level: str
+    risk_level: RiskLevel
     nugget_min_mm: float
     nugget_opt_mm: float
     recommended_ranges: list
