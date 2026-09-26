@@ -325,8 +325,185 @@ h3 { font-size: var(--fs-h4); font-weight: 600; letter-spacing: -0.005em; }
 .sidebar-foot{margin-top:var(--sp-5);padding:var(--sp-3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-surface-2);font-size:var(--fs-xs);color:var(--text-tertiary)}
 
 /* ============================================================
-   Public premium design system — Spot Welding Parametre Analysis
+   SpotWeldPro AI — Public premium design system
    ============================================================ */
+
+/* ─── Navigation ─────────────────────────────────────────── */
+.pub-topnav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-7);
+  height: 56px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.pub-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  text-decoration: none;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: var(--fs-h4);
+  flex-shrink: 0;
+}
+.pub-brand-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+.pub-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.pub-nav-links a {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+.pub-nav-links a:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface-2);
+}
+.pub-nav-links a.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ─── Page shell ─────────────────────────────────────────── */
+.pub-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 var(--sp-7) var(--sp-8);
+}
+
+/* ─── Hero section ───────────────────────────────────────── */
+.pub-hero {
+  padding: 64px var(--sp-7) 48px;
+  text-align: center;
+}
+.pub-hero h1 {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: var(--sp-3) 0 var(--sp-4);
+}
+.eyebrow {
+  display: inline-block;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--sp-3);
+}
+.lead {
+  font-size: var(--fs-body-lg);
+  color: var(--text-secondary);
+  max-width: 640px;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+
+/* ─── Content sections ───────────────────────────────────── */
+.pub-section {
+  margin: var(--sp-8) 0;
+}
+.pub-h2 {
+  font-size: var(--fs-h2);
+  font-weight: 650;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--sp-2);
+}
+.pub-sub {
+  font-size: var(--fs-body-lg);
+  color: var(--text-secondary);
+  margin-bottom: var(--sp-6);
+  max-width: 680px;
+  line-height: 1.6;
+}
+
+/* ─── Card grid ──────────────────────────────────────────── */
+.pub-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--sp-4);
+}
+.pub-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.pub-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+.pub-card h3,
+.pub-card b {
+  color: var(--text-primary);
+}
+.pub-card p,
+.pub-card li,
+.pub-note {
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+
+/* ─── Action list (package points) ──────────────────────── */
+.action-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: 0;
+  margin: var(--sp-2) 0;
+}
+.action-list li {
+  font-size: var(--fs-body);
+  color: var(--text-secondary);
+  padding-left: var(--sp-5);
+  position: relative;
+  line-height: 1.5;
+}
+.action-list li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: var(--fs-sm);
+}
+
+/* ─── Footer ─────────────────────────────────────────────── */
+.pub-footer {
+  text-align: center;
+  padding: var(--sp-6) var(--sp-7);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+}
 
 /* Package mini cards (Landing preview) */
 .pub-pkg-mini {
@@ -568,9 +745,13 @@ h3 { font-size: var(--fs-h4); font-weight: 600; letter-spacing: -0.005em; }
 @media (max-width: 860px) {
   .pub-topnav {
     padding: 10px 16px;
+    height: auto;
     gap: var(--sp-3);
     flex-wrap: wrap;
   }
+  .pub-brand-logo { height: 26px; }
+  .pub-main { padding: 0 var(--sp-4) var(--sp-7); }
+  .pub-hero { padding: 48px var(--sp-4) 36px; }
   .pub-nav-links {
     order: 3;
     width: 100%;
@@ -587,7 +768,8 @@ h3 { font-size: var(--fs-h4); font-weight: 600; letter-spacing: -0.005em; }
 }
 
 @media (max-width: 480px) {
-  .pub-hero { padding: 36px 16px; }
+  .pub-brand-logo { height: 22px; }
+  .pub-hero { padding: 36px 16px 28px; }
   .pub-hero h1 { font-size: 1.4rem; }
   .pub-section { margin: var(--sp-6) 0; }
   .pub-card-grid { grid-template-columns: 1fr; }
