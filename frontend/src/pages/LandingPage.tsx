@@ -20,7 +20,6 @@ export function LandingPage() {
             <p className="lead">{l.heroSubtitle}</p>
             <div className="pub-cta">
               <Link to="/demo" className="btn btn-primary">{t.cta.primary}</Link>
-              <Link to="/login" className="pub-link-cta">{t.cta.tertiary} →</Link>
             </div>
           </div>
           <aside className="hero-preview" aria-label="Engineering product preview">

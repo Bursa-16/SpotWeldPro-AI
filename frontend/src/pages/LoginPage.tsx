@@ -5,8 +5,8 @@ type Props = { onLogin: () => void }
 
 /* Prefilled development credentials — form defaults ONLY.
    Authentication is decided exclusively by the backend. */
-const DEFAULT_EMAIL = 'admin@spotwelding.example'
-const DEFAULT_PASSWORD = 'ChangeMe123!'
+const DEFAULT_EMAIL = ''
+const DEFAULT_PASSWORD = ''
 
 export function LoginPage({ onLogin }: Props) {
   const [email, setEmail] = useState(DEFAULT_EMAIL)
