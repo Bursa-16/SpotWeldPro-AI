@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DashboardPage } from './pages/DashboardPage'
 import { EngineeringPage } from './pages/EngineeringPage'
 import { LoginPage } from './pages/LoginPage'
@@ -20,72 +20,191 @@ import './styles.css'
    Short lines only to keep the file writer stable. */
 type Page = 'dashboard' | 'projects' | 'analysis' | 'engineering' | 'optimization' | 'failure'
 
-const NAV: { section: string; items: { id: Page; label: string; code: string }[] }[] = [
+type NavItem = { id: Page; label: string; mk: string }
+type NavGroup = { id: string; label: string; accordion: boolean; items: NavItem[] }
+
+const NAV: NavGroup[] = [
   {
-    section: 'Overview',
-    items: [{ id: 'dashboard', label: 'Command Center', code: 'CC' }],
+    id: 'dash', label: 'Dashboard', accordion: false,
+    items: [{ id: 'dashboard', label: 'Dashboard', mk: 'D' }],
   },
   {
-    section: 'Production',
+    id: 'work', label: 'WORK', accordion: true,
     items: [
-      { id: 'projects', label: 'Projects & Weld Points', code: 'PW' },
-      { id: 'analysis', label: 'Weld Quality Analysis', code: 'WQ' },
+      { id: 'projects', label: 'Projects & Weld Points', mk: 'P' },
+      { id: 'engineering', label: 'Weld Lobe Lab', mk: 'L' },
     ],
   },
   {
-    section: 'Engineering',
+    id: 'analysis', label: 'ANALYSIS', accordion: true,
     items: [
-      { id: 'engineering', label: 'Weld Lobe Lab', code: 'WL' },
-      { id: 'optimization', label: 'DOE Optimization', code: 'DO' },
-      { id: 'failure', label: 'Failure Analysis', code: 'FA' },
+      { id: 'analysis', label: 'Weld Quality Analysis', mk: 'Q' },
+      { id: 'failure', label: 'Failure Analysis', mk: 'F' },
+      { id: 'optimization', label: 'DOE Optimization', mk: 'O' },
     ],
   },
 ]
 
-function Sidebar({ page, setPage }: { page: Page; setPage: (p: Page) => void }) {
+function Sidebar({
+  page, setPage, collapsed, setCollapsed, mobileOpen, setMobileOpen,
+}: {
+  page: Page
+  setPage: (p: Page) => void
+  collapsed: boolean
+  setCollapsed: (v: boolean) => void
+  mobileOpen: boolean
+  setMobileOpen: (v: boolean) => void
+}) {
+  const [open, setOpen] = useState<Record<string, boolean>>(() => {
+    try { const s = localStorage.getItem('sb_open'); return s ? JSON.parse(s) : {} } catch { return {} }
+  })
+
+  useEffect(() => {
+    const gid = NAV.find((g) => g.accordion && g.items.some((i) => i.id === page))?.id
+    if (gid) {
+      setOpen((prev) => {
+        if (prev[gid]) return prev
+        const next = { ...prev, [gid]: true }
+        try { localStorage.setItem('sb_open', JSON.stringify(next)) } catch { /**/ }
+        return next
+      })
+    }
+  }, [page])
+
+  useEffect(() => {
+    if (!mobileOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [mobileOpen, setMobileOpen])
+
+  function toggleGroup(id: string) {
+    setOpen((prev) => {
+      const next = { ...prev, [id]: !prev[id] }
+      try { localStorage.setItem('sb_open', JSON.stringify(next)) } catch { /**/ }
+      return next
+    })
+  }
+
+  function handleNav(id: Page) {
+    setPage(id)
+    setMobileOpen(false)
+  }
+
+  function toggleCollapsed() {
+    const next = !collapsed
+    setCollapsed(next)
+    try { localStorage.setItem('sb_collapsed', String(next)) } catch { /**/ }
+  }
+
+  const iconOnly = collapsed && !mobileOpen
+
   return (
-    <aside className="sidebar" aria-label="Primary navigation">
-      <div className="sidebar-brand">
-        <div className="brand-mark" aria-hidden="true">SW</div>
-        <div className="brand-name">
-          <strong>SpotWeldPro AI</strong>
-          <span>Spot Welding Parametre Analysis</span>
+    <>
+      {mobileOpen && (
+        <div className="sb-backdrop" aria-hidden="true" onClick={() => setMobileOpen(false)} />
+      )}
+      <aside className={'sidebar' + (mobileOpen ? ' sb-mobile-open' : '')} aria-label="Primary navigation">
+        <div className="sidebar-brand">
+          <div className="brand-mark" aria-hidden="true">SW</div>
+          {!iconOnly && (
+            <div className="brand-name">
+              <strong>SpotWeldPro AI</strong>
+              <span>Spot Welding Analysis</span>
+            </div>
+          )}
         </div>
-      </div>
-      <nav className="sidebar-nav">
-        {NAV.map((group) => (
-          <div key={group.section} className="sidebar-group">
-            <div className="nav-section">{group.section}</div>
-            {group.items.map((item) => (
+        <nav className="sidebar-nav">
+          {iconOnly ? (
+            NAV.flatMap((g) => g.items).map((item) => (
               <button
                 key={item.id}
                 className={'nav-item' + (page === item.id ? ' active' : '')}
                 aria-current={page === item.id ? 'page' : undefined}
-                onClick={() => setPage(item.id)}
+                onClick={() => handleNav(item.id)}
+                title={item.label}
               >
-                <span className="nav-code" aria-hidden="true">{item.code}</span>
-                <span className="nav-label">{item.label}</span>
-                {page === item.id && <span className="nav-dot" aria-hidden="true" />}
+                <span className="nav-mk" aria-hidden="true">{item.mk}</span>
               </button>
-            ))}
-          </div>
-        ))}
-      </nav>
-      <div className="sidebar-foot">Engineering workstation · deterministic authority preserved</div>
-    </aside>
+            ))
+          ) : (
+            NAV.map((group) => {
+              if (!group.accordion) {
+                const item = group.items[0]
+                return (
+                  <button
+                    key={item.id}
+                    className={'nav-item' + (page === item.id ? ' active' : '')}
+                    aria-current={page === item.id ? 'page' : undefined}
+                    onClick={() => handleNav(item.id)}
+                  >
+                    <span className="nav-mk" aria-hidden="true">{item.mk}</span>
+                    <span className="nav-label">{item.label}</span>
+                  </button>
+                )
+              }
+              const isOpen = !!open[group.id]
+              const panelId = 'sbp-' + group.id
+              return (
+                <div key={group.id} className="sb-group">
+                  <button
+                    className="sb-group-hd"
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    onClick={() => toggleGroup(group.id)}
+                  >
+                    <span className="sb-group-label">{group.label}</span>
+                    <span className="sb-chevron" aria-hidden="true">{isOpen ? '▴' : '▾'}</span>
+                  </button>
+                  {isOpen && (
+                    <div id={panelId} role="group">
+                      {group.items.map((item) => (
+                        <button
+                          key={item.id}
+                          className={'nav-item' + (page === item.id ? ' active' : '')}
+                          aria-current={page === item.id ? 'page' : undefined}
+                          onClick={() => handleNav(item.id)}
+                        >
+                          <span className="nav-mk" aria-hidden="true">{item.mk}</span>
+                          <span className="nav-label">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })
+          )}
+        </nav>
+        <div className="sidebar-foot-wrap">
+          <button
+            className="sb-collapse-btn"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            onClick={toggleCollapsed}
+          >
+            <span aria-hidden="true">{collapsed ? '▶' : '◀'}</span>
+          </button>
+        </div>
+      </aside>
+    </>
   )
 }
 
-function Topbar({ page, userName, onSignOut }: { page: Page; userName: string; onSignOut: () => void }) {
+function Topbar({ page, userName, onSignOut, onHamburger }: { page: Page; userName: string; onSignOut: () => void; onHamburger: () => void }) {
   const item = NAV.flatMap((g) => g.items).find((i) => i.id === page)
-  const group = NAV.find((g) => g.items.some((i) => i.id === page))?.section ?? 'SpotWeldPro'
+  const group = NAV.find((g) => g.items.some((i) => i.id === page))?.label ?? 'SpotWeldPro'
   const title = item?.label ?? 'SpotWeldPro'
   const initials = userName.trim() ? userName.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() : '…'
   return (
     <header className="topbar">
-      <div className="topbar-module">
-        <span className="topbar-title">{title}</span>
-        <span className="topbar-crumb">SpotWeldPro AI / {group}</span>
+      <div className="topbar-start">
+        <button className="hamburger-btn" aria-label="Open navigation" onClick={onHamburger}>
+          <span aria-hidden="true">☰</span>
+        </button>
+        <div className="topbar-module">
+          <span className="topbar-title">{title}</span>
+          <span className="topbar-crumb">SpotWeldPro AI / {group}</span>
+        </div>
       </div>
       <div className="topbar-user">
         <span className="user-chip"><span className="user-avatar" aria-hidden="true">{initials}</span>{userName}</span>
@@ -104,6 +223,10 @@ function AuthenticatedApp() {
   const [page, setPage] = useState<Page>('dashboard')
   const [project, setProject] = useState<Project | null>(null)
   const [userName, setUserName] = useState('')
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem('sb_collapsed') === 'true' } catch { return false }
+  })
+  const [mobileOpen, setMobileOpen] = useState(false)
   const navigate = useNavigate()
 
   if (!authenticated) return <Navigate to="/login" replace />
@@ -114,7 +237,7 @@ function AuthenticatedApp() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={'app-shell' + (collapsed ? ' shell-collapsed' : '')}>
       <Topbar
         page={page}
         userName={userName || '…'}
@@ -122,8 +245,13 @@ function AuthenticatedApp() {
           localStorage.clear()
           navigate('/login')
         }}
+        onHamburger={() => setMobileOpen(true)}
       />
-      <Sidebar page={page} setPage={setPage} />
+      <Sidebar
+        page={page} setPage={setPage}
+        collapsed={collapsed} setCollapsed={setCollapsed}
+        mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}
+      />
       <main className="main">
         {page === 'dashboard' && <DashboardPage />}
         {page === 'projects' && <ProjectsPage onOpen={setProject} />}
