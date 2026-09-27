@@ -1,0 +1,289 @@
+/* APP-UX-01C-02: Engineering UI component stylesheet.
+   Scoped to .eui-* classes only. Does not modify global styles.css.
+   Uses design tokens defined in the global stylesheet. */
+
+/* ── Section wrapper ──────────────────────────────────────── */
+.eui-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eui-section-title {
+  font-size: var(--fs-sm, 0.8125rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #8a9bb0);
+  margin: 0;
+}
+
+/* ── Form rows ────────────────────────────────────────────── */
+.eui-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .eui-field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.eui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eui-field-full {
+  grid-column: 1 / -1;
+}
+
+.eui-label {
+  font-size: var(--fs-xs, 0.75rem);
+  color: var(--text-secondary, #8a9bb0);
+  font-weight: 500;
+}
+
+.eui-input,
+.eui-select {
+  background: var(--bg-surface-2, #1a2333);
+  border: 1px solid var(--border, #2a3a50);
+  border-radius: var(--r-sm, 4px);
+  color: var(--text-primary, #e0e8f0);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: var(--fs-sm, 0.8125rem);
+  padding: 6px 10px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.eui-input:focus,
+.eui-select:focus {
+  outline: none;
+  border-color: var(--accent, #3b82f6);
+}
+
+.eui-input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+/* ── Checkbox row ─────────────────────────────────────────── */
+.eui-check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eui-check-row input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent, #3b82f6);
+  flex-shrink: 0;
+}
+
+.eui-check-label {
+  font-size: var(--fs-sm, 0.8125rem);
+  color: var(--text-primary, #e0e8f0);
+}
+
+/* ── Stack-up editor ──────────────────────────────────────── */
+.eui-stack-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.eui-stack-btn {
+  background: var(--bg-surface-2, #1a2333);
+  border: 1px solid var(--border, #2a3a50);
+  border-radius: var(--r-sm, 4px);
+  color: var(--text-secondary, #8a9bb0);
+  font-size: var(--fs-sm, 0.8125rem);
+  font-weight: 600;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+.eui-stack-btn[aria-pressed='true'] {
+  background: var(--accent, #3b82f6);
+  border-color: var(--accent, #3b82f6);
+  color: #fff;
+}
+
+.eui-layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eui-layer-card {
+  border: 1px solid var(--border, #2a3a50);
+  border-radius: var(--r-sm, 4px);
+  padding: 12px;
+  background: var(--bg-surface-2, #1a2333);
+}
+
+.eui-layer-title {
+  font-size: var(--fs-xs, 0.75rem);
+  font-weight: 600;
+  color: var(--text-secondary, #8a9bb0);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px;
+}
+
+/* ── Collapsible panel ────────────────────────────────────── */
+.eui-panel {
+  border: 1px solid var(--border, #2a3a50);
+  border-radius: var(--r-sm, 4px);
+  overflow: hidden;
+}
+
+.eui-panel-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: var(--bg-surface-2, #1a2333);
+  border: none;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: var(--fs-sm, 0.8125rem);
+  font-weight: 600;
+  color: var(--text-primary, #e0e8f0);
+  text-align: left;
+}
+
+.eui-panel-toggle:focus-visible {
+  outline: 2px solid var(--accent, #3b82f6);
+  outline-offset: -2px;
+}
+
+.eui-panel-chevron {
+  font-size: 0.625rem;
+  color: var(--text-secondary, #8a9bb0);
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.eui-panel-chevron[data-open='true'] {
+  transform: rotate(180deg);
+}
+
+.eui-panel-body {
+  padding: 14px;
+  background: var(--bg-surface, #111c2b);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Weld result panel ────────────────────────────────────── */
+.eui-result-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary, #8a9bb0);
+  font-size: var(--fs-sm, 0.8125rem);
+  border: 1px dashed var(--border, #2a3a50);
+  border-radius: var(--r-sm, 4px);
+}
+
+.eui-result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.eui-stat-card {
+  background: var(--bg-surface-2, #1a2333);
+  border: 1px solid var(--border, #2a3a50);
+  border-radius: var(--r-sm, 4px);
+  padding: 10px 12px;
+}
+
+.eui-stat-label {
+  font-size: var(--fs-xs, 0.75rem);
+  color: var(--text-secondary, #8a9bb0);
+  margin-bottom: 4px;
+}
+
+.eui-stat-value {
+  font-size: var(--fs-md, 0.9375rem);
+  font-weight: 700;
+  color: var(--text-primary, #e0e8f0);
+}
+
+.eui-risk-high   { color: var(--color-danger,  #ef4444); }
+.eui-risk-medium { color: var(--color-warn,    #f59e0b); }
+.eui-risk-low    { color: var(--color-success, #22c55e); }
+
+.eui-model-tag {
+  display: inline-block;
+  font-size: var(--fs-xs, 0.75rem);
+  background: var(--bg-surface-2, #1a2333);
+  border: 1px solid var(--border, #2a3a50);
+  border-radius: var(--r-sm, 4px);
+  padding: 2px 8px;
+  color: var(--text-secondary, #8a9bb0);
+  font-family: var(--font-mono, monospace);
+}
+
+.eui-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eui-list-item {
+  font-size: var(--fs-sm, 0.8125rem);
+  color: var(--text-primary, #e0e8f0);
+  padding: 8px 10px;
+  background: var(--bg-surface-2, #1a2333);
+  border: 1px solid var(--border, #2a3a50);
+  border-radius: var(--r-sm, 4px);
+}
+
+.eui-list-item strong {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.eui-range-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-xs, 0.75rem);
+}
+
+.eui-range-table th,
+.eui-range-table td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #2a3a50);
+  color: var(--text-primary, #e0e8f0);
+}
+
+.eui-range-table th {
+  color: var(--text-secondary, #8a9bb0);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.eui-divider {
+  border: none;
+  border-top: 1px solid var(--border, #2a3a50);
+  margin: 4px 0;
+}
