@@ -30,7 +30,6 @@ from app.domain.rule_registry_types import (
     MissingHandling,
     RuleCategory,
     RuleOperator,
-    RuleSourceType,
     SafeDefault,
 )
 from app.models.entities import utc_now
@@ -40,6 +39,17 @@ from app.models.governance import (
     portable_enum,
     protect_immutable_model,
 )
+
+
+class LegacyRuleSourceType(StrEnum):  # LEGACY_PERSISTENCE_ONLY
+    OEM = "OEM"
+    ISO = "ISO"
+    AWS = "AWS"
+    SEP = "SEP"
+    COMPANY_STANDARD = "COMPANY_STANDARD"
+    FIELD_MODEL = "FIELD_MODEL"
+    LITERATURE = "LITERATURE"
+    DERIVED = "DERIVED"
 
 
 class EngineeringRule(Base):
@@ -136,16 +146,16 @@ class EngineeringRuleRevision(Base):
     effective_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     expiry_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     supersedes_revision_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    source_type: Mapped[RuleSourceType | None] = mapped_column(
+    source_type: Mapped[LegacyRuleSourceType | None] = mapped_column(  # LEGACY_PERSISTENCE_ONLY
         portable_enum(
-            RuleSourceType,
+            LegacyRuleSourceType,
             "ck_engineering_rule_revisions_source_type",
         ),
         nullable=True,
     )
-    source_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    source_document: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_name: Mapped[str | None] = mapped_column(String(255), nullable=True)  # LEGACY_PERSISTENCE_ONLY
+    source_document: Mapped[str | None] = mapped_column(String(255), nullable=True)  # LEGACY_PERSISTENCE_ONLY
+    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)  # LEGACY_PERSISTENCE_ONLY
     safe_default: Mapped[SafeDefault] = mapped_column(
         portable_enum(
             SafeDefault,
@@ -260,19 +270,19 @@ class EvidenceReference(Base):
         ),
         default=EvidenceAvailability.UNKNOWN,
     )
-    source_type: Mapped[RuleSourceType | None] = mapped_column(
+    source_type: Mapped[LegacyRuleSourceType | None] = mapped_column(  # LEGACY_PERSISTENCE_ONLY
         portable_enum(
-            RuleSourceType,
+            LegacyRuleSourceType,
             "ck_evidence_references_source_type",
         ),
         nullable=True,
     )
-    source_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    source_document: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    edition: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    section_reference: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    page_reference: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    table_reference: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    source_name: Mapped[str | None] = mapped_column(String(255), nullable=True)  # LEGACY_PERSISTENCE_ONLY
+    source_document: Mapped[str | None] = mapped_column(String(255), nullable=True)  # LEGACY_PERSISTENCE_ONLY
+    edition: Mapped[str | None] = mapped_column(String(100), nullable=True)  # LEGACY_PERSISTENCE_ONLY
+    section_reference: Mapped[str | None] = mapped_column(String(120), nullable=True)  # LEGACY_PERSISTENCE_ONLY
+    page_reference: Mapped[str | None] = mapped_column(String(120), nullable=True)  # LEGACY_PERSISTENCE_ONLY
+    table_reference: Mapped[str | None] = mapped_column(String(120), nullable=True)  # LEGACY_PERSISTENCE_ONLY
     evidence_class: Mapped[EvidenceClass] = mapped_column(
         portable_enum(
             EvidenceClass,
@@ -285,7 +295,7 @@ class EvidenceReference(Base):
             "ck_evidence_references_lifecycle_status",
         )
     )
-    reference_uri: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reference_uri: Mapped[str | None] = mapped_column(Text, nullable=True)  # LEGACY_PERSISTENCE_ONLY
     reference_metadata: Mapped[dict | None] = mapped_column(ImmutableJSON, nullable=True)
     schema_version: Mapped[str | None] = mapped_column(String(40), nullable=True)
     hash_algorithm: Mapped[str | None] = mapped_column(String(40), nullable=True)

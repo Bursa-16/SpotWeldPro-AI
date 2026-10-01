@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import math
 
 
-SOURCE_PRIORITY = {
+AUTHORITY_PRIORITY = {
     "REFERENCE_LEVEL_01": 1,
     "REFERENCE_LEVEL_02": 2,
     "REFERENCE_LEVEL_03": 3,
@@ -20,8 +20,8 @@ SOURCE_PRIORITY = {
 class Rule:
     rule_id: str
     name: str
-    source_type: str
-    source_name: str
+    authority_level: str
+    reference_profile_id: str
     parameter: str
     operator: str
     min_value: Optional[float]
@@ -34,15 +34,15 @@ class Rule:
 
     @property
     def priority(self) -> int:
-        return SOURCE_PRIORITY.get(self.source_type, 99)
+        return AUTHORITY_PRIORITY.get(self.authority_level, 99)
 
 
 DEFAULT_RULES: List[Rule] = [
     Rule(
         rule_id="COOL_FLOW_MIN_01",
         name="Minimum soğutma debisi",
-        source_type="REFERENCE_LEVEL_02",
-        source_name="REF_PROFILE_01",
+        authority_level="REFERENCE_LEVEL_02",
+        reference_profile_id="REF_PROFILE_01",
         parameter="cooling_flow_lpm",
         operator="min",
         min_value=6.0,
@@ -55,8 +55,8 @@ DEFAULT_RULES: List[Rule] = [
     Rule(
         rule_id="COOL_TEMP_MAX_01",
         name="Maksimum soğutma suyu sıcaklığı",
-        source_type="REFERENCE_LEVEL_02",
-        source_name="REF_PROFILE_01",
+        authority_level="REFERENCE_LEVEL_02",
+        reference_profile_id="REF_PROFILE_01",
         parameter="cooling_temp_c",
         operator="max",
         min_value=None,
@@ -69,8 +69,8 @@ DEFAULT_RULES: List[Rule] = [
     Rule(
         rule_id="DC_CURRENT_REQUIRED_01",
         name="DC akım zorunluluğu",
-        source_type="REFERENCE_LEVEL_02",
-        source_name="REF_PROFILE_01",
+        authority_level="REFERENCE_LEVEL_02",
+        reference_profile_id="REF_PROFILE_01",
         parameter="dc_current",
         operator="equals",
         min_value=1.0,
@@ -83,8 +83,8 @@ DEFAULT_RULES: List[Rule] = [
     Rule(
         rule_id="TIP_DIAMETER_07_09_01",
         name="0,7–0,9 mm için elektrot uç çapı",
-        source_type="REFERENCE_LEVEL_01",
-        source_name="REF_PROFILE_02",
+        authority_level="REFERENCE_LEVEL_01",
+        reference_profile_id="REF_PROFILE_02",
         parameter="tip_diameter_mm",
         operator="range",
         min_value=5.0,
@@ -97,8 +97,8 @@ DEFAULT_RULES: List[Rule] = [
     Rule(
         rule_id="NUGGET_MIN_DERIVED_01",
         name="Minimum çekirdek çapı 4√t",
-        source_type="REFERENCE_LEVEL_05",
-        source_name="REF_PROFILE_03",
+        authority_level="REFERENCE_LEVEL_05",
+        reference_profile_id="REF_PROFILE_03",
         parameter="nugget_min_mm",
         operator="derived_min",
         min_value=None,
@@ -246,8 +246,8 @@ def build_custom_rule(data: Dict[str, Any]) -> Rule:
     return Rule(
         rule_id=str(data["rule_id"]).strip(),
         name=str(data["name"]).strip(),
-        source_type=str(data["source_type"]).strip(),
-        source_name=str(data["source_name"]).strip(),
+        authority_level=str(data["authority_level"]).strip(),
+        reference_profile_id=str(data["reference_profile_id"]).strip(),
         parameter=str(data["parameter"]).strip(),
         operator=str(data["operator"]).strip(),
         min_value=data.get("min_value"),

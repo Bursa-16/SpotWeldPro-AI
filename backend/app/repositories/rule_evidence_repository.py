@@ -102,16 +102,16 @@ class RuleEvidenceRepository:
                 draft.supersedes_evidence_reference_id
             ),
             availability=draft.availability,
-            source_type=draft.source_type,
-            source_name=draft.source_name,
-            source_document=draft.source_document,
-            edition=draft.edition,
-            section_reference=draft.section_reference,
-            page_reference=draft.page_reference,
-            table_reference=draft.table_reference,
+            source_type=None,  # LEGACY_PERSISTENCE_ONLY
+            source_name=None,  # LEGACY_PERSISTENCE_ONLY
+            source_document=None,  # LEGACY_PERSISTENCE_ONLY
+            edition=None,  # LEGACY_PERSISTENCE_ONLY
+            section_reference=None,  # LEGACY_PERSISTENCE_ONLY
+            page_reference=None,  # LEGACY_PERSISTENCE_ONLY
+            table_reference=None,  # LEGACY_PERSISTENCE_ONLY
             evidence_class=draft.evidence_class,
             lifecycle_status=draft.lifecycle_status,
-            reference_uri=draft.reference_uri,
+            reference_uri=None,  # LEGACY_PERSISTENCE_ONLY
             reference_metadata=draft.reference_metadata,
             schema_version=draft.schema_version,
             hash_algorithm=draft.hash_algorithm,

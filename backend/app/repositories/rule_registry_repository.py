@@ -17,7 +17,6 @@ from app.domain.rule_registry_types import (
     MissingHandling,
     RuleCategory,
     RuleOperator,
-    RuleSourceType,
     SafeDefault,
 )
 from app.domain.verification_types import VerificationDecisionOutcome
@@ -81,10 +80,6 @@ class RuleRegistryRepository:
         effective_date: datetime | None = None,
         expiry_date: datetime | None = None,
         supersedes_revision_id: int | None = None,
-        source_type: RuleSourceType | None = None,
-        source_name: str | None = None,
-        source_document: str | None = None,
-        source_url: str | None = None,
         conflict_handling: str | None = None,
         unit_mismatch_handling: str | None = None,
         description: str | None = None,
@@ -139,10 +134,10 @@ class RuleRegistryRepository:
             effective_date=effective_date,
             expiry_date=expiry_date,
             supersedes_revision_id=supersedes_revision_id,
-            source_type=source_type,
-            source_name=source_name,
-            source_document=source_document,
-            source_url=source_url,
+            source_type=None,  # LEGACY_PERSISTENCE_ONLY
+            source_name=None,  # LEGACY_PERSISTENCE_ONLY
+            source_document=None,  # LEGACY_PERSISTENCE_ONLY
+            source_url=None,  # LEGACY_PERSISTENCE_ONLY
             safe_default=safe_default,
             missing_handling=missing_handling,
             conflict_handling=conflict_handling,
@@ -168,16 +163,16 @@ class RuleRegistryRepository:
                 engineering_rule_revision=rule_revision,
                 evidence_id=evidence.evidence_id,
                 evidence_revision=evidence.evidence_revision,
-                source_type=evidence.source_type,
-                source_name=evidence.source_name,
-                source_document=evidence.source_document,
-                edition=evidence.edition,
-                section_reference=evidence.section_reference,
-                page_reference=evidence.page_reference,
-                table_reference=evidence.table_reference,
+                source_type=None,  # LEGACY_PERSISTENCE_ONLY
+                source_name=None,  # LEGACY_PERSISTENCE_ONLY
+                source_document=None,  # LEGACY_PERSISTENCE_ONLY
+                edition=None,  # LEGACY_PERSISTENCE_ONLY
+                section_reference=None,  # LEGACY_PERSISTENCE_ONLY
+                page_reference=None,  # LEGACY_PERSISTENCE_ONLY
+                table_reference=None,  # LEGACY_PERSISTENCE_ONLY
                 evidence_class=evidence.evidence_class,
                 lifecycle_status=evidence.lifecycle_status,
-                reference_uri=evidence.reference_uri,
+                reference_uri=None,  # LEGACY_PERSISTENCE_ONLY
                 reference_metadata=evidence.reference_metadata,
                 schema_version=evidence.schema_version,
                 hash_algorithm=evidence.hash_algorithm,

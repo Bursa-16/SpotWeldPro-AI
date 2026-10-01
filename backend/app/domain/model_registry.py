@@ -16,7 +16,7 @@ from app.domain.models import (
 class RegisteredModel:
     key: str
     name: str
-    source_type: str
+    model_basis: str
     priority: int
     validation_status: str
     supported_materials: List[str]
@@ -27,7 +27,7 @@ MODEL_REGISTRY = [
     RegisteredModel(
         key="oem_table",
         name="OEM Referans Tablosu",
-        source_type="OEM / şirket normu",
+        model_basis="REFERENCE_TABLE",
         priority=1,
         validation_status="Referans",
         supported_materials=["Düşük / Orta Karbonlu Çelik"],
@@ -36,7 +36,7 @@ MODEL_REGISTRY = [
     RegisteredModel(
         key="minitab_doe_linear",
         name="Minitab DOE — doğrusal terimler",
-        source_type="Saha / deneysel model",
+        model_basis="EXPERIMENTAL_MODEL",
         priority=3,
         validation_status="Doğrulanmamış",
         supported_materials=["Düşük / Orta Karbonlu Çelik"],
@@ -45,7 +45,7 @@ MODEL_REGISTRY = [
     RegisteredModel(
         key="literature_4sqrt_t",
         name="4√t Literatür Kriteri",
-        source_type="Literatür",
+        model_basis="DERIVED_CRITERION",
         priority=4,
         validation_status="Minimum kriter",
         supported_materials=["Tümü"],

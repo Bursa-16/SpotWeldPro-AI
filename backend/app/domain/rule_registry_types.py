@@ -25,14 +25,14 @@ class RuleOperator(StrEnum):
     CUSTOM = "CUSTOM"
 
 
-class RuleSourceType(StrEnum):
-    OEM = "OEM"
-    ISO = "ISO"
-    AWS = "AWS"
-    SEP = "SEP"
-    COMPANY_STANDARD = "COMPANY_STANDARD"
+class RuleAuthorityLevel(StrEnum):
+    REFERENCE_LEVEL_01 = "REFERENCE_LEVEL_01"
+    REFERENCE_LEVEL_02 = "REFERENCE_LEVEL_02"
+    REFERENCE_LEVEL_03 = "REFERENCE_LEVEL_03"
+    REFERENCE_LEVEL_04 = "REFERENCE_LEVEL_04"
+    REFERENCE_LEVEL_05 = "REFERENCE_LEVEL_05"
+    REFERENCE_LEVEL_06 = "REFERENCE_LEVEL_06"
     FIELD_MODEL = "FIELD_MODEL"
-    LITERATURE = "LITERATURE"
     DERIVED = "DERIVED"
 
 
@@ -78,14 +78,6 @@ class EvidenceReferenceDraft:
     lifecycle_status: RuleLifecycleStatus
     created_by_actor_id: str
     created_by_user_id: int | None = None
-    source_type: RuleSourceType | None = None
-    source_name: str | None = None
-    source_document: str | None = None
-    edition: str | None = None
-    section_reference: str | None = None
-    page_reference: str | None = None
-    table_reference: str | None = None
-    reference_uri: str | None = None
     reference_metadata: dict | None = None
     schema_version: str | None = None
     hash_algorithm: str | None = None

@@ -145,7 +145,6 @@ def _setup_promotable_rule(
                     lifecycle_status=RuleLifecycleStatus.DRAFT,
                     created_by_actor_id=submitter_email,
                     created_by_user_id=submitter_id,
-                    reference_uri=f"urn:{rule_id}:evidence",
                 ),
             ),
         )
@@ -244,7 +243,6 @@ def _setup_source_backed_rule(
                     lifecycle_status=RuleLifecycleStatus.DRAFT,
                     created_by_actor_id=submitter_email,
                     created_by_user_id=submitter_id,
-                    reference_uri=f"urn:{rule_id}:evidence",
                 ),
             ),
         )
