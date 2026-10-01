@@ -7,12 +7,12 @@ import math
 
 
 SOURCE_PRIORITY = {
-    "OEM / Müşteri Normu": 1,
-    "Şirket İçi Standart": 2,
-    "Doğrulanmış Saha Modeli": 3,
-    "Deneysel Model": 4,
-    "Literatür": 5,
-    "Genel Mühendislik Formülü": 6,
+    "REFERENCE_LEVEL_01": 1,
+    "REFERENCE_LEVEL_02": 2,
+    "REFERENCE_LEVEL_03": 3,
+    "REFERENCE_LEVEL_04": 4,
+    "REFERENCE_LEVEL_05": 5,
+    "REFERENCE_LEVEL_06": 6,
 }
 
 
@@ -39,10 +39,10 @@ class Rule:
 
 DEFAULT_RULES: List[Rule] = [
     Rule(
-        rule_id="OEM_COOL_FLOW_MIN",
+        rule_id="COOL_FLOW_MIN_01",
         name="Minimum soğutma debisi",
-        source_type="Şirket İçi Standart",
-        source_name="Punta Kaynak CheckList Rev01",
+        source_type="REFERENCE_LEVEL_02",
+        source_name="REF_PROFILE_01",
         parameter="cooling_flow_lpm",
         operator="min",
         min_value=6.0,
@@ -50,13 +50,13 @@ DEFAULT_RULES: List[Rule] = [
         unit="L/dk",
         material_family="Tümü",
         stack_count="Tümü",
-        note="Saha checklist referansı."
+        note="Minimum soğutma debisi gereksinimi."
     ),
     Rule(
-        rule_id="OEM_COOL_TEMP_MAX",
+        rule_id="COOL_TEMP_MAX_01",
         name="Maksimum soğutma suyu sıcaklığı",
-        source_type="Şirket İçi Standart",
-        source_name="Punta Kaynak CheckList Rev01",
+        source_type="REFERENCE_LEVEL_02",
+        source_name="REF_PROFILE_01",
         parameter="cooling_temp_c",
         operator="max",
         min_value=None,
@@ -64,13 +64,13 @@ DEFAULT_RULES: List[Rule] = [
         unit="°C",
         material_family="Tümü",
         stack_count="Tümü",
-        note="Saha checklist referansı."
+        note="Maksimum soğutma suyu sıcaklığı gereksinimi."
     ),
     Rule(
-        rule_id="OEM_DC_REQUIRED",
+        rule_id="DC_CURRENT_REQUIRED_01",
         name="DC akım zorunluluğu",
-        source_type="Şirket İçi Standart",
-        source_name="Punta Kaynak CheckList Rev01",
+        source_type="REFERENCE_LEVEL_02",
+        source_name="REF_PROFILE_01",
         parameter="dc_current",
         operator="equals",
         min_value=1.0,
@@ -78,13 +78,13 @@ DEFAULT_RULES: List[Rule] = [
         unit="bool",
         material_family="Tümü",
         stack_count="Tümü",
-        note="İlk saha kural setinde DC akım referansı."
+        note="DC akım gereksinimi."
     ),
     Rule(
-        rule_id="OEM_TIP_07_09",
+        rule_id="TIP_DIAMETER_07_09_01",
         name="0,7–0,9 mm için elektrot uç çapı",
-        source_type="OEM / Müşteri Normu",
-        source_name="OEM Eğitim Tablosu",
+        source_type="REFERENCE_LEVEL_01",
+        source_name="REF_PROFILE_02",
         parameter="tip_diameter_mm",
         operator="range",
         min_value=5.0,
@@ -95,10 +95,10 @@ DEFAULT_RULES: List[Rule] = [
         note="En ince sac 0,7–0,9 mm olduğunda."
     ),
     Rule(
-        rule_id="LIT_4SQRT_T",
+        rule_id="NUGGET_MIN_DERIVED_01",
         name="Minimum çekirdek çapı 4√t",
-        source_type="Literatür",
-        source_name="RWMA/AWS destekli kriter",
+        source_type="REFERENCE_LEVEL_05",
+        source_name="REF_PROFILE_03",
         parameter="nugget_min_mm",
         operator="derived_min",
         min_value=None,
@@ -156,8 +156,6 @@ def _evaluate_rule(rule: Rule, values: Dict[str, Any], t_min: float) -> Dict[str
     return {
         "rule_id": rule.rule_id,
         "rule_name": rule.name,
-        "source_type": rule.source_type,
-        "source_name": rule.source_name,
         "priority": rule.priority,
         "parameter": rule.parameter,
         "actual_value": value,
@@ -202,11 +200,9 @@ def detect_conflicts(rules: List[Rule]) -> List[Dict[str, Any]]:
                     "parameter": key[0],
                     "material_family": key[1],
                     "stack_count": key[2],
-                    "winner_rule": winner.rule_id,
-                    "winner_source": winner.source_name,
-                    "challenger_rule": challenger.rule_id,
-                    "challenger_source": challenger.source_name,
-                    "decision": "Daha yüksek öncelikli kaynak esas alındı.",
+                    "winner_rule_id": winner.rule_id,
+                    "challenger_rule_id": challenger.rule_id,
+                    "decision": "Öncelikli mühendislik kuralı uygulandı.",
                 })
 
     return conflicts

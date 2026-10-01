@@ -232,8 +232,8 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
             {result.compliance_conflicts.map((c, i) => (
               <li key={i} className="eui-list-item">
                 <strong>{c.parameter}</strong>
-                {` — Kazanan: ${c.winner_rule} (${c.winner_source})`}
-                {` | Rakip: ${c.challenger_rule} (${c.challenger_source})`}
+                {` — Kazanan: ${c.winner_rule_id}`}
+                {` | Rakip: ${c.challenger_rule_id}`}
                 {c.decision && <span>{` → ${c.decision}`}</span>}
               </li>
             ))}
