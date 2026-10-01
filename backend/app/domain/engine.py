@@ -1,6 +1,16 @@
 import math
 from app.domain.materials import MATERIAL_FAMILIES
 from app.models.enums import RiskLevel
+from app.domain.reference_profile import (
+    REF_PROFILE_MS_2T_50HZ_V1,
+    BandSelectionStatus,
+    ReferenceGuidanceStatus,
+    evaluate_material_scope,
+    evaluate_optional_parameter,
+    get_effective_thickness,
+    get_parameter_band,
+    kn_to_dan,
+)
 TABLE=[(0.5,3.0,3.9),(0.6,3.2,4.3),(0.7,3.5,4.6),(0.8,3.8,4.9),(0.9,4.0,5.2),(1.0,4.2,5.5),(1.2,4.6,6.0),(1.5,5.2,6.7),(1.75,5.6,7.3),(2.0,6.0,7.8),(2.25,6.4,8.3),(2.5,6.6,8.7),(2.75,7.0,9.1)]
 def interp(t):
     if t<=TABLE[0][0]: return TABLE[0][1],TABLE[0][2]
@@ -27,4 +37,38 @@ def evaluate_weld(i):
     if MATERIAL_FAMILIES[fam]["status"]=="unsupported": pen+=30; risks.append({"title":"Desteklenmeyen motor","detail":"Doğrulanmış kural seti yok."})
     if not actions: actions=["En az 30 numune ile doğrulayın.","Peel/chisel veya kesit testi yapın."]
     score=max(0,100-pen); level=RiskLevel.LOW if score>=80 else (RiskLevel.MEDIUM if score>=60 else RiskLevel.HIGH)
-    return {"score":score,"risk_level":level,"nugget_min_mm":round(dmin,2),"nugget_opt_mm":round(dopt,2),"recommended_ranges":rr,"risks":risks,"actions":actions}
+    # --- Reference Profile Foundation (PARAMETER-ENGINE-01B1) ---
+    profile = REF_PROFILE_MS_2T_50HZ_V1
+    material_scope_status = evaluate_material_scope(fam, profile)
+    if material_scope_status != ReferenceGuidanceStatus.WITHIN_REFERENCE_RANGE:
+        ref_effective_mm = None
+        ref_selected_band = None
+        ref_band_status = BandSelectionStatus.ENGINEERING_REVIEW_REQUIRED.value
+    else:
+        stack_count = i["stack_count"]
+        layers_mm = [float(x["thickness_mm"]) for x in i["layers"]]
+        t_eff_result = get_effective_thickness(stack_count, layers_mm, profile)
+        ref_effective_mm = t_eff_result.effective_thickness_mm
+        ref_band_status = t_eff_result.band_selection_status.value
+        if ref_effective_mm is not None:
+            band = get_parameter_band(ref_effective_mm, profile)
+            ref_selected_band = band.band_id if band else None
+            if band is not None:
+                force_dan = kn_to_dan(float(i["force_kn"]))
+                force_guidance = (
+                    ReferenceGuidanceStatus.WITHIN_REFERENCE_RANGE
+                    if band.force_min_dan <= force_dan <= band.force_max_dan
+                    else (ReferenceGuidanceStatus.BELOW_REFERENCE_RANGE
+                          if force_dan < band.force_min_dan
+                          else ReferenceGuidanceStatus.ABOVE_REFERENCE_RANGE)
+                )
+                # force_guidance available for 01B2+; outside range does NOT affect score
+        else:
+            ref_selected_band = None
+    # P2 optional fields: missing = NOT_EVALUATED, never treated as a default value
+    _ = evaluate_optional_parameter(i.get("approach_cycles"))
+    _ = evaluate_optional_parameter(i.get("cooling_cycles"))
+    _ = evaluate_optional_parameter(i.get("air_pressure_bar"))
+    # --- End Reference Profile Foundation ---
+    return {"score":score,"risk_level":level,"nugget_min_mm":round(dmin,2),"nugget_opt_mm":round(dopt,2),"recommended_ranges":rr,"risks":risks,"actions":actions,
+            "reference_profile_id":profile.profile_id,"effective_thickness_mm":ref_effective_mm,"selected_band":ref_selected_band,"band_selection_status":ref_band_status}

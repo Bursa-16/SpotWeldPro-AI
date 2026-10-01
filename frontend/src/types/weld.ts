@@ -21,6 +21,11 @@ export type WeldAnalysisRequest = {
   dc_current: boolean
   adhesive: boolean
   shunt_risk: boolean
+  // P2-safe optional fields (PARAMETER-ENGINE-01B1 §7)
+  // Missing = NOT_EVALUATED. Never treated as a default value.
+  approach_cycles?: number
+  cooling_cycles?: number
+  air_pressure_bar?: number
 }
 
 export type WeldAnalysisResponse = {
@@ -44,6 +49,11 @@ export type WeldAnalysisResponse = {
   model_results?: ModelResultRow[]
   compliance_results?: ComplianceRuleRow[]
   compliance_conflicts?: ComplianceConflictRow[]
+  // Reference profile fields (PARAMETER-ENGINE-01B1 §8)
+  reference_profile_id?: string
+  effective_thickness_mm?: number | null
+  selected_band?: string | null
+  band_selection_status?: string
 }
 
 export type RecommendedRangeRow = {
