@@ -17,6 +17,7 @@
  *   - pulse scheduling / multi-pulse current
  */
 import { useId } from 'react'
+import { useAppLanguage } from '../../i18n/useAppLanguage'
 import './engineering-ui.css'
 
 export interface AdvancedEquipmentValues {
@@ -43,6 +44,7 @@ export function AdvancedEquipmentPanel({
   onChange,
 }: AdvancedEquipmentPanelProps) {
   const bodyId = useId()
+  const { t } = useAppLanguage()
 
   function handleNumber(field: keyof AdvancedEquipmentValues, raw: string) {
     const parsed = raw === '' ? 0 : parseFloat(raw)
@@ -62,7 +64,7 @@ export function AdvancedEquipmentPanel({
         aria-controls={bodyId}
         onClick={onToggle}
       >
-        <span>Advanced Equipment</span>
+        <span>{t.advancedPanel.title}</span>
         <span className="eui-panel-chevron" data-open={open ? 'true' : 'false'} aria-hidden="true">
           ▼
         </span>
@@ -75,7 +77,7 @@ export function AdvancedEquipmentPanel({
           <div className="eui-field-row">
             <div className="eui-field">
               <label className="eui-label" htmlFor="adv-squeeze-cycles">
-                Squeeze cycles
+                {t.advancedPanel.squeezeCycles}
               </label>
               <input
                 id="adv-squeeze-cycles"
@@ -91,7 +93,7 @@ export function AdvancedEquipmentPanel({
 
             <div className="eui-field">
               <label className="eui-label" htmlFor="adv-hold-cycles">
-                Hold cycles
+                {t.advancedPanel.holdCycles}
               </label>
               <input
                 id="adv-hold-cycles"
@@ -110,7 +112,7 @@ export function AdvancedEquipmentPanel({
           <div className="eui-field-row">
             <div className="eui-field">
               <label className="eui-label" htmlFor="adv-cooling-flow">
-                Cooling flow (L/min)
+                {t.advancedPanel.coolingFlow}
               </label>
               <input
                 id="adv-cooling-flow"
@@ -126,7 +128,7 @@ export function AdvancedEquipmentPanel({
 
             <div className="eui-field">
               <label className="eui-label" htmlFor="adv-cooling-temp">
-                Cooling temp (°C)
+                {t.advancedPanel.coolingTemp}
               </label>
               <input
                 id="adv-cooling-temp"
@@ -149,7 +151,7 @@ export function AdvancedEquipmentPanel({
                   checked={values.dc_current}
                   onChange={(e) => handleBool('dc_current', e.target.checked)}
                 />
-                <span className="eui-check-label">DC current</span>
+                <span className="eui-check-label">{t.advancedPanel.dcCurrent}</span>
               </label>
             </div>
 
@@ -160,7 +162,7 @@ export function AdvancedEquipmentPanel({
                   checked={values.adhesive}
                   onChange={(e) => handleBool('adhesive', e.target.checked)}
                 />
-                <span className="eui-check-label">Adhesive bonding</span>
+                <span className="eui-check-label">{t.advancedPanel.adhesive}</span>
               </label>
             </div>
 
@@ -171,7 +173,7 @@ export function AdvancedEquipmentPanel({
                   checked={values.shunt_risk}
                   onChange={(e) => handleBool('shunt_risk', e.target.checked)}
                 />
-                <span className="eui-check-label">Shunt risk</span>
+                <span className="eui-check-label">{t.advancedPanel.shuntRisk}</span>
               </label>
             </div>
           </div>

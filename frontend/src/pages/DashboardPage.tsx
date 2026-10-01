@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react'
 import { currentUser, dashboard } from '../api/client'
+import { useAppLanguage } from '../i18n/useAppLanguage'
 
 type DashboardData = {
   total_projects: number
@@ -13,23 +14,11 @@ type DashboardData = {
   recent_audit_events: number
 }
 
-// Isolated mapping from canonical role codes to display labels.
-// Structure is intentionally flat so it can be moved into TR/EN i18n later.
-const ROLE_LABELS: Record<string, string> = {
-  SYSTEM_ADMIN:           'System Admin',
-  PROCESS_ENGINEER:       'Process Engineer',
-  QUALITY_ENGINEER:       'Quality Engineer',
-  MANUFACTURING_ENGINEER: 'Manufacturing Engineer',
-  MAINTENANCE:            'Maintenance',
-  OPERATOR:               'Operator',
-  READ_ONLY:              'Read Only',
-  CUSTOMER:               'Customer',
-}
-
 export function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [user, setUser] = useState<{ full_name: string; role: string } | null>(null)
   const [error, setError] = useState(false)
+  const { t } = useAppLanguage()
 
   useEffect(() => {
     Promise.all([dashboard(), currentUser()])
@@ -43,17 +32,17 @@ export function DashboardPage() {
   if (error) {
     return (
       <div className="page active">
-        <div className="ws-kicker">Command Center</div>
+        <div className="ws-kicker">{t.dashboardPage.kicker}</div>
         <header className="page-header">
           <div>
-            <h1>Command Center</h1>
-            <p className="subtitle">Production quality and engineering overview</p>
+            <h1>{t.dashboardPage.title}</h1>
+            <p className="subtitle">{t.dashboardPage.subtitle}</p>
           </div>
         </header>
         <div className="alert danger" role="alert">
           <div>
-            <div className="alert-title">Backend connection unavailable</div>
-            <div className="alert-text">Engineering data could not be loaded. Verify the API service and retry.</div>
+            <div className="alert-title">{t.dashboardPage.errorTitle}</div>
+            <div className="alert-text">{t.dashboardPage.errorText}</div>
           </div>
         </div>
       </div>
@@ -65,31 +54,34 @@ export function DashboardPage() {
       <div className="page active">
         <div className="state-msg" role="status">
           <div className="spinner" aria-hidden="true" />
-          <span>Loading command center…</span>
+          <span>{t.dashboardPage.loading}</span>
         </div>
       </div>
     )
   }
 
+  const d = t.dashboardPage
   const cards: { label: string; value: number; state?: 'ok' | 'warn' | 'danger'; sub?: string }[] = [
-    { label: 'Total Projects', value: data.total_projects },
-    { label: 'Active Projects', value: data.active_projects, state: 'ok' },
-    { label: 'Total Weld Points', value: data.total_weld_points },
-    { label: 'Risky Weld Points', value: data.risky_weld_points, state: data.risky_weld_points > 0 ? 'warn' : undefined, sub: data.risky_weld_points > 0 ? 'engineering review required' : 'no review required' },
-    { label: 'Pending Approvals', value: data.pending_approvals, state: data.pending_approvals > 0 ? 'warn' : undefined, sub: 'awaiting human decision' },
-    { label: 'Rejected Approvals', value: data.rejected_approvals, state: data.rejected_approvals > 0 ? 'danger' : undefined },
-    { label: 'Users', value: data.total_users },
-    { label: 'Audit Events (7 d)', value: data.recent_audit_events },
+    { label: d.totalProjects, value: data.total_projects },
+    { label: d.activeProjects, value: data.active_projects, state: 'ok' },
+    { label: d.totalWeldPoints, value: data.total_weld_points },
+    { label: d.riskyWeldPoints, value: data.risky_weld_points, state: data.risky_weld_points > 0 ? 'warn' : undefined, sub: data.risky_weld_points > 0 ? d.engineeringReview : d.noReview },
+    { label: d.pendingApprovals, value: data.pending_approvals, state: data.pending_approvals > 0 ? 'warn' : undefined, sub: d.awaitingDecision },
+    { label: d.rejectedApprovals, value: data.rejected_approvals, state: data.rejected_approvals > 0 ? 'danger' : undefined },
+    { label: d.users, value: data.total_users },
+    { label: d.auditEvents, value: data.recent_audit_events },
   ]
+
+  const roleLabel = t.roleLabels[user?.role ?? ''] ?? user?.role ?? ''
 
   return (
     <div className="page active">
-      <div className="ws-kicker">Overview · Spot Welding Parametre Analysis</div>
+      <div className="ws-kicker">{d.kickerData}</div>
       <header className="page-header">
         <div>
-          <h1>Command Center</h1>
+          <h1>{d.title}</h1>
           <p className="subtitle">
-            {user ? `${user.full_name} — ${ROLE_LABELS[user.role] ?? user.role}` : '…'} · production quality &amp; engineering overview
+            {user ? `${user.full_name} — ${roleLabel}` : '…'} · {d.subtitle}
           </p>
         </div>
       </header>
@@ -110,26 +102,26 @@ export function DashboardPage() {
       </section>
       <div className="ws-grid-main" style={{ marginTop: 'var(--sp-5)' }}>
         <section className="panel" aria-label="Engineering activity">
-          <div className="panel-header"><h3>Engineering activity</h3><span className="panel-meta">current backend state</span></div>
+          <div className="panel-header"><h3>{d.engineeringActivity}</h3><span className="panel-meta">{d.engineeringActivityMeta}</span></div>
           <div className="panel-body">
           <div className="trace-block">
-            <div className="trace-row"><span className="label">Projects</span><span className="value">{data.total_projects} total · {data.active_projects} active</span></div>
-            <div className="trace-row"><span className="label">Weld points</span><span className="value">{data.total_weld_points} total · {data.risky_weld_points} risky</span></div>
-            <div className="trace-row"><span className="label">Approvals</span><span className="value">{data.pending_approvals} pending · {data.rejected_approvals} rejected</span></div>
+            <div className="trace-row"><span className="label">{d.projects}</span><span className="value">{data.total_projects} {d.total} · {data.active_projects} {d.active}</span></div>
+            <div className="trace-row"><span className="label">{d.weldPoints}</span><span className="value">{data.total_weld_points} {d.total} · {data.risky_weld_points} {d.risky}</span></div>
+            <div className="trace-row"><span className="label">{d.approvals}</span><span className="value">{data.pending_approvals} {d.pending} · {data.rejected_approvals} {d.rejected}</span></div>
           </div>
           </div>
-          <div className="panel-footer">Live backend counts only — no sampled metrics.</div>
+          <div className="panel-footer">{d.activityFooter}</div>
         </section>
         <section className="panel" aria-label="System readiness">
-          <div className="panel-header"><h3>System readiness</h3><span className="panel-meta">connection</span></div>
+          <div className="panel-header"><h3>{d.systemReadiness}</h3><span className="panel-meta">{d.systemReadinessMeta}</span></div>
           <div className="panel-body">
           <div className="trace-block">
-            <div className="trace-row"><span className="label">Backend</span><span className="value">connected</span></div>
-            <div className="trace-row"><span className="label">Audit events (7 d)</span><span className="value">{data.recent_audit_events}</span></div>
-            <div className="trace-row"><span className="label">Users</span><span className="value">{data.total_users}</span></div>
+            <div className="trace-row"><span className="label">{d.backend}</span><span className="value">{d.connected}</span></div>
+            <div className="trace-row"><span className="label">{d.auditEvents7d}</span><span className="value">{data.recent_audit_events}</span></div>
+            <div className="trace-row"><span className="label">{d.users}</span><span className="value">{data.total_users}</span></div>
           </div>
           </div>
-          <div className="panel-footer">Audit-backed traceability context.</div>
+          <div className="panel-footer">{d.readinessFooter}</div>
         </section>
       </div>
     </div>

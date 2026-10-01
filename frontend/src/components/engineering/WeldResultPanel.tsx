@@ -1,5 +1,7 @@
 /**
  * APP-UX-01C-02: WeldResultPanel
+ * APP-I18N-01A: All display labels translated via useAppLanguage().
+ *               RISK_LEVEL_LABELS import replaced by t.riskLabels[level].
  *
  * Display-only component that renders a WeldAnalysisResponse from the backend.
  * Shows: score, risk_level, nugget targets, model prediction, compliance summary,
@@ -13,10 +15,11 @@
  * Margin (selected_prediction_mm − nugget_min_mm) is arithmetic presentation
  * ONLY and is shown ONLY when both values are present and non-null.
  *
- * risk_level label resolves via RISK_LEVEL_LABELS; falls back to raw string.
+ * risk_level display label: t.riskLabels[level.toUpperCase()] falls back to raw string.
+ * Canonical internal value (HIGH / MEDIUM / LOW) is never changed.
  */
 import type { WeldAnalysisResponse } from '../../types/weld'
-import { RISK_LEVEL_LABELS } from '../../constants/riskLevel'
+import { useAppLanguage } from '../../i18n/useAppLanguage'
 import './engineering-ui.css'
 
 export interface WeldResultPanelProps {
@@ -37,15 +40,17 @@ function fmt(v: number | null | undefined, decimals = 2): string {
 }
 
 export function WeldResultPanel({ result }: WeldResultPanelProps) {
+  const { t } = useAppLanguage()
+
   if (!result) {
     return (
       <div className="eui-result-empty">
-        Analiz sonucu bekleniyor…
+        {t.resultPanel.empty}
       </div>
     )
   }
 
-  const riskLabel = RISK_LEVEL_LABELS[result.risk_level.toUpperCase()] ?? result.risk_level
+  const riskLabel = t.riskLabels[result.risk_level.toUpperCase()] ?? result.risk_level
 
   // Arithmetic margin — only when both backend values are present
   const showMargin =
@@ -60,37 +65,37 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
       {/* ── Core metrics ───────────────────────────────────── */}
       <div className="eui-result-grid">
         <div className="eui-stat-card">
-          <div className="eui-stat-label">Skor</div>
+          <div className="eui-stat-label">{t.resultPanel.score}</div>
           <div className="eui-stat-value">{fmt(result.score, 1)}</div>
         </div>
 
         <div className="eui-stat-card">
-          <div className="eui-stat-label">Risk</div>
+          <div className="eui-stat-label">{t.resultPanel.risk}</div>
           <div className={`eui-stat-value ${riskClass(result.risk_level)}`}>
             {riskLabel}
           </div>
         </div>
 
         <div className="eui-stat-card">
-          <div className="eui-stat-label">Nugget min (mm)</div>
+          <div className="eui-stat-label">{t.resultPanel.nuggetMin}</div>
           <div className="eui-stat-value">{fmt(result.nugget_min_mm)}</div>
         </div>
 
         <div className="eui-stat-card">
-          <div className="eui-stat-label">Nugget opt (mm)</div>
+          <div className="eui-stat-label">{t.resultPanel.nuggetOpt}</div>
           <div className="eui-stat-value">{fmt(result.nugget_opt_mm)}</div>
         </div>
 
         {result.selected_prediction_mm != null && (
           <div className="eui-stat-card">
-            <div className="eui-stat-label">Model tahmini (mm)</div>
+            <div className="eui-stat-label">{t.resultPanel.modelPrediction}</div>
             <div className="eui-stat-value">{fmt(result.selected_prediction_mm)}</div>
           </div>
         )}
 
         {showMargin && (
           <div className="eui-stat-card">
-            <div className="eui-stat-label">Marj (mm)</div>
+            <div className="eui-stat-label">{t.resultPanel.margin}</div>
             <div className={`eui-stat-value ${margin != null && margin < 0 ? 'eui-risk-high' : ''}`}>
               {fmt(margin)}
             </div>
@@ -109,34 +114,34 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
       {result.compliance_summary && (
         <div className="eui-stat-card">
           <div className="eui-stat-label" style={{ marginBottom: '8px' }}>
-            Uyum özeti
+            {t.resultPanel.complianceSummary}
           </div>
           <div className="eui-result-grid">
             <div>
-              <div className="eui-stat-label">Skor</div>
+              <div className="eui-stat-label">{t.resultPanel.complianceScore}</div>
               <div className="eui-stat-value">{fmt(result.compliance_summary.score, 1)}</div>
             </div>
             {result.compliance_summary.total_rules != null && (
               <div>
-                <div className="eui-stat-label">Toplam kural</div>
+                <div className="eui-stat-label">{t.resultPanel.totalRules}</div>
                 <div className="eui-stat-value">{result.compliance_summary.total_rules}</div>
               </div>
             )}
             {result.compliance_summary.passed != null && (
               <div>
-                <div className="eui-stat-label">Geçti</div>
+                <div className="eui-stat-label">{t.resultPanel.passed}</div>
                 <div className="eui-stat-value eui-risk-low">{result.compliance_summary.passed}</div>
               </div>
             )}
             {result.compliance_summary.failed != null && (
               <div>
-                <div className="eui-stat-label">Başarısız</div>
+                <div className="eui-stat-label">{t.resultPanel.failed}</div>
                 <div className="eui-stat-value eui-risk-high">{result.compliance_summary.failed}</div>
               </div>
             )}
             {result.compliance_summary.review != null && (
               <div>
-                <div className="eui-stat-label">İnceleme</div>
+                <div className="eui-stat-label">{t.resultPanel.review}</div>
                 <div className="eui-stat-value eui-risk-medium">{result.compliance_summary.review}</div>
               </div>
             )}
@@ -147,7 +152,7 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
       {/* ── Risks ─────────────────────────────────────────── */}
       {result.risks && result.risks.length > 0 && (
         <div>
-          <p className="eui-section-title">Riskler</p>
+          <p className="eui-section-title">{t.resultPanel.risks}</p>
           <ul className="eui-list">
             {result.risks.map((r, i) => (
               <li key={i} className="eui-list-item">
@@ -162,7 +167,7 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
       {/* ── Actions ───────────────────────────────────────── */}
       {result.actions && result.actions.length > 0 && (
         <div>
-          <p className="eui-section-title">Önerilen aksiyonlar</p>
+          <p className="eui-section-title">{t.resultPanel.actions}</p>
           <ul className="eui-list">
             {result.actions.map((a, i) => (
               <li key={i} className="eui-list-item">{a}</li>
@@ -174,16 +179,16 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
       {/* ── Recommended ranges ────────────────────────────── */}
       {result.recommended_ranges && result.recommended_ranges.length > 0 && (
         <div>
-          <p className="eui-section-title">Önerilen aralıklar</p>
+          <p className="eui-section-title">{t.resultPanel.recommendedRanges}</p>
           <table className="eui-range-table">
             <thead>
               <tr>
-                <th>Parametre</th>
-                <th>Min</th>
-                <th>Maks</th>
-                <th>Birim</th>
-                <th>Mevcut</th>
-                <th>Durum</th>
+                <th>{t.resultPanel.rangeParam}</th>
+                <th>{t.resultPanel.rangeMin}</th>
+                <th>{t.resultPanel.rangeMax}</th>
+                <th>{t.resultPanel.rangeUnit}</th>
+                <th>{t.resultPanel.rangeCurrent}</th>
+                <th>{t.resultPanel.rangeStatus}</th>
               </tr>
             </thead>
             <tbody>
@@ -232,8 +237,8 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
             {result.compliance_conflicts.map((c, i) => (
               <li key={i} className="eui-list-item">
                 <strong>{c.parameter}</strong>
-                {` — Kazanan: ${c.winner_rule_id}`}
-                {` | Rakip: ${c.challenger_rule_id}`}
+                {` — Kazanan: ${c.winner_rule}`}
+                {` | Rakip: ${c.challenger_rule}`}
                 {c.decision && <span>{` → ${c.decision}`}</span>}
               </li>
             ))}

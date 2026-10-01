@@ -13,6 +13,7 @@
  * Replace with <select> elements if a backend-driven list is added.
  */
 import type { LayerInput } from '../../types/weld'
+import { useAppLanguage } from '../../i18n/useAppLanguage'
 import './engineering-ui.css'
 
 type StackCount = '2T' | '3T' | '4T'
@@ -39,6 +40,7 @@ export interface StackUpEditorProps {
 }
 
 export function StackUpEditor({ stackCount, layers, onChange }: StackUpEditorProps) {
+  const { t } = useAppLanguage()
   const targetCount = STACK_LAYER_COUNT[stackCount]
 
   function handleStackCountChange(next: StackCount) {
@@ -62,12 +64,12 @@ export function StackUpEditor({ stackCount, layers, onChange }: StackUpEditorPro
 
   return (
     <div className="eui-section">
-      <p className="eui-section-title">Stack-Up Configuration</p>
+      <p className="eui-section-title">{t.stackEditor.sectionTitle}</p>
 
       {/* Stack count selector */}
       <div>
         <p className="eui-label" id="stack-count-label">
-          Stack count
+          {t.stackEditor.stackCountLabel}
         </p>
         <div className="eui-stack-selector" role="group" aria-labelledby="stack-count-label">
           {STACK_OPTIONS.map((opt) => (
@@ -91,19 +93,19 @@ export function StackUpEditor({ stackCount, layers, onChange }: StackUpEditorPro
           const idPrefix = `layer-${layerNum}`
           return (
             <div key={idx} className="eui-layer-card">
-              <p className="eui-layer-title">Layer {layerNum}</p>
+              <p className="eui-layer-title">{t.stackEditor.layerPrefix} {layerNum}</p>
               <div className="eui-field-row">
                 {/* material_family */}
                 <div className="eui-field">
                   <label className="eui-label" htmlFor={`${idPrefix}-family`}>
-                    Material family
+                    {t.stackEditor.materialFamily}
                   </label>
                   <input
                     id={`${idPrefix}-family`}
                     type="text"
                     className="eui-input"
                     value={layer.material_family}
-                    placeholder="e.g. DP, IF, AHSS"
+                    placeholder={t.stackEditor.materialFamilyPlaceholder}
                     onChange={(e) => handleLayerChange(idx, 'material_family', e.target.value)}
                     autoComplete="off"
                   />
@@ -111,14 +113,14 @@ export function StackUpEditor({ stackCount, layers, onChange }: StackUpEditorPro
                 {/* material_subtype */}
                 <div className="eui-field">
                   <label className="eui-label" htmlFor={`${idPrefix}-subtype`}>
-                    Material subtype
+                    {t.stackEditor.materialSubtype}
                   </label>
                   <input
                     id={`${idPrefix}-subtype`}
                     type="text"
                     className="eui-input"
                     value={layer.material_subtype}
-                    placeholder="e.g. DP600, DP780"
+                    placeholder={t.stackEditor.materialSubtypePlaceholder}
                     onChange={(e) => handleLayerChange(idx, 'material_subtype', e.target.value)}
                     autoComplete="off"
                   />
@@ -126,7 +128,7 @@ export function StackUpEditor({ stackCount, layers, onChange }: StackUpEditorPro
                 {/* thickness_mm */}
                 <div className="eui-field">
                   <label className="eui-label" htmlFor={`${idPrefix}-thickness`}>
-                    Thickness (mm)
+                    {t.stackEditor.thickness}
                   </label>
                   <input
                     id={`${idPrefix}-thickness`}
@@ -153,7 +155,7 @@ export function StackUpEditor({ stackCount, layers, onChange }: StackUpEditorPro
                       checked={layer.coated}
                       onChange={(e) => handleLayerChange(idx, 'coated', e.target.checked)}
                     />
-                    <span className="eui-check-label">Coated</span>
+                    <span className="eui-check-label">{t.stackEditor.coated}</span>
                   </label>
                 </div>
               </div>

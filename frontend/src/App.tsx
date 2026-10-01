@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { useState, useEffect } from 'react'
 import { DashboardPage } from './pages/DashboardPage'
 import { EngineeringPage } from './pages/EngineeringPage'
+import { AppLanguageContext, getInitialAppLang, persistAppLang } from './i18n/AppLanguageContext'
+import { useAppLanguage } from './i18n/useAppLanguage'
+import type { AppLanguage } from './i18n/appContent'
 import { LoginPage } from './pages/LoginPage'
 import { OptimizationPage } from './pages/OptimizationPage'
 import { FailureProbabilityPage } from './pages/FailureProbabilityPage'
@@ -55,6 +58,8 @@ function Sidebar({
   mobileOpen: boolean
   setMobileOpen: (v: boolean) => void
 }) {
+  const { t } = useAppLanguage()
+
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     try { const s = localStorage.getItem('sb_open'); return s ? JSON.parse(s) : {} } catch { return {} }
   })
@@ -122,7 +127,7 @@ function Sidebar({
                 className={'nav-item' + (page === item.id ? ' active' : '')}
                 aria-current={page === item.id ? 'page' : undefined}
                 onClick={() => handleNav(item.id)}
-                title={item.label}
+                title={t.nav.items[item.id] ?? item.label}
               >
                 <span className="nav-mk" aria-hidden="true">{item.mk}</span>
               </button>
@@ -139,7 +144,7 @@ function Sidebar({
                     onClick={() => handleNav(item.id)}
                   >
                     <span className="nav-mk" aria-hidden="true">{item.mk}</span>
-                    <span className="nav-label">{item.label}</span>
+                    <span className="nav-label">{t.nav.items[item.id] ?? item.label}</span>
                   </button>
                 )
               }
@@ -153,7 +158,7 @@ function Sidebar({
                     aria-controls={panelId}
                     onClick={() => toggleGroup(group.id)}
                   >
-                    <span className="sb-group-label">{group.label}</span>
+                    <span className="sb-group-label">{t.nav.groups[group.id] ?? group.label}</span>
                     <span className="sb-chevron" aria-hidden="true">{isOpen ? '▴' : '▾'}</span>
                   </button>
                   {isOpen && (
@@ -166,7 +171,7 @@ function Sidebar({
                           onClick={() => handleNav(item.id)}
                         >
                           <span className="nav-mk" aria-hidden="true">{item.mk}</span>
-                          <span className="nav-label">{item.label}</span>
+                          <span className="nav-label">{t.nav.items[item.id] ?? item.label}</span>
                         </button>
                       ))}
                     </div>
@@ -191,10 +196,18 @@ function Sidebar({
 }
 
 function Topbar({ page, userName, onSignOut, onHamburger }: { page: Page; userName: string; onSignOut: () => void; onHamburger: () => void }) {
+  const { lang, setLang, t } = useAppLanguage()
   const item = NAV.flatMap((g) => g.items).find((i) => i.id === page)
-  const group = NAV.find((g) => g.items.some((i) => i.id === page))?.label ?? 'SpotWeldPro'
-  const title = item?.label ?? 'SpotWeldPro'
+  const group = NAV.find((g) => g.items.some((i) => i.id === page))
+  const title = t.nav.items[page] ?? item?.label ?? 'SpotWeldPro'
+  const groupLabel = group ? (t.nav.groups[group.id] ?? group.label) : 'SpotWeldPro'
   const initials = userName.trim() ? userName.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() : '…'
+
+  function handleLang(next: AppLanguage) {
+    persistAppLang(next)
+    setLang(next)
+  }
+
   return (
     <header className="topbar">
       <div className="topbar-start">
@@ -203,13 +216,26 @@ function Topbar({ page, userName, onSignOut, onHamburger }: { page: Page; userNa
         </button>
         <div className="topbar-module">
           <span className="topbar-title">{title}</span>
-          <span className="topbar-crumb">SpotWeldPro AI / {group}</span>
+          <span className="topbar-crumb">SpotWeldPro AI / {groupLabel}</span>
         </div>
       </div>
       <div className="topbar-user">
+        <div className="lang-switch" role="group" aria-label="Language">
+          {(['tr', 'en'] as AppLanguage[]).map((l) => (
+            <button
+              key={l}
+              type="button"
+              className={'lang-btn' + (lang === l ? ' lang-btn-active' : '')}
+              aria-pressed={lang === l}
+              onClick={() => handleLang(l)}
+            >
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
         <span className="user-chip"><span className="user-avatar" aria-hidden="true">{initials}</span>{userName}</span>
         <button className="signout-btn" onClick={onSignOut}>
-          Sign out
+          {t.topbar.signOut}
         </button>
       </div>
     </header>
@@ -227,6 +253,7 @@ function AuthenticatedApp() {
     try { return localStorage.getItem('sb_collapsed') === 'true' } catch { return false }
   })
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [lang, setLang] = useState<AppLanguage>(getInitialAppLang)
   const navigate = useNavigate()
 
   if (!authenticated) return <Navigate to="/login" replace />
@@ -237,30 +264,32 @@ function AuthenticatedApp() {
   }
 
   return (
-    <div className={'app-shell' + (collapsed ? ' shell-collapsed' : '')}>
-      <Topbar
-        page={page}
-        userName={userName || '…'}
-        onSignOut={() => {
-          localStorage.clear()
-          navigate('/login')
-        }}
-        onHamburger={() => setMobileOpen(true)}
-      />
-      <Sidebar
-        page={page} setPage={setPage}
-        collapsed={collapsed} setCollapsed={setCollapsed}
-        mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}
-      />
-      <main className="main">
-        {page === 'dashboard' && <DashboardPage />}
-        {page === 'projects' && <ProjectsPage onOpen={setProject} />}
-        {page === 'analysis' && <AnalysisPage />}
-        {page === 'engineering' && <EngineeringPage />}
-        {page === 'optimization' && <OptimizationPage />}
-        {page === 'failure' && <FailureProbabilityPage />}
-      </main>
-    </div>
+    <AppLanguageContext.Provider value={{ lang, setLang }}>
+      <div className={'app-shell' + (collapsed ? ' shell-collapsed' : '')}>
+        <Topbar
+          page={page}
+          userName={userName || '…'}
+          onSignOut={() => {
+            localStorage.clear()
+            navigate('/login')
+          }}
+          onHamburger={() => setMobileOpen(true)}
+        />
+        <Sidebar
+          page={page} setPage={setPage}
+          collapsed={collapsed} setCollapsed={setCollapsed}
+          mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}
+        />
+        <main className="main">
+          {page === 'dashboard' && <DashboardPage />}
+          {page === 'projects' && <ProjectsPage onOpen={setProject} />}
+          {page === 'analysis' && <AnalysisPage />}
+          {page === 'engineering' && <EngineeringPage />}
+          {page === 'optimization' && <OptimizationPage />}
+          {page === 'failure' && <FailureProbabilityPage />}
+        </main>
+      </div>
+    </AppLanguageContext.Provider>
   )
 }
 
