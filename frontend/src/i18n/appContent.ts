@@ -157,6 +157,68 @@ export interface AppContent {
   }
   /** Display mapping for canonical backend role codes. */
   roleLabels: Record<string, string>
+  stackDefinition: {
+    sectionTitle: string
+    stackCountLabel: string
+    layerPrefix: string
+    materialFamily: string
+    materialFamilyPlaceholder: string
+    materialSubtype: string
+    materialSubtypePlaceholder: string
+    thickness: string
+    coated: string
+    engineeringReviewRequired: string
+  }
+  parameterPanel: {
+    sectionTitle: string
+    groupElectrical: string
+    groupForce: string
+    groupTime: string
+    groupCooling: string
+    currentKa: string
+    forceKn: string
+    forceDaN: string
+    tipDiameter: string
+    airPressure: string
+    weldTime: string
+    squeezeTime: string
+    holdTime: string
+    approachTime: string
+    coolingTime: string
+    coolingFlow: string
+    coolingTemp: string
+    dcCurrent: string
+    adhesive: string
+    shuntRisk: string
+    unitCycle: string
+    unitMs: string
+    unitToggleLabel: string
+    unitBasisUnresolved: string
+    cycleEqMs: string
+    runAnalysis: string
+    analyzing: string
+  }
+  referenceGuidancePanel: {
+    sectionTitle: string
+    referenceProfile: string
+    referenceBand: string
+    effectiveThickness: string
+    parameterRange: string
+    engineeringReviewRequired: string
+    outsideRangeWarning: string
+    notEvaluated: string
+    withinRange: string
+    belowRange: string
+    aboveRange: string
+    unitBasisUnresolved: string
+    noReferenceFound: string
+    rangeParam: string
+    rangeMin: string
+    rangeMax: string
+    rangeUnit: string
+    rangeStatus: string
+    guidanceInfoNote: string
+  }
   /** Display mapping for canonical backend risk level values. */
   riskLabels: Record<string, string>
 }
@@ -326,6 +388,68 @@ const TR: AppContent = {
     complianceConflicts: 'Kural çakışmaları',
     conflictWinner: 'Kazanan',
     conflictChallenger: 'Rakip',
+  },
+  stackDefinition: {
+    sectionTitle: 'Malzeme Yığını Tanımı',
+    stackCountLabel: 'Kat Sayısı',
+    layerPrefix: 'Kat',
+    materialFamily: 'Malzeme Ailesi',
+    materialFamilyPlaceholder: 'ör. mild_steel',
+    materialSubtype: 'Malzeme Alt Tipi',
+    materialSubtypePlaceholder: 'ör. IF',
+    thickness: 'Kalınlık (mm)',
+    coated: 'Kaplı',
+    engineeringReviewRequired: 'Bu konfigürasyon mühendislik incelemesi gerektirir.',
+  },
+  parameterPanel: {
+    sectionTitle: 'Kaynak Parametreleri',
+    groupElectrical: 'Elektrik / Kaynak',
+    groupForce: 'Kuvvet / Elektrot',
+    groupTime: 'Zaman Parametreleri',
+    groupCooling: 'Soğutma / Makine Koşulları',
+    currentKa: 'Akım (kA)',
+    forceKn: 'Kuvvet (kN)',
+    forceDaN: 'Kuvvet (daN)',
+    tipDiameter: 'Uç Çapı (mm)',
+    airPressure: 'Hava Basıncı (bar)',
+    weldTime: 'Kaynak Süresi',
+    squeezeTime: 'Sıkıştırma Süresi',
+    holdTime: 'Tutma Süresi',
+    approachTime: 'Yaklaşma Süresi',
+    coolingTime: 'Soğutma Süresi',
+    coolingFlow: 'Soğutma Debisi (L/dk)',
+    coolingTemp: 'Soğutma Sıcaklığı (°C)',
+    dcCurrent: 'DC Akım',
+    adhesive: 'Yapıştırıcı',
+    shuntRisk: 'Şant Riski',
+    unitCycle: 'Çevrim',
+    unitMs: 'ms',
+    unitToggleLabel: 'Zaman Birimi',
+    unitBasisUnresolved: 'Birim belirsiz',
+    cycleEqMs: '1 çevrim = 20 ms (50 Hz)',
+    runAnalysis: 'Analiz Et ve Kaydet',
+    analyzing: 'Analiz ediliyor…',
+  },
+  referenceGuidancePanel: {
+    sectionTitle: 'Referans Kılavuzu',
+    referenceProfile: 'Referans Profili',
+    referenceBand: 'Referans Bandı',
+    effectiveThickness: 'Efektif Kalınlık',
+    parameterRange: 'Parametre Aralığı',
+    engineeringReviewRequired: 'Mühendislik incelemesi gerekli.',
+    outsideRangeWarning: 'İdeal seçim limitleri dışına çıktınız.',
+    notEvaluated: 'Değerlendirilmedi',
+    withinRange: 'Aralık İçinde',
+    belowRange: 'Aralığın Altında',
+    aboveRange: 'Aralığın Üzerinde',
+    unitBasisUnresolved: 'Birim belirsiz',
+    noReferenceFound: 'Bu konfigürasyon için referans profili bulunamadı.',
+    rangeParam: 'Parametre',
+    rangeMin: 'Min',
+    rangeMax: 'Maks',
+    rangeUnit: 'Birim',
+    rangeStatus: 'Durum',
+    guidanceInfoNote: 'Referans kılavuzu yalnızca bilgi amaçlıdır. Uyum değerlendirmesini veya riski etkilemez.',
   },
   riskLabels: {
     HIGH: 'Yüksek',
@@ -498,6 +622,68 @@ const EN: AppContent = {
     complianceConflicts: 'Rule conflicts',
     conflictWinner: 'Winner',
     conflictChallenger: 'Challenger',
+  },
+  stackDefinition: {
+    sectionTitle: 'Material Stack Definition',
+    stackCountLabel: 'Layer Count',
+    layerPrefix: 'Layer',
+    materialFamily: 'Material Family',
+    materialFamilyPlaceholder: 'e.g. mild_steel',
+    materialSubtype: 'Material Subtype',
+    materialSubtypePlaceholder: 'e.g. IF',
+    thickness: 'Thickness (mm)',
+    coated: 'Coated',
+    engineeringReviewRequired: 'This configuration requires engineering review.',
+  },
+  parameterPanel: {
+    sectionTitle: 'Weld Parameters',
+    groupElectrical: 'Electrical / Welding',
+    groupForce: 'Force / Electrode',
+    groupTime: 'Time Parameters',
+    groupCooling: 'Cooling / Machine Conditions',
+    currentKa: 'Current (kA)',
+    forceKn: 'Force (kN)',
+    forceDaN: 'Force (daN)',
+    tipDiameter: 'Tip Diameter (mm)',
+    airPressure: 'Air Pressure (bar)',
+    weldTime: 'Weld Time',
+    squeezeTime: 'Squeeze Time',
+    holdTime: 'Hold Time',
+    approachTime: 'Approach Time',
+    coolingTime: 'Cooling Time',
+    coolingFlow: 'Cooling Flow (L/min)',
+    coolingTemp: 'Cooling Temperature (°C)',
+    dcCurrent: 'DC Current',
+    adhesive: 'Adhesive',
+    shuntRisk: 'Shunt Risk',
+    unitCycle: 'Cycle',
+    unitMs: 'ms',
+    unitToggleLabel: 'Time Unit',
+    unitBasisUnresolved: 'Unit unresolved',
+    cycleEqMs: '1 cycle = 20 ms (50 Hz)',
+    runAnalysis: 'Analyze and Save',
+    analyzing: 'Analyzing…',
+  },
+  referenceGuidancePanel: {
+    sectionTitle: 'Reference Guidance',
+    referenceProfile: 'Reference Profile',
+    referenceBand: 'Reference Band',
+    effectiveThickness: 'Effective Thickness',
+    parameterRange: 'Parameter Range',
+    engineeringReviewRequired: 'Engineering review required.',
+    outsideRangeWarning: 'You are outside the recommended parameter range.',
+    notEvaluated: 'Not Evaluated',
+    withinRange: 'Within Range',
+    belowRange: 'Below Range',
+    aboveRange: 'Above Range',
+    unitBasisUnresolved: 'Unit unresolved',
+    noReferenceFound: 'No reference profile found for this configuration.',
+    rangeParam: 'Parameter',
+    rangeMin: 'Min',
+    rangeMax: 'Max',
+    rangeUnit: 'Unit',
+    rangeStatus: 'Status',
+    guidanceInfoNote: 'Reference guidance is informational only. It does not affect compliance evaluation or risk.',
   },
   riskLabels: {
     HIGH: 'High',

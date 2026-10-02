@@ -50,10 +50,10 @@ export type WeldAnalysisResponse = {
   compliance_results?: ComplianceRuleRow[]
   compliance_conflicts?: ComplianceConflictRow[]
   // Reference profile fields (PARAMETER-ENGINE-01B1 §8)
-  reference_profile_id?: string
+  reference_profile_id?: string | null
   effective_thickness_mm?: number | null
   selected_band?: string | null
-  band_selection_status?: string
+  band_selection_status?: string | null
 }
 
 export type RecommendedRangeRow = {

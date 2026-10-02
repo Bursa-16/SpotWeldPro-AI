@@ -1,45 +1,153 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useState, useCallback } from 'react'
 import { createWeldPoint, listWeldPoints } from '../api/client'
 import type { Project, WeldPoint } from '../types/project'
 import type { WeldAnalysisRequest } from '../types/weld'
+import { WeldResultPanel } from '../components/engineering'
+import { useAppLanguage } from '../i18n/useAppLanguage'
+import {
+  StackDefinitionPanel,
+  makeEmptyLayer,
+  type StackCount,
+  type LayerDraft,
+} from '../components/weld/StackDefinitionPanel'
+import {
+  WeldParameterPanel,
+  makeEmptyParameters,
+  type WeldParameterDraft,
+} from '../components/weld/WeldParameterPanel'
+import { ReferenceGuidancePanel } from '../components/weld/ReferenceGuidancePanel'
+import type { TimeUnit } from '../components/weld/TimeInputField'
 import { RISK_LEVEL_LABELS } from '../constants/riskLevel'
 
-const baseInput: WeldAnalysisRequest = {
-  material_family: 'Düşük / Orta Karbonlu Çelik',
-  material_subtype: 'Düşük karbonlu çelik',
-  stack_count: '2T',
-  layers: [
-    { material_family: 'Düşük / Orta Karbonlu Çelik', material_subtype: 'Düşük karbonlu çelik', thickness_mm: 1, coated: false },
-    { material_family: 'Düşük / Orta Karbonlu Çelik', material_subtype: 'Düşük karbonlu çelik', thickness_mm: 1, coated: false },
-  ],
-  current_ka: 8, weld_cycles: 12, force_kn: 3, tip_diameter_mm: 6,
-  squeeze_cycles: 15, hold_cycles: 15, cooling_flow_lpm: 6, cooling_temp_c: 20,
-  dc_current: true, adhesive: false, shunt_risk: false,
+// ── Request builder ───────────────────────────────────────────────────────────
+
+/**
+ * Build a WeldAnalysisRequest from panel state.
+ * Returns null if required fields are missing or invalid.
+ * Never fabricates values — absent optional fields are omitted from payload.
+ */
+function buildRequest(
+  stackCount: StackCount,
+  layers: LayerDraft[],
+  params: WeldParameterDraft,
+): WeldAnalysisRequest | null {
+  const layerCount = parseInt(stackCount[0], 10)
+  const builtLayers = []
+  for (let i = 0; i < layerCount; i++) {
+    const l = layers[i]
+    if (!l) return null
+    const thickness = parseFloat(l.thickness_mm)
+    if (!l.material_family || !l.material_subtype || isNaN(thickness) || thickness <= 0) return null
+    builtLayers.push({
+      material_family: l.material_family.trim(),
+      material_subtype: l.material_subtype.trim(),
+      thickness_mm: thickness,
+      coated: l.coated,
+    })
+  }
+
+  const current_ka      = parseFloat(params.current_ka)
+  const force_kn        = parseFloat(params.force_kn)
+  const tip_diameter_mm = parseFloat(params.tip_diameter_mm)
+  const cooling_flow_lpm = parseFloat(params.cooling_flow_lpm)
+  const cooling_temp_c  = parseFloat(params.cooling_temp_c)
+
+  if (
+    isNaN(current_ka) || isNaN(force_kn) || isNaN(tip_diameter_mm) ||
+    isNaN(cooling_flow_lpm) || isNaN(cooling_temp_c) ||
+    params.weld_cycles   === undefined ||
+    params.squeeze_cycles === undefined ||
+    params.hold_cycles   === undefined
+  ) return null
+
+  const layer1 = builtLayers[0]
+  const req: WeldAnalysisRequest = {
+    material_family:   layer1.material_family,
+    material_subtype:  layer1.material_subtype,
+    stack_count:       stackCount,
+    layers:            builtLayers,
+    current_ka,
+    weld_cycles:       params.weld_cycles,
+    force_kn,
+    tip_diameter_mm,
+    squeeze_cycles:    params.squeeze_cycles,
+    hold_cycles:       params.hold_cycles,
+    cooling_flow_lpm,
+    cooling_temp_c,
+    dc_current:        params.dc_current,
+    adhesive:          params.adhesive,
+    shunt_risk:        params.shunt_risk,
+  }
+
+  // Optional fields — omit when not provided (→ NOT_EVALUATED on backend)
+  if (params.approach_cycles !== undefined) req.approach_cycles = params.approach_cycles
+  if (params.cooling_cycles  !== undefined) req.cooling_cycles  = params.cooling_cycles
+  const air = parseFloat(params.air_pressure_bar)
+  if (!isNaN(air))                          req.air_pressure_bar = air
+
+  return req
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export function WeldPointWizard({ project, onBack }: { project: Project; onBack: () => void }) {
-  const [points, setPoints] = useState<WeldPoint[]>([])
+  const { t } = useAppLanguage()
+
+  const [points,    setPoints]    = useState<WeldPoint[]>([])
   const [pointCode, setPointCode] = useState('W001')
-  const [partNo, setPartNo] = useState('')
-  const [input, setInput] = useState(baseInput)
-  const [message, setMessage] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [partNo,    setPartNo]    = useState('')
+  const [message,   setMessage]   = useState('')
+  const [busy,      setBusy]      = useState(false)
+
+  // Stack state — no silent defaults
+  const [stackCount, setStackCount] = useState<StackCount>('2T')
+  const [layers, setLayers] = useState<LayerDraft[]>([makeEmptyLayer(), makeEmptyLayer()])
+
+  // Parameter state — all undefined/empty
+  const [params, setParams] = useState<WeldParameterDraft>(makeEmptyParameters)
+
+  // Time unit display mode
+  const [timeUnit, setTimeUnit] = useState<TimeUnit>('cycle')
+
+  // Last analysis result (from saved weld point)
+  const [lastResult, setLastResult] = useState<WeldPoint['analysis_result'] | null>(null)
 
   async function refresh() { setPoints(await listWeldPoints(project.id)) }
   useEffect(() => { refresh().catch(() => setMessage('Backend connection unavailable. Engineering data could not be loaded. Verify the API service and retry.')) }, [project.id])
 
+  const handleStackCountChange = useCallback((sc: StackCount) => {
+    setStackCount(sc)
+    const n = parseInt(sc[0], 10)
+    setLayers((prev) => {
+      if (prev.length === n) return prev
+      if (prev.length < n) return [...prev, ...Array.from({ length: n - prev.length }, makeEmptyLayer)]
+      return prev.slice(0, n)
+    })
+    setLastResult(null)
+  }, [])
+
+  const handleLayerChange = useCallback((index: number, layer: LayerDraft) => {
+    setLayers((prev) => { const next = [...prev]; next[index] = layer; return next })
+  }, [])
+
   async function submit(e: FormEvent) {
-    e.preventDefault(); setBusy(true)
+    e.preventDefault()
+    const req = buildRequest(stackCount, layers, params)
+    if (!req) return
+    setBusy(true)
     try {
       const created = await createWeldPoint(project.id, {
-        point_code: pointCode, part_no: partNo, criticality: 'Standart', analysis_input: input,
+        point_code: pointCode, part_no: partNo, criticality: 'Standart', analysis_input: req,
       })
       setMessage(`Kaydedildi: ${created.point_code} — skor %${created.analysis_result.score.toFixed(0)}`)
+      setLastResult(created.analysis_result)
       await refresh()
-    } catch {
+    } catch (err) {
       setMessage('Backend connection unavailable. Engineering data could not be saved. Verify the API service and retry.')
     } finally { setBusy(false) }
   }
+
+  const canSubmit = buildRequest(stackCount, layers, params) !== null && !busy
 
   return (
     <div className="page active">
@@ -60,20 +168,38 @@ export function WeldPointWizard({ project, onBack }: { project: Project; onBack:
       </div>
       {message && <div className="alert info" role="status"><div><div className="alert-text">{message}</div></div></div>}
       <div className="ws-grid-main">
-        <form className="panel" onSubmit={submit} aria-label="Weld point entry">
+        <form className="panel" onSubmit={submit} aria-label="Weld point entry" noValidate>
           <div className="panel-header"><h3>Weld-point parameters</h3><span className="panel-meta">step 1 · definition</span></div>
           <div className="panel-body">
-          <div className="ws-zone-label">Point identity · welding parameters</div>
-          <div className="grid-2">
-            <div className="field"><label htmlFor="wp-code">Nokta ID</label><input id="wp-code" value={pointCode} onChange={(e) => setPointCode(e.target.value)} required /></div>
-            <div className="field"><label htmlFor="wp-part">Parça No</label><input id="wp-part" value={partNo} onChange={(e) => setPartNo(e.target.value)} placeholder="ör. P-1092" /></div>
-            <div className="field"><label htmlFor="wp-ka">Akım (kA)</label><input id="wp-ka" type="number" value={input.current_ka} onChange={(e) => setInput({ ...input, current_ka: Number(e.target.value) })} /></div>
-            <div className="field"><label htmlFor="wp-cyc">Süre (cyc)</label><input id="wp-cyc" type="number" value={input.weld_cycles} onChange={(e) => setInput({ ...input, weld_cycles: Number(e.target.value) })} /></div>
-            <div className="field"><label htmlFor="wp-kn">Kuvvet (kN)</label><input id="wp-kn" type="number" value={input.force_kn} onChange={(e) => setInput({ ...input, force_kn: Number(e.target.value) })} /></div>
-          </div>
-          <div style={{ marginTop: 'var(--sp-4)' }}>
-            <button className="btn btn-primary" type="submit" disabled={busy}>{busy ? 'Kaydediliyor…' : 'Analiz Et ve Kaydet'}</button>
-          </div>
+            <div className="ws-zone-label">Point identity ┬À welding parameters</div>
+            <div className="grid-2">
+              <div className="field"><label htmlFor="wp-code">Nokta ID</label><input id="wp-code" value={pointCode} onChange={(e) => setPointCode(e.target.value)} required /></div>
+              <div className="field"><label htmlFor="wp-part">Parça No</label><input id="wp-part" value={partNo} onChange={(e) => setPartNo(e.target.value)} placeholder="ör. P-1092" /></div>
+            </div>
+
+            {/* Stack definition — replaces silent baseInput defaults */}
+            <StackDefinitionPanel
+              t={t.stackDefinition}
+              stackCount={stackCount}
+              layers={layers}
+              onStackCountChange={handleStackCountChange}
+              onLayerChange={handleLayerChange}
+            />
+
+            {/* Parameter inputs — all 13 supported fields, dual cycle/ms */}
+            <WeldParameterPanel
+              t={t.parameterPanel}
+              params={params}
+              timeUnit={timeUnit}
+              onTimeUnitChange={setTimeUnit}
+              onChange={setParams}
+            />
+
+            <div style={{ marginTop: 'var(--sp-4)' }}>
+              <button className="btn btn-primary" type="submit" disabled={!canSubmit}>
+                {busy ? t.parameterPanel.analyzing : 'Analiz Et ve Kaydet'}
+              </button>
+            </div>
           </div>
           <div className="panel-footer">Backend evaluation runs on save; project context preserved.</div>
         </form>

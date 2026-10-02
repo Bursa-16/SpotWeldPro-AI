@@ -24,6 +24,9 @@ class WeldAnalysisRequest(BaseModel):
     dc_current: bool = True
     adhesive: bool = False
     shunt_risk: bool = False
+    approach_cycles: Optional[float] = Field(default=None, ge=0, le=500)
+    cooling_cycles: Optional[float] = Field(default=None, ge=0, le=500)
+    air_pressure_bar: Optional[float] = Field(default=None, ge=0, le=20)
 
     @model_validator(mode="after")
     def validate_stack(self):
@@ -48,3 +51,7 @@ class WeldAnalysisResponse(BaseModel):
     compliance_summary: dict
     compliance_results: list
     compliance_conflicts: list
+    reference_profile_id: Optional[str] = None
+    effective_thickness_mm: Optional[float] = None
+    selected_band: Optional[str] = None
+    band_selection_status: Optional[str] = None
