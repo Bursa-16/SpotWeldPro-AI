@@ -1,12 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { DashboardPage } from './pages/DashboardPage'
 import { EngineeringPage } from './pages/EngineeringPage'
-import { AppLanguageContext, getInitialAppLang, persistAppLang } from './i18n/AppLanguageContext'
-import { useAppLanguage } from './i18n/useAppLanguage'
-import type { AppLanguage } from './i18n/appContent'
 import { LoginPage } from './pages/LoginPage'
-import { OptimizationPage } from './pages/OptimizationPage'
 import { FailureProbabilityPage } from './pages/FailureProbabilityPage'
 import { AnalysisPage } from './pages/AnalysisPage'
 import { ProjectsPage } from './pages/ProjectsPage'
@@ -16,16 +12,22 @@ import { FeaturesPage } from './pages/FeaturesPage'
 import { HowItWorksPage } from './pages/HowItWorksPage'
 import { PackagesPage } from './pages/PackagesPage'
 import { DemoPage } from './pages/DemoPage'
+import { AppLanguageContext, getInitialAppLang, persistAppLang } from './i18n/AppLanguageContext'
+import { useAppLanguage } from './i18n/useAppLanguage'
+import { LangContext, getInitialLang, persistLang } from './i18n/useLang'
+import type { AppLanguage } from './i18n/appContent'
+import type { Lang } from './i18n/publicContent'
 import type { Project } from './types/project'
 import './styles.css'
 
 /* Public pre-login design system — global stylesheet injected once at root.
    Short lines only to keep the file writer stable. */
-type Page = 'dashboard' | 'projects' | 'analysis' | 'engineering' | 'optimization' | 'failure'
+type Page = 'dashboard' | 'projects' | 'analysis' | 'engineering' | 'failure'
 
 type NavItem = { id: Page; label: string; mk: string }
 type NavGroup = { id: string; label: string; accordion: boolean; items: NavItem[] }
 
+/** Static nav structure — internal IDs are stable, labels are translated at render time. */
 const NAV: NavGroup[] = [
   {
     id: 'dash', label: 'Dashboard', accordion: false,
@@ -43,7 +45,6 @@ const NAV: NavGroup[] = [
     items: [
       { id: 'analysis', label: 'Weld Quality Analysis', mk: 'Q' },
       { id: 'failure', label: 'Failure Analysis', mk: 'F' },
-      { id: 'optimization', label: 'DOE Optimization', mk: 'O' },
     ],
   },
 ]
@@ -285,7 +286,6 @@ function AuthenticatedApp() {
           {page === 'projects' && <ProjectsPage onOpen={setProject} />}
           {page === 'analysis' && <AnalysisPage />}
           {page === 'engineering' && <EngineeringPage />}
-          {page === 'optimization' && <OptimizationPage />}
           {page === 'failure' && <FailureProbabilityPage />}
         </main>
       </div>
@@ -305,17 +305,44 @@ function PublicLogin() {
   )
 }
 
+/**
+ * PUBLIC-I18N-01-HF2: Single source of truth for public language state.
+ * Owns useState<Lang>, reads localStorage via getInitialLang(), writes via
+ * persistLang(). Renders LangContext.Provider so every descendant — both the
+ * page component AND its <PublicLayout> child — reads from the same reactive
+ * context value.  PublicLayout is now a pure consumer (useLang() only).
+ *
+ * Uses React Router's layout-route / Outlet pattern so the Provider is NOT
+ * remounted on navigation between public routes — lang state survives
+ * cross-route navigation, fulfilling the route persistence requirement.
+ */
+function PublicLangProvider() {
+  const [lang, setLangState] = useState<Lang>(getInitialLang)
+
+  function setLang(next: Lang) {
+    persistLang(next)
+    setLangState(next)
+  }
+
+  return (
+    <LangContext.Provider value={{ lang, setLang }}>
+      <Outlet />
+    </LangContext.Provider>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/features" element={<FeaturesPage />} />
-        <Route path="/how-it-works" element={<HowItWorksPage />} />
-        <Route path="/packages" element={<PackagesPage />} />
-        <Route path="/demo" element={<DemoPage />} />
-        <Route path="/login" element={<PublicLogin />} />
+        <Route element={<PublicLangProvider />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/how-it-works" element={<HowItWorksPage />} />
+          <Route path="/packages" element={<PackagesPage />} />
+          <Route path="/demo" element={<DemoPage />} />
+          <Route path="/login" element={<PublicLogin />} />
+        </Route>
         <Route path="/app" element={<AuthenticatedApp />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -11,3 +11,10 @@ def test_health():
 def test_analysis():
     r=client.post("/api/v1/weld-analysis",json=payload()); assert r.status_code==200
     b=r.json(); assert b["nugget_min_mm"]==4.2; assert b["selected_model"]=="OEM Referans Tablosu"
+    # Phase B DOE isolation — regression assertions
+    assert "Minitab DOE" not in b["selected_model"]
+    assert "model_results" in b or "results" in b, \
+        f"Model collection key missing. Response keys: {list(b.keys())}"
+    _models = b.get("model_results", b.get("results", []))
+    assert all("Minitab DOE" not in str(m.get("model_name", "")) for m in _models), \
+        "Minitab DOE entry found in model collection (Phase B isolation violated)"

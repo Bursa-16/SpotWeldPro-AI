@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 
 from app.domain.models import (
-    minitab_doe_predict,
     oem_table_prediction,
     literature_4sqrt_t,
 )
@@ -32,15 +31,6 @@ MODEL_REGISTRY = [
         validation_status="Referans",
         supported_materials=["Düşük / Orta Karbonlu Çelik"],
         notes="En ince sac kalınlığına göre minimum ve optimum çekirdek çapı."
-    ),
-    RegisteredModel(
-        key="minitab_doe_linear",
-        name="Minitab DOE — doğrusal terimler",
-        model_basis="EXPERIMENTAL_MODEL",
-        priority=3,
-        validation_status="Doğrulanmamış",
-        supported_materials=["Düşük / Orta Karbonlu Çelik"],
-        notes="Birim varsayımları A, daN, çevrim ve mm."
     ),
     RegisteredModel(
         key="literature_4sqrt_t",
@@ -127,26 +117,6 @@ def compare_and_select(
         "reason": "Destekleyici minimum kriter."
     })
 
-    doe = minitab_doe_predict({
-        "current_a": current_ka * 1000,
-        "force_dan": force_kn * 100,
-        "time_cycle": weld_cycles,
-        "cooling_cycle": cooling_cycles,
-        "sequence_cycle": squeeze_cycles,
-        "holding_cycle": hold_cycles,
-        "sheet_thickness_mm": t_min,
-    })
-    doe_eligible = material_family == "Düşük / Orta Karbonlu Çelik"
-    results.append({
-        "key": "minitab_doe_linear",
-        "model_name": doe.model_name,
-        "prediction_mm": doe.prediction_mm,
-        "confidence": doe.confidence,
-        "status": doe.status,
-        "priority": 3,
-        "eligible": doe_eligible,
-        "reason": "Deneysel model; doğrulama tamamlanmadı."
-    })
 
     eligible = [
         r for r in results

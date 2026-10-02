@@ -1,9 +1,13 @@
 
+import logging
 import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.requests import Request
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 
 import app.models
@@ -17,7 +21,6 @@ from app.api.v1.evidence_verification import router as evidence_verification_rou
 from app.api.v1.failure_probability import router as failure_probability_router
 from app.api.v1.health import router as health_router
 from app.api.v1.machine_readiness import router as machine_readiness_router
-from app.api.v1.optimization import router as optimization_router
 from app.api.v1.projects import router as projects_router
 from app.api.v1.rule_evaluation import router as rule_evaluation_router
 from app.api.v1.rule_registry import router as rule_registry_router
@@ -27,6 +30,9 @@ from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models.entities import User
 from app.models.enums import UserRole
+from app.schemas.governed_api import GovernedAPIError
+
+_log = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -51,15 +57,40 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5180"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5180"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    detail = exc.detail
+    if isinstance(detail, dict) and "error_code" in detail:
+        payload = GovernedAPIError(
+            error_code=detail["error_code"],
+            message=detail.get("message", ""),
+            context=detail.get("context"),
+        )
+        headers = {}
+        if exc.headers and "WWW-Authenticate" in exc.headers:
+            headers["WWW-Authenticate"] = exc.headers["WWW-Authenticate"]
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=payload.model_dump(),
+            headers=headers or None,
+        )
+    _log.error("unstructured HTTPException: status=%s detail=%r", exc.status_code, detail)
+    payload = GovernedAPIError(
+        error_code="INTERNAL_ERROR",
+        message="An unexpected error occurred.",
+    )
+    return JSONResponse(status_code=500, content=payload.model_dump())
+
+
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(failure_probability_router, prefix="/api/v1")
-app.include_router(optimization_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
 app.include_router(engineering_router, prefix="/api/v1")

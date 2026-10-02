@@ -240,7 +240,6 @@ const TR: AppContent = {
       engineering: 'Kaynak Lobu Laboratuvarı',
       analysis: 'Kaynak Kalite Analizi',
       failure: 'Hata Analizi',
-      optimization: 'DOE Optimizasyonu',
     },
   },
   analysisPage: {
@@ -475,7 +474,6 @@ const EN: AppContent = {
       engineering: 'Weld Lobe Lab',
       analysis: 'Weld Quality Analysis',
       failure: 'Failure Analysis',
-      optimization: 'DOE Optimization',
     },
   },
   analysisPage: {

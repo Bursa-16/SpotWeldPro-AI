@@ -59,7 +59,6 @@ export interface LangContent {
     tertiary: string
   }
   trustNote: TrustNote
-  langToggle: string
 
   // Shared data arrays (consumed by multiple pages)
   modules: Module[]
@@ -72,6 +71,25 @@ export interface LangContent {
     eyebrow: string
     heroTitle: string
     heroSubtitle: string
+    // Hero engineering simulation labels (PUBLIC-VISUAL-01, presentational only)
+    heroSim: {
+      exampleLabel: string
+      currentLabel: string
+      timeLabel: string
+      forceLabel: string
+      nuggetLabel: string
+      processWindowLabel: string
+      insufficientLabel: string
+      safeLabel: string
+      expulsionLabel: string
+      upperElectrode: string
+      lowerElectrode: string
+      completeLabel: string
+      currentValue: string
+      timeValue: string
+      forceValue: string
+      nuggetValue: string
+    }
     modulesTitle: string
     modulesSub: string
     moduleDetailBtn: string
@@ -142,6 +160,18 @@ export interface LangContent {
     exploreBtn: string
     howBtn: string
   }
+
+  // Login page strings
+  login: {
+    ariaLabel: string
+    note: string
+    usernameLabel: string
+    passwordLabel: string
+    submitBusy: string
+    submitIdle: string
+    errorNetwork: string
+    errorCredentials: string
+  }
 }
 
 export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
@@ -168,55 +198,48 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       bold: 'AI açıklama ve mühendislik bağlamı sağlar;',
       rest: ' nihai karar deterministik mühendislik kurallarına dayanır.',
     },
-    langToggle: 'EN',
 
     modules: [
       {
         slug: 'command-center',
         code: 'CC',
-        name: 'Command Center',
+        name: 'Komuta Merkezi',
         text: 'Tüm hat genelinde kaynak kalitesi, makine duruşu ve risk özetini tek ekranda izleyin.',
       },
       {
         slug: 'weld-quality',
         code: 'WQ',
-        name: 'Weld Quality Analysis',
+        name: 'Kaynak Kalite Analizi',
         text: 'Nugget çapı, minimum kabul sınırı ve fışkırma (expulsion) riskine göre kaynağı değerlendirin.',
       },
       {
         slug: 'weld-lobe',
         code: 'WL',
-        name: 'Weld Lobe Lab',
+        name: 'Kaynak Lobu Laboratuvarı',
         text: 'Proses penceresini (weld lobe) görselleştirin; akım–süre–kuvvet bölgesini inceleyin.',
-      },
-      {
-        slug: 'doe-optimization',
-        code: 'DO',
-        name: 'DOE Optimization',
-        text: 'Deney tasarımı ile parametre uzayını tarayıp hedef nugget çapına en yakın bölgeyi bulun.',
       },
       {
         slug: 'failure-analysis',
         code: 'FA',
-        name: 'Failure Analysis',
+        name: 'Hata Analizi',
         text: 'Olası hata modlarını ve birincil katkı faktörlerini risk önceliyle sıralayın.',
       },
       {
         slug: 'projects',
         code: 'PW',
-        name: 'Projects & Weld Points',
+        name: 'Projeler ve Kaynak Noktaları',
         text: 'Projeleri, kaynak noktalarını ve parça–istasyon–robot bağlamını yönetin.',
       },
       {
         slug: 'traceability',
         code: 'TR',
-        name: 'Traceability / History',
+        name: 'İzlenebilirlik / Geçmiş',
         text: 'Analiz geçmişini, karar gerekçelerini ve mühendislik kuralı referanslarını koruyun.',
       },
       {
         slug: 'ai-explanation',
         code: 'AI',
-        name: 'AI Explanation',
+        name: 'AI Açıklama',
         text: 'AI, karmaşık sonuçları mühendislik bağlamıyla açıklar; karar kuralları deterministiktir.',
       },
     ],
@@ -232,7 +255,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         name: 'Beyaz Eşya',
         use: 'İnce saç panellerin seri kaynağında döngü süresi kontrolü.',
         need: 'Dar proses penceresinde hızlı parametre doğrulaması.',
-        modules: 'Weld Lobe Lab · DOE Optimization',
+        modules: 'Weld Lobe Lab',
       },
       {
         name: 'Savunma',
@@ -250,7 +273,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         name: 'Makine İmalatı',
         use: 'Karmaşık parça kombinasyonlarında kaynak penceresinin yeniden kurulması.',
         need: 'Yeni malzeme girişlerinde proses penceresinin haritalanması.',
-        modules: 'Weld Lobe Lab · DOE Optimization',
+        modules: 'Weld Lobe Lab',
       },
       {
         name: 'Sac Metal Üretimi',
@@ -269,7 +292,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       {
         name: 'Professional',
         tagline: 'Mühendislik ekibi için tam çalışma alanı.',
-        points: ['Weld Lobe Lab + DOE Optimization', 'Failure Analysis', 'Proje & kaynak noktası yönetimi'],
+        points: ['Weld Lobe Lab', 'Failure Analysis', 'Proje & kaynak noktası yönetimi'],
       },
       {
         name: 'Enterprise',
@@ -315,7 +338,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         no: '05',
         title: 'Proses Penceresi / Optimizasyon',
         input: 'Analiz sonucu + hedefler.',
-        system: 'Operating window incelemesi, DOE/optimizasyon önerisi.',
+        system: 'Operating window incelemesi ve parametre doğrulama.',
         output: 'Current vs recommended delta ve önerilen parametre.',
         next: 'Sonuç, doğrulama ve izlenebilirlik',
       },
@@ -335,6 +358,24 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       heroSubtitle:
         'Deterministik mühendislik kuralları ile kaynak kalitesini doğrulayın;'
         + ' deney tasarımı ve hata analizi ile prosesi yönetin.',
+      heroSim: {
+        exampleLabel: 'Örnek Proses',
+        currentLabel: 'Kaynak Akımı',
+        timeLabel: 'Kaynak Süresi',
+        forceLabel: 'Elektrot Kuvveti',
+        nuggetLabel: 'Çekirdek Çapı',
+        processWindowLabel: 'Proses Penceresi',
+        insufficientLabel: 'Yetersiz',
+        safeLabel: 'Güvenli Pencere',
+        expulsionLabel: 'Fışkırma Riski',
+        upperElectrode: 'Üst Elektrot',
+        lowerElectrode: 'Alt Elektrot',
+        completeLabel: 'Örnek Tamamlandı',
+        currentValue: '9.2 kA',
+        timeValue: '14 cyc',
+        forceValue: '3.5 kN',
+        nuggetValue: '5.4 mm',
+      },
       modulesTitle: 'Modüller',
       modulesSub: 'Bir modülü incelemek için Özellikler sayfasındaki detayı görüntüleyin.',
       moduleDetailBtn: 'Detayı Gör',
@@ -417,6 +458,18 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       exploreBtn: 'Özellikleri İncele',
       howBtn: 'Nasıl Kullanılır',
     },
+
+    login: {
+      ariaLabel: 'Kurumsal giriş',
+      note: 'Kurumsal giriş — resistance spot welding mühendislik zekası',
+      usernameLabel: 'Kullanıcı Adı',
+      passwordLabel: 'Şifre',
+      submitBusy: 'Giriş yapılıyor…',
+      submitIdle: 'Giriş Yap',
+      errorNetwork:
+        'Backend bağlantısı yok. Mühendislik verisi yüklenemedi; API servisini doğrulayın ve tekrar deneyin.',
+      errorCredentials: 'Kullanıcı adı veya şifre hatalı.',
+    },
   },
 
   // ─────────────────────────────────────────────────────────────
@@ -442,7 +495,6 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       bold: 'AI provides explanation and engineering context;',
       rest: ' the final decision is always based on deterministic engineering rules.',
     },
-    langToggle: 'TR',
 
     modules: [
       {
@@ -462,12 +514,6 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         code: 'WL',
         name: 'Weld Lobe Lab',
         text: 'Visualize the process window (weld lobe); examine the current–time–force region.',
-      },
-      {
-        slug: 'doe-optimization',
-        code: 'DO',
-        name: 'DOE Optimization',
-        text: 'Scan the parameter space with design of experiments to find the region closest to the target nugget diameter.',
       },
       {
         slug: 'failure-analysis',
@@ -506,7 +552,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         name: 'White Goods',
         use: 'Cycle time control in high-speed welding of thin sheet panels.',
         need: 'Fast parameter validation within a narrow process window.',
-        modules: 'Weld Lobe Lab · DOE Optimization',
+        modules: 'Weld Lobe Lab',
       },
       {
         name: 'Defense',
@@ -524,7 +570,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         name: 'Machine Manufacturing',
         use: 'Rebuilding the weld window for complex part combinations.',
         need: 'Mapping the process window for new material introductions.',
-        modules: 'Weld Lobe Lab · DOE Optimization',
+        modules: 'Weld Lobe Lab',
       },
       {
         name: 'Sheet Metal Production',
@@ -543,7 +589,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       {
         name: 'Professional',
         tagline: 'Full workspace for engineering teams.',
-        points: ['Weld Lobe Lab + DOE Optimization', 'Failure Analysis', 'Project & weld point management'],
+        points: ['Weld Lobe Lab', 'Failure Analysis', 'Project & weld point management'],
       },
       {
         name: 'Enterprise',
@@ -609,6 +655,24 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       heroSubtitle:
         'Verify weld quality with deterministic engineering rules;'
         + ' manage the process with design of experiments and failure analysis.',
+      heroSim: {
+        exampleLabel: 'Example Process',
+        currentLabel: 'Welding Current',
+        timeLabel: 'Weld Time',
+        forceLabel: 'Electrode Force',
+        nuggetLabel: 'Nugget Diameter',
+        processWindowLabel: 'Process Window',
+        insufficientLabel: 'Insufficient',
+        safeLabel: 'Safe Window',
+        expulsionLabel: 'Expulsion Risk',
+        upperElectrode: 'Upper Electrode',
+        lowerElectrode: 'Lower Electrode',
+        completeLabel: 'Example Complete',
+        currentValue: '9.2 kA',
+        timeValue: '14 cyc',
+        forceValue: '3.5 kN',
+        nuggetValue: '5.4 mm',
+      },
       modulesTitle: 'Modules',
       modulesSub: 'View the details on the Features page to explore a module.',
       moduleDetailBtn: 'View Details',
@@ -690,6 +754,18 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         'Your demo request has been successfully received. Our team will contact you as soon as possible.',
       exploreBtn: 'Explore Features',
       howBtn: 'How It Works',
+    },
+
+    login: {
+      ariaLabel: 'Sign in',
+      note: 'Enterprise login — engineering intelligence for resistance spot welding',
+      usernameLabel: 'Username',
+      passwordLabel: 'Password',
+      submitBusy: 'Signing in…',
+      submitIdle: 'Sign In',
+      errorNetwork:
+        'No backend connection. Engineering data could not be loaded; verify the API service and retry.',
+      errorCredentials: 'Incorrect username or password.',
     },
   },
 }
