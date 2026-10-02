@@ -26,6 +26,16 @@ def _b64decode(data: str) -> bytes:
     return base64.urlsafe_b64decode(data + padding)
 
 
+def canonicalize_username(raw: str) -> str:
+    """Normalize a username to its canonical form: strip whitespace, lowercase.
+
+    Canonical form is stored in the database and used for login lookup,
+    so "demo", "Demo", "DEMO" all resolve to the same record.
+    This function is the single source of truth for that normalisation.
+    """
+    return raw.strip().lower()
+
+
 def hash_password(password: str) -> str:
     salt = secrets.token_bytes(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 240_000)

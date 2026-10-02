@@ -3,14 +3,15 @@ import { login } from '../api/client'
 
 type Props = { onLogin: () => void }
 
-/* Prefilled development credentials — form defaults ONLY.
-   Authentication is decided exclusively by the backend. */
-const DEFAULT_EMAIL = ''
-const DEFAULT_PASSWORD = ''
+/* Demo username prefilled for the public demo experience.
+   Authentication is decided exclusively by the backend.
+   Password is intentionally NOT prefilled. */
+const DEMO_USERNAME = 'demo'
+
 
 export function LoginPage({ onLogin }: Props) {
-  const [email, setEmail] = useState(DEFAULT_EMAIL)
-  const [password, setPassword] = useState(DEFAULT_PASSWORD)
+  const [username, setUsername] = useState(DEMO_USERNAME)
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -18,7 +19,7 @@ export function LoginPage({ onLogin }: Props) {
     setError('')
     setBusy(true)
     try {
-      await login(email, password)
+      await login(username, password)
       onLogin()
     } catch (err) {
       const backendResponded = (err as { response?: unknown })?.response !== undefined
@@ -41,8 +42,8 @@ export function LoginPage({ onLogin }: Props) {
         </div>
         <p className="login-note">Kurumsal giriş — engineering intelligence for resistance spot welding</p>
         <div className="login-field">
-          <label htmlFor="login-email">E-posta</label>
-          <input id="login-email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <label htmlFor="login-username">Kullanıcı Adı</label>
+          <input id="login-username" type="text" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
         </div>
         <div className="login-field">
           <label htmlFor="login-password">Şifre</label>

@@ -11,8 +11,10 @@ client.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
-export async function login(email: string, password: string) {
-  const response = await client.post('/auth/login', { email, password })
+// AUTH-UX-03: login now authenticates by username (not email).
+// JWT subject (sub) remains user.email internally — see AUTH-UX-03B.
+export async function login(username: string, password: string) {
+  const response = await client.post('/auth/login', { username, password })
   localStorage.setItem('access_token', response.data.access_token)
   localStorage.setItem('refresh_token', response.data.refresh_token)
   return response.data
