@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from fastapi import HTTPException, status
+from app.models.error_codes import ApiErrorCode, ResourceType
+from app.models.error_codes import ApiErrorCode, ResourceType
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -25,7 +27,7 @@ class ProjectService:
             self.db.commit()
         except IntegrityError as exc:
             self.db.rollback()
-            raise HTTPException(status_code=409, detail="Project code already exists") from exc
+            raise HTTPException(status_code=409, detail={"error_code": ApiErrorCode.RESOURCE_CONFLICT, "message": "Project code already exists", "context": {"resource_type": ResourceType.PROJECT}}) from exc
         self.db.refresh(project)
         return project
 
@@ -35,7 +37,7 @@ class ProjectService:
     def get_project(self, project_id: int) -> Project:
         project = self.db.get(Project, project_id)
         if not project:
-            raise HTTPException(status_code=404, detail="Project not found")
+            raise HTTPException(status_code=404, detail={"error_code": ApiErrorCode.RESOURCE_NOT_FOUND, "message": "Project not found", "context": {"resource_type": ResourceType.PROJECT, "resource_id": project_id}})
         return project
 
     def update_project(self, project_id: int, payload: ProjectUpdate) -> Project:
@@ -65,7 +67,7 @@ class ProjectService:
             self.db.commit()
         except IntegrityError as exc:
             self.db.rollback()
-            raise HTTPException(status_code=409, detail="Weld point code already exists in project") from exc
+            raise HTTPException(status_code=409, detail={"error_code": ApiErrorCode.RESOURCE_CONFLICT, "message": "Weld point code already exists in project", "context": {"resource_type": ResourceType.WELD_POINT}}) from exc
         self.db.refresh(point)
         return point
 
@@ -77,7 +79,7 @@ class ProjectService:
     def get_weld_point(self, point_id: int) -> WeldPoint:
         point = self.db.get(WeldPoint, point_id)
         if not point:
-            raise HTTPException(status_code=404, detail="Weld point not found")
+            raise HTTPException(status_code=404, detail={"error_code": ApiErrorCode.RESOURCE_NOT_FOUND, "message": "Weld point not found", "context": {"resource_type": ResourceType.WELD_POINT, "resource_id": point_id}})
         return point
 
     def update_weld_point(self, point_id: int, payload: WeldPointUpdate) -> WeldPoint:

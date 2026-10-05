@@ -1,6 +1,45 @@
-import axios from 'axios'
+import axios, { isAxiosError } from 'axios'
 import type { WeldAnalysisRequest, WeldAnalysisResponse } from '../types/weld'
 import type { Project, ProjectCreate, WeldPoint, WeldPointCreate } from '../types/project'
+
+export type BackendApiErrorCode =
+  | 'INVALID_TOKEN'
+  | 'INACTIVE_USER'
+  | 'PERMISSION_DENIED'
+  | 'RESOURCE_NOT_FOUND'
+  | 'INVALID_REQUEST'
+  | 'IDEMPOTENCY_CONFLICT'
+  | 'IDEMPOTENCY_IN_PROGRESS'
+  | 'GOVERNED_TRANSACTION_FAILED'
+  | 'MISSING_IDEMPOTENCY_KEY'
+  | 'INTERNAL_ERROR'
+  | 'VALIDATION_ERROR'
+  | 'INVALID_CREDENTIALS'
+  | 'USERNAME_ALREADY_EXISTS'
+  | 'MACHINE_READINESS_REVISION_NOT_FOUND'
+  | 'LIBRARY_RESOURCE_NOT_FOUND'
+  | 'INVALID_REFRESH_TOKEN'
+  | 'INVALID_ROLE'
+  | 'EMAIL_ALREADY_EXISTS'
+  | 'NO_ACTIVE_REVISION'
+  | 'AMBIGUOUS_CURRENT_REVISION'
+  | 'RESOURCE_CONFLICT'
+  | 'LIBRARY_CONFLICT'
+
+export type FrontendErrorCode = BackendApiErrorCode | 'NETWORK_ERROR' | 'UNKNOWN_ERROR'
+
+export function extractErrorCode(err: unknown): FrontendErrorCode {
+  if (isAxiosError(err)) {
+    const data = err.response?.data
+    if (data && typeof data === 'object' && 'error_code' in data && typeof data.error_code === 'string') {
+      return data.error_code as BackendApiErrorCode
+    }
+    if (!err.response) {
+      return 'NETWORK_ERROR'
+    }
+  }
+  return 'UNKNOWN_ERROR'
+}
 
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1',
