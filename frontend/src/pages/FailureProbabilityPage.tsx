@@ -1,6 +1,7 @@
 
 import { useState } from 'react'
 import client from '../api/client'
+import { VisualWeldInspector } from '../components/weld/VisualWeldInspector'
 
 type FailureMode = {
   code: string
@@ -184,6 +185,7 @@ export function FailureProbabilityPage() {
           </section>
         </div>
       )}
+      <VisualWeldInspector />
     </div>
   )
 }

@@ -220,6 +220,32 @@ export interface AppContent {
     guidanceInfoNote: string
   }
   /** Display mapping for canonical backend risk level values. */
+  visualWeldInspector: {
+    sectionTitle: string
+    meta: string
+    governanceNotice: string
+    selectionDetailLabel: string
+    selectedDefect: string
+    canonicalCode: string
+    normalWeldNotice: string
+    normalWeldNoticeValue: string
+    sessionScope: string
+    sessionScopeValue: string
+    footer: string
+    /** Display labels for the 10 frozen defect codes. */
+    defectLabels: Record<string, string>
+    /** Four-field model field labels. */
+    observation: string
+    visualAssessment: string
+    requiredVerification: string
+    engineeringStatus: string
+    additionalVerificationRequired: string
+    engineeringAcceptanceNotEvaluated: string
+    /** Per-defect observation text (one line per code). */
+    defectObservation: Record<string, string>
+    /** Per-defect visual assessment text (one line per code). */
+    defectVisualAssessment: Record<string, string>
+  }
   riskLabels: Record<string, string>
 }
 
@@ -455,6 +481,64 @@ const TR: AppContent = {
     MEDIUM: 'Orta',
     LOW: 'Düşük',
   },
+  visualWeldInspector: {
+    sectionTitle: 'Görsel Punta Kontrolü',
+    meta: 'sadece oturum içi görsel seçim',
+    governanceNotice:
+      'Görsel seçim mühendislik kararı değildir. ' +
+      'Onay, doğrulama veya üretim uygunluğu oluşturmaz. ' +
+      'NORMAL_WELD otomatik olarak mühendislik ONAYI anlamına gelmez.',
+    selectionDetailLabel: 'Seçilen hata detayı',
+    selectedDefect: 'Seçilen Hata',
+    canonicalCode: 'Kanonik Kod',
+    normalWeldNotice: 'Dikkat',
+    normalWeldNoticeValue: 'NORMAL_WELD görsel seçimi mühendislik onayı değildir.',
+    sessionScope: 'Kapsam',
+    sessionScopeValue: 'Yalnızca oturum içi — kalıcı kayıt yok.',
+    footer: 'Görsel denetim yardımcı araçtır. Mühendislik kararını geçersiz kılmaz.',
+    defectLabels: {
+      NORMAL_WELD:             'Normal Punta',
+      STICK_WELD:              'Soğuk Punta / Yetersiz Birleşme',
+      NO_WELD:                 'Kaynak Yok',
+      UNDERSIZED_WELD:         'Küçük Çekirdek',
+      EXPULSION:               'Kaynak Çapağı / Sıçrama',
+      SURFACE_HOLE:            'Yüzey Deliği',
+      SURFACE_CRACK:           'Yüzey Çatlağı',
+      EXCESSIVE_INDENTATION:   'Aşırı Çökme',
+      EDGE_WELD:               'Kenara Yakın Punta',
+      DISTORTION:              'Deformasyon',
+    },
+    observation: 'Gözlem',
+    visualAssessment: 'Görsel Değerlendirme',
+    requiredVerification: 'Gerekli Doğrulama',
+    engineeringStatus: 'Mühendislik Durumu',
+    additionalVerificationRequired: 'Ek doğrulama gerekli',
+    engineeringAcceptanceNotEvaluated: 'Mühendislik kabulü değerlendirilmedi',
+    defectObservation: {
+      NORMAL_WELD:           'Bölge homojen görünüm sergiliyor',
+      STICK_WELD:            'Elektrot izleri mevcut; birleşme görünümü sınırlı görünüyor',
+      NO_WELD:               'Birleşme bölgesinde kaynak izi tespit edilemiyor',
+      UNDERSIZED_WELD:       'Görsel kaynak bölgesi diğer görünümlere göre daha küçük görünüyor',
+      EXPULSION:             'Elektrot çevresinde metal saçıntısı tespit ediliyor',
+      SURFACE_HOLE:          'Yüzeyde boşluk veya çukur gözlemleniyor',
+      SURFACE_CRACK:         'Yüzeyde çizgisel ayrılma izleri görülüyor',
+      EXCESSIVE_INDENTATION: 'Elektrot izi belirgin çökme görünümü sergiliyor',
+      EDGE_WELD:             'Punta sac kenarına yakın görünüyor',
+      DISTORTION:            'Sac yüzeyinde düzlemsel sapma gözlemleniyor',
+    },
+    defectVisualAssessment: {
+      NORMAL_WELD:           'Görsel görünüm uygun',
+      STICK_WELD:            'Görsel birleşme kuşkulu — ek doğrulama gerekli',
+      NO_WELD:               'Görsel olarak birleşme tespit edilemiyor',
+      UNDERSIZED_WELD:       'Boyut açısından ek doğrulama gerekli',
+      EXPULSION:             'Sıçrama hasarı görsel olarak belirlendi',
+      SURFACE_HOLE:          'Yüzey bütünlüğü bozulmuş görünüyor',
+      SURFACE_CRACK:         'Yüzey çatlağı görsel olarak tespit edildi',
+      EXCESSIVE_INDENTATION: 'Çökme seviyesi için ek doğrulama gerekli',
+      EDGE_WELD:             'Kenar mesafesi için ek doğrulama gerekli',
+      DISTORTION:            'Sac deformasyonu görsel olarak tespit edildi',
+    },
+  },
 }
 
 /* ── English ─────────────────────────────────────────────────────────── */
@@ -687,6 +771,64 @@ const EN: AppContent = {
     HIGH: 'High',
     MEDIUM: 'Medium',
     LOW: 'Low',
+  },
+  visualWeldInspector: {
+    sectionTitle: 'Visual Weld Inspector',
+    meta: 'session-local visual selection only',
+    governanceNotice:
+      'Visual selection is not an engineering decision. ' +
+      'It does not generate acceptance, validation, or production approval. ' +
+      'NORMAL_WELD does not automatically mean engineering PASS.',
+    selectionDetailLabel: 'Selected defect detail',
+    selectedDefect: 'Selected Defect',
+    canonicalCode: 'Canonical Code',
+    normalWeldNotice: 'Notice',
+    normalWeldNoticeValue: 'NORMAL_WELD visual selection is not an engineering approval.',
+    sessionScope: 'Scope',
+    sessionScopeValue: 'Session-local only — no persistent record.',
+    footer: 'Visual inspection is a support tool. It does not override engineering decision authority.',
+    defectLabels: {
+      NORMAL_WELD:             'Normal Weld',
+      STICK_WELD:              'Stick Weld (Cold Weld)',
+      NO_WELD:                 'No Weld',
+      UNDERSIZED_WELD:         'Undersized Weld',
+      EXPULSION:               'Expulsion',
+      SURFACE_HOLE:            'Surface Hole',
+      SURFACE_CRACK:           'Surface Crack',
+      EXCESSIVE_INDENTATION:   'Excessive Indentation',
+      EDGE_WELD:               'Edge Weld',
+      DISTORTION:              'Distortion',
+    },
+    observation: 'Observation',
+    visualAssessment: 'Visual Assessment',
+    requiredVerification: 'Required Verification',
+    engineeringStatus: 'Engineering Status',
+    additionalVerificationRequired: 'Additional verification required',
+    engineeringAcceptanceNotEvaluated: 'Engineering acceptance not evaluated',
+    defectObservation: {
+      NORMAL_WELD:           'Region presents homogeneous appearance',
+      STICK_WELD:            'Electrode marks are present; visible joining appearance is limited',
+      NO_WELD:               'No weld trace detectable in bond zone',
+      UNDERSIZED_WELD:       'Visible weld region appears smaller than the reference appearance',
+      EXPULSION:             'Metal spatter detected around electrode',
+      SURFACE_HOLE:          'Void or pit observed at surface',
+      SURFACE_CRACK:         'Linear separation traces visible at surface',
+      EXCESSIVE_INDENTATION: 'Electrode impression shows pronounced indentation',
+      EDGE_WELD:             'Weld appears close to the sheet edge',
+      DISTORTION:            'Planar deviation observed on sheet surface',
+    },
+    defectVisualAssessment: {
+      NORMAL_WELD:           'Visual appearance acceptable',
+      STICK_WELD:            'Visual joining appearance is suspect — additional verification required',
+      NO_WELD:               'Bond not detectable visually',
+      UNDERSIZED_WELD:       'Additional size verification required',
+      EXPULSION:             'Expulsion damage visually identified',
+      SURFACE_HOLE:          'Surface integrity appears compromised',
+      SURFACE_CRACK:         'Surface crack visually detected',
+      EXCESSIVE_INDENTATION: 'Additional indentation verification required',
+      EDGE_WELD:             'Additional edge-distance verification required',
+      DISTORTION:            'Sheet distortion visually detected',
+    },
   },
 }
 
