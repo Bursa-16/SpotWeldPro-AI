@@ -1,0 +1,91 @@
+# SpotWeldPro AI — GitHub Pages: Marketing Website
+#
+# Deploys the isolated static marketing build to:
+#   https://spotweldpro-ai.github.io/SpotWeldPro-AI/
+#
+# PUBLICATION GATE: trigger is workflow_dispatch only.
+# This workflow does NOT run on push to main.
+# Deployment requires an explicit manual trigger from the GitHub Actions UI.
+# Enable "Automatic deployment" in GitHub Pages settings only after approval.
+#
+# Repository Settings required (one-time, GitHub UI):
+#   Settings → Pages → Source: GitHub Actions
+
+name: Deploy Marketing Site to Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type PUBLISH to confirm deployment to GitHub Pages"
+        required: true
+        default: ""
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build marketing site
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Gate — confirm PUBLISH input
+        if: ${{ github.event.inputs.confirm != 'PUBLISH' }}
+        run: |
+          echo "Deployment cancelled: input was '${{ github.event.inputs.confirm }}', expected 'PUBLISH'."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build marketing site
+        run: npm run build:marketing
+        # VITE_API_URL is not needed for the marketing build (no API calls).
+        # If set as a repo variable, it will be available to /login → /app
+        # fallback paths; leave unset for the pure marketing deployment.
+
+      - name: Verify artifact contents
+        run: |
+          echo "=== dist-marketing/ contents ==="
+          ls -la dist-marketing/
+          echo "=== dist-marketing/assets/ ==="
+          ls -la dist-marketing/assets/
+          echo "=== index.html base check ==="
+          grep -o 'base="[^"]*"\|href="/SpotWeldPro-AI' dist-marketing/index.html | head -5 || true
+          echo "=== 404.html present? ==="
+          test -f dist-marketing/404.html && echo "PASS: 404.html present" || echo "FAIL: 404.html missing"
+          echo "=== logo present? ==="
+          test -f dist-marketing/spotweldpro-logo.png && echo "PASS: logo present" || echo "FAIL: logo missing"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist-marketing
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
