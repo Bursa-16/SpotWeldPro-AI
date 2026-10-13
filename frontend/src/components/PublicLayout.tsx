@@ -36,7 +36,7 @@ export function PublicLayout({ children }: Props) {
       >
         <Link className="pub-brand" to="/">
           <img
-            src="/spotweldpro-logo.png"
+            src={`${import.meta.env.BASE_URL}spotweldpro-logo.png`}
             alt="SpotWeldPro AI"
             className="pub-brand-logo"
           />
@@ -88,7 +88,7 @@ export function PublicLayout({ children }: Props) {
 
           {/* Brand column */}
           <div className="pub-footer-brand">
-            <img src="/spotweldpro-logo.png" alt="SpotWeldPro AI" className="pub-footer-logo" />
+            <img src={`${import.meta.env.BASE_URL}spotweldpro-logo.png`} alt="SpotWeldPro AI" className="pub-footer-logo" />
             <p className="pub-footer-tagline">{f.tagline}</p>
             <a
               href="https://github.com/SpotWeldPro-AI/SpotWeldPro-AI"
