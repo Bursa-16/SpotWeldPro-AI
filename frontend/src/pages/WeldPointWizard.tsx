@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState, useCallback } from 'react'
+import { FormEvent, useEffect, useState, useCallback, Fragment } from 'react'
 import { createWeldPoint, listWeldPoints } from '../api/client'
 import type { Project, WeldPoint } from '../types/project'
 import type { WeldAnalysisRequest } from '../types/weld'
@@ -17,7 +17,7 @@ import {
 } from '../components/weld/WeldParameterPanel'
 import { ReferenceGuidancePanel } from '../components/weld/ReferenceGuidancePanel'
 import type { TimeUnit } from '../components/weld/TimeInputField'
-import { RISK_LEVEL_LABELS } from '../constants/riskLevel'
+// DEMO-PREP-01C: RISK_LEVEL_LABELS replaced by t.riskLabels (i18n infrastructure)
 
 // ── Request builder ───────────────────────────────────────────────────────────
 
@@ -139,7 +139,11 @@ export function WeldPointWizard({ project, onBack }: { project: Project; onBack:
       const created = await createWeldPoint(project.id, {
         point_code: pointCode, part_no: partNo, criticality: 'Standart', analysis_input: req,
       })
-      setMessage(`Kaydedildi: ${created.point_code} — skor %${created.analysis_result.score.toFixed(0)}`)
+      // DEMO-PREP-01C: guard null score ahead of backend fail-closed deployment
+      const scoreDisplay = created.analysis_result.score != null
+        ? `%${created.analysis_result.score.toFixed(0)}`
+        : t.referenceGuidancePanel.notEvaluated
+      setMessage(`Kaydedildi: ${created.point_code} — skor ${scoreDisplay}`)
       setLastResult(created.analysis_result)
       await refresh()
     } catch (err) {
@@ -189,6 +193,7 @@ export function WeldPointWizard({ project, onBack }: { project: Project; onBack:
             {/* Parameter inputs — all 13 supported fields, dual cycle/ms */}
             <WeldParameterPanel
               t={t.parameterPanel}
+              guideT={t.electrodeGuide}
               params={params}
               timeUnit={timeUnit}
               onTimeUnitChange={setTimeUnit}
@@ -220,13 +225,27 @@ export function WeldPointWizard({ project, onBack }: { project: Project; onBack:
               </thead>
               <tbody>
                 {points.map((p) => (
-                  <tr key={p.id}>
-                    <td className="mono">{p.point_code}</td>
-                    <td>{p.part_no || '—'}</td>
-                    <td className="mono">%{p.analysis_result.score.toFixed(0)}</td>
-                    <td><span className={`badge ${p.analysis_result.risk_level === 'LOW' ? 'ok' : 'warn'}`}>{RISK_LEVEL_LABELS[p.analysis_result.risk_level] ?? p.analysis_result.risk_level}</span></td>
-                    <td className="mono">{p.version_no}</td>
-                  </tr>
+                  <Fragment key={p.id}>
+                    <tr>
+                      <td className="mono">{p.point_code}</td>
+                      <td>{p.part_no || '—'}</td>
+                      {/* DEMO-PREP-01C: guard null score and risk_level; switch to i18n riskLabels */}
+                      {/* STACK-001: historical 4T scores shown as-is; legacyUnsupportedNotice below disambiguates */}
+                      <td className="mono">{p.analysis_result?.score != null ? `%${p.analysis_result.score.toFixed(0)}` : '—'}</td>
+                      <td><span className={`badge ${p.analysis_result?.risk_level === 'LOW' ? 'ok' : 'warn'}`}>{t.riskLabels[p.analysis_result?.risk_level ?? 'NOT_EVALUATED'] ?? p.analysis_result?.risk_level ?? '—'}</span></td>
+                      <td className="mono">{p.version_no}</td>
+                    </tr>
+                    {/* STACK-001: warn on historical 4T records — UNSUPPORTED_PRODUCT_SCOPE */}
+                    {p.analysis_input?.stack_count === '4T' && (
+                      <tr>
+                        <td colSpan={5}>
+                          <div className="alert warn" role="alert">
+                            <div className="alert-text">{t.stackDefinition.legacyUnsupportedNotice}</div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

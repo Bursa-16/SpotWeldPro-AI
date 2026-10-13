@@ -3,10 +3,13 @@ import { analyzeWeld } from '../api/client'
 import type { WeldAnalysisRequest, WeldAnalysisResponse, LayerInput } from '../types/weld'
 import type { ReactNode } from 'react'
 import { RISK_LEVEL_LABELS } from '../constants/riskLevel'
+import { useWeldAnalysis } from '../context/WeldAnalysisContext'
 const baseLayer: LayerInput = { material_family: 'Düşük / Orta Karbonlu Çelik', material_subtype: 'Düşük karbonlu çelik', thickness_mm: 1, coated: false }
 const base: WeldAnalysisRequest = { ...baseLayer, stack_count: '2T', layers: [{ ...baseLayer }, { ...baseLayer }], current_ka: 8, weld_cycles: 12, force_kn: 3, tip_diameter_mm: 6, squeeze_cycles: 15, hold_cycles: 15, cooling_flow_lpm: 6, cooling_temp_c: 20, dc_current: true, adhesive: false, shunt_risk: false }
 
-function riskState(risk: string): 'ok' | 'warn' | 'danger' {
+// DEMO-PREP-01C: guard null risk ahead of backend fail-closed deployment
+function riskState(risk: string | null | undefined): 'ok' | 'warn' | 'danger' {
+  if (risk == null) return 'warn'
   const r = risk.toLowerCase()
   if (r === 'HIGH' || r.includes('high')) return 'danger'
   if (r === 'MEDIUM' || r.includes('medium') || r.includes('review')) return 'warn'
@@ -22,15 +25,16 @@ function statusBadge(status: string): 'ok' | 'warn' | 'danger' | 'neutral' {
 }
 
 const PRIMARY_FIELDS: Array<[string, keyof WeldAnalysisRequest, string]> = [
-  ['Akım (kA)', 'current_ka', 'kA'],
+  ['Kaynak akımı', 'current_ka', 'kA'],
   ['Kaynak süresi', 'weld_cycles', 'çevrim'],
-  ['Kuvvet (kN)', 'force_kn', 'kN'],
-  ['Squeeze süresi', 'squeeze_cycles', 'çevrim'],
-  ['Hold / Soğutma', 'hold_cycles', 'çevrim'],
-  ['Uç çapı', 'tip_diameter_mm', 'mm'],
+  ['Elektrot kuvveti', 'force_kn', 'kN'],
+  ['Sıkıştırma süresi', 'squeeze_cycles', 'çevrim'],
+  ['Tutma süresi', 'hold_cycles', 'çevrim'],
+  ['Elektrot uç çapı', 'tip_diameter_mm', 'mm'],
 ]
 
 export function AnalysisPage() {
+  const { setLastAnalysis } = useWeldAnalysis()
   const [p, setP] = useState<WeldAnalysisRequest>(base)
   const [r, setR] = useState<WeldAnalysisResponse | null>(null)
   const [busy, setBusy] = useState(false)
@@ -38,7 +42,7 @@ export function AnalysisPage() {
 
   const totalThickness = useMemo(() => p.layers.reduce((sum, l) => sum + (Number(l.thickness_mm) || 0), 0), [p.layers])
 
-  function setStack(n: 2 | 3 | 4) {
+  function setStack(n: 2 | 3) {
     setP((prev) => {
       const layers = [...prev.layers]
       while (layers.length < n) layers.push({ ...(layers[layers.length - 1] ?? baseLayer) })
@@ -60,7 +64,10 @@ export function AnalysisPage() {
 
   async function run() {
     try {
-      setBusy(true); setErr(''); setR(await analyzeWeld(p))
+      setBusy(true); setErr('')
+      const result = await analyzeWeld(p)
+      setR(result)
+      setLastAnalysis(p, result)
     } catch {
       setErr('Engineering data could not be loaded. Verify the API service and retry.')
     } finally {
@@ -86,7 +93,7 @@ export function AnalysisPage() {
     )
   }
   return <div className="page active">
-    <div className="ws-kicker">Production · Spot Welding Parametre Analysis</div>
+    <div className="ws-kicker">Production · Spot Welding Parameter Analysis</div>
     <header className="page-header">
       <div>
         <h1>Weld Quality Analysis</h1>
@@ -107,13 +114,14 @@ export function AnalysisPage() {
         <div className="panel-body">
           <div className="ws-zone-label">A · Stack &amp; material</div>
           <div className="seg-group" role="group" aria-label="Stack count">
-            {(['2T', '3T', '4T'] as const).map((sc) => (
+            {/* STACK-001: 4T removed — UNSUPPORTED_PRODUCT_SCOPE; only 2T and 3T permitted for new analysis */}
+            {(['2T', '3T'] as const).map((sc) => (
               <button
                 type="button"
                 key={sc}
                 className={'seg-btn' + (p.stack_count === sc ? ' active' : '')}
                 aria-pressed={p.stack_count === sc}
-                onClick={() => setStack(Number(sc[0]) as 2 | 3 | 4)}
+                onClick={() => setStack(Number(sc[0]) as 2 | 3)}
               >{sc}</button>
             ))}
           </div>
@@ -160,18 +168,21 @@ export function AnalysisPage() {
         <div className="panel-footer">Inputs are evaluated by backend deterministic rules only. Top-level material follows Sheet 1.</div>
       </section>
       <section className="panel" aria-label="Engineering result">
-        <div className="panel-header"><h3>Engineering result</h3>{r && <span className={`badge ${riskState(r.risk_level)}`}>{RISK_LEVEL_LABELS[r.risk_level] ?? r.risk_level}</span>}</div>
+        {/* DEMO-PREP-01C: guard null risk_level ahead of backend fail-closed deployment */}
+        <div className="panel-header"><h3>Engineering result</h3>{r && (r.band_selection_status === 'ENGINEERING_REVIEW_REQUIRED' ? <span className="badge warn">İnceleme gerekli</span> : <span className={`badge ${riskState(r.risk_level)}`}>{r.risk_level != null ? (RISK_LEVEL_LABELS[r.risk_level] ?? r.risk_level) : '—'}</span>)}</div>
         <div className="panel-body">
         <div className="ws-zone-label">Engineering evaluation · result · traceability</div>
         {!r && !busy && <div className="ws-empty" role="status"><span className="empty-glyph" aria-hidden="true">RQ</span><strong>No analysis result yet</strong><span className="ws-empty-hint">Run analysis to generate the governed engineering result. Empty state is expected before the first backend evaluation.</span><span className="empty-action">Next action: Run analysis with the current parameter set.</span></div>}
         {busy && <div className="state-msg" role="status"><div className="spinner" aria-hidden="true"/><span>Evaluating governed rules…</span></div>}
         {r && !busy && <>
           <div className="grid-2">
-            <article className="metric-card"><span className="metric-label">Quality score</span><strong className="metric-value">%{r.score.toFixed(0)}</strong></article>
-            <article className="metric-card"><span className="metric-label">Norm compliance</span><strong className="metric-value">%{r.compliance_summary.score.toFixed(0)}</strong></article>
+            {/* DEMO-PREP-01C: guard null score ahead of backend fail-closed deployment */}
+            <article className="metric-card"><span className="metric-label">Quality score</span><strong className="metric-value">{r.score != null ? `%${r.score.toFixed(0)}` : '—'}</strong></article>
+            <article className="metric-card"><span className="metric-label">Norm compliance</span><strong className="metric-value">{r.compliance_summary.score != null ? `%${r.compliance_summary.score.toFixed(0)}` : '—'}</strong></article>
             <article className="metric-card"><span className="metric-label">Target nugget</span><strong className="metric-value">{r.nugget_opt_mm.toFixed(2)}<span className="metric-unit"> mm</span></strong><span className="metric-sub">min {r.nugget_min_mm.toFixed(2)} mm</span></article>
-            <article className="metric-card"><span className="metric-label">Prediction</span><strong className="metric-value">{r.selected_prediction_mm!=null ? <>{r.selected_prediction_mm.toFixed(2)}<span className="metric-unit"> mm</span></> : '—'}</strong></article>
+            <article className="metric-card"><span className="metric-label">Calculated estimate</span><strong className="metric-value">{r.selected_prediction_mm!=null ? <>{r.selected_prediction_mm.toFixed(2)}<span className="metric-unit"> mm</span></> : '—'}</strong><span className="metric-sub">OEM table — not independently validated</span></article>
           </div>
+          {r.band_selection_status === 'ENGINEERING_REVIEW_REQUIRED' && <div className="alert warn" role="alert" style={{marginTop:'var(--sp-3)'}}><div className="alert-body"><div className="alert-title">Mühendislik incelemesi gerekli — referans kapsamı yetersiz</div><div className="alert-text">Bu yığın konfigürasyonu için kayıtlı referans bandı bulunamadı. Hesaplama sonuçları yalnızca bilgilendirme amaçlıdır ve OEM kabul kriteri olarak kullanılamaz. Nitelendirme öncesinde bağımsız mühendislik incelemesi şarttır.</div></div></div>}
           {r.selected_model && <div className="trace-block" style={{marginTop:'var(--sp-3)'}}>
             <div className="trace-row"><span className="label">Model / rule basis</span><span className="value">{r.selected_model}</span></div>
             <div className="trace-row"><span className="label">Rules evaluated</span><span className="value">{r.compliance_summary.passed??0} passed / {r.compliance_summary.failed??0} failed / {r.compliance_summary.review??0} review</span></div>
@@ -257,7 +268,12 @@ export function AnalysisPage() {
           <div className="inspector-row"><span>Total thickness</span><strong className="mono">{totalThickness.toFixed(2)} mm</strong></div>
           <div className="inspector-row"><span>Current mode</span><strong>{p.dc_current ? 'DC' : 'AC'}</strong></div>
           <div className="inspector-row"><span>Selected model</span><strong className="mono">{r?.selected_model ?? '—'}</strong></div>
-          <div className="inspector-row"><span>Compliance status</span><strong>{r ? `${r.compliance_summary.passed ?? 0}P / ${r.compliance_summary.failed ?? 0}F · %${r.compliance_summary.score.toFixed(0)}` : '—'}</strong></div>
+          {/* DEMO-PREP-01C: guard null compliance score ahead of backend fail-closed deployment */}
+          <div className="inspector-row"><span>Compliance status</span><strong>{r ? `${r.compliance_summary.passed ?? 0}P / ${r.compliance_summary.failed ?? 0}F · ${r.compliance_summary.score != null ? `%${r.compliance_summary.score.toFixed(0)}` : '—'}` : '—'}</strong></div>
+          <div className="inspector-row"><span>Reference profile</span><strong className="mono">{r?.reference_profile_id ?? '—'}</strong></div>
+          <div className="inspector-row"><span>Reference band</span><strong className="mono">{r?.selected_band ?? '—'}</strong></div>
+          <div className="inspector-row"><span>Band status</span><strong>{r?.band_selection_status ? <span className={`badge ${r.band_selection_status === 'OK' ? 'ok' : r.band_selection_status === 'ENGINEERING_REVIEW_REQUIRED' ? 'warn' : 'neutral'}`}>{r.band_selection_status}</span> : '—'}</strong></div>
+          {r?.effective_thickness_mm != null && <div className="inspector-row"><span>Effective thickness</span><strong className="mono">{r.effective_thickness_mm.toFixed(2)} mm</strong></div>}
           <div className="inspector-sep" />
           <div className="inspector-row muted"><span>Parameter revision</span><strong>—</strong></div>
           <div className="inspector-row muted"><span>Rule revision</span><strong>—</strong></div>

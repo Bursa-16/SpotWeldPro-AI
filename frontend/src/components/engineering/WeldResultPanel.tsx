@@ -50,7 +50,10 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
     )
   }
 
-  const riskLabel = t.riskLabels[result.risk_level.toUpperCase()] ?? result.risk_level
+  // DEMO-PREP-01C: guard null risk_level ahead of backend fail-closed deployment
+  const riskLabel = result.risk_level != null
+    ? (t.riskLabels[result.risk_level.toUpperCase()] ?? result.risk_level)
+    : (t.riskLabels['NOT_EVALUATED'] ?? 'Not Evaluated')
 
   // Arithmetic margin — only when both backend values are present
   const showMargin =
@@ -71,7 +74,7 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
 
         <div className="eui-stat-card">
           <div className="eui-stat-label">{t.resultPanel.risk}</div>
-          <div className={`eui-stat-value ${riskClass(result.risk_level)}`}>
+          <div className={`eui-stat-value ${result.risk_level != null ? riskClass(result.risk_level) : ''}`}>
             {riskLabel}
           </div>
         </div>
@@ -210,7 +213,7 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
       {/* ── Model results ─────────────────────────────────── */}
       {result.model_results && result.model_results.length > 0 && (
         <div>
-          <p className="eui-section-title">Model sonuçları</p>
+          <p className="eui-section-title">{t.resultPanel.modelResults}</p>
           <ul className="eui-list">
             {result.model_results.map((m, i) => (
               <li key={i} className="eui-list-item">
@@ -232,13 +235,13 @@ export function WeldResultPanel({ result }: WeldResultPanelProps) {
       {/* ── Compliance conflicts ───────────────────────────── */}
       {result.compliance_conflicts && result.compliance_conflicts.length > 0 && (
         <div>
-          <p className="eui-section-title">Kural çakışmaları</p>
+          <p className="eui-section-title">{t.resultPanel.complianceConflicts}</p>
           <ul className="eui-list">
             {result.compliance_conflicts.map((c, i) => (
               <li key={i} className="eui-list-item">
                 <strong>{c.parameter}</strong>
-                {` — Kazanan: ${c.winner_rule}`}
-                {` | Rakip: ${c.challenger_rule}`}
+                {` — ${t.resultPanel.conflictWinner}: ${c.winner_rule}`}
+                {` | ${t.resultPanel.conflictChallenger}: ${c.challenger_rule}`}
                 {c.decision && <span>{` → ${c.decision}`}</span>}
               </li>
             ))}

@@ -16,14 +16,13 @@ import type { LayerInput } from '../../types/weld'
 import { useAppLanguage } from '../../i18n/useAppLanguage'
 import './engineering-ui.css'
 
-type StackCount = '2T' | '3T' | '4T'
+type StackCount = '2T' | '3T'
 
-const STACK_OPTIONS: StackCount[] = ['2T', '3T', '4T']
+const STACK_OPTIONS: StackCount[] = ['2T', '3T']
 
 const STACK_LAYER_COUNT: Record<StackCount, number> = {
   '2T': 2,
   '3T': 3,
-  '4T': 4,
 }
 
 const EMPTY_LAYER: LayerInput = {

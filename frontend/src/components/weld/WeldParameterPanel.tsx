@@ -16,6 +16,7 @@
 import React from 'react'
 import type { AppContent } from '../../i18n/appContent'
 import { TimeInputField, type TimeUnit } from './TimeInputField'
+import { ElectrodeGuideModal } from './ElectrodeGuideModal'
 
 export interface WeldParameterDraft {
   current_ka: string
@@ -55,6 +56,7 @@ export function makeEmptyParameters(): WeldParameterDraft {
 
 export interface WeldParameterPanelProps {
   t: AppContent['parameterPanel']
+  guideT: AppContent['electrodeGuide']
   params: WeldParameterDraft
   timeUnit: TimeUnit
   onTimeUnitChange: (unit: TimeUnit) => void
@@ -63,11 +65,13 @@ export interface WeldParameterPanelProps {
 
 export function WeldParameterPanel({
   t,
+  guideT,
   params,
   timeUnit,
   onTimeUnitChange,
   onChange,
 }: WeldParameterPanelProps): React.ReactElement {
+  const [guideOpen, setGuideOpen] = React.useState(false)
   const set = <K extends keyof WeldParameterDraft>(key: K, value: WeldParameterDraft[K]) =>
     onChange({ ...params, [key]: value })
 
@@ -139,7 +143,12 @@ export function WeldParameterPanel({
           />
         </div>
         <div className="weld-parameter-panel__field">
-          <label htmlFor="param-tip-dia">{t.tipDiameter}</label>
+          <div className="eg-tip-header">
+            <label htmlFor="param-tip-dia">{t.tipDiameter}</label>
+            <button type="button" className="eg-trigger" onClick={() => setGuideOpen(true)}>
+              {guideT.openLabel}
+            </button>
+          </div>
           <input
             id="param-tip-dia"
             type="number"
@@ -276,6 +285,7 @@ export function WeldParameterPanel({
           />
         </div>
       </fieldset>
+      {guideOpen && <ElectrodeGuideModal t={guideT} onClose={() => setGuideOpen(false)} />}
     </section>
   )
 }

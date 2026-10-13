@@ -49,6 +49,7 @@ export interface TrustNote {
 }
 
 export interface LangContent {
+  langToggle: string;
   brand: string
   brandMark: string
   nav: NavItem[]
@@ -89,6 +90,18 @@ export interface LangContent {
       timeValue: string
       forceValue: string
       nuggetValue: string
+      // Hero preview panel labels (PUBLIC-I18N-01)
+      panelAriaLabel: string
+      panelHeading: string
+      panelBadge: string
+      panelCurrent: string
+      panelTime: string
+      panelForce: string
+      panelTip: string
+      panelTraceLabel: string
+      panelTraceValue: string
+      panelStateLabel: string
+      panelStateValue: string
     }
     modulesTitle: string
     modulesSub: string
@@ -179,6 +192,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
   // TURKISH
   // ─────────────────────────────────────────────────────────────
   tr: {
+    langToggle: 'EN',
     brand: 'SpotWeldPro AI',
     brandMark: 'SW',
     nav: [
@@ -247,7 +261,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
     industries: [
       {
         name: 'Otomotiv',
-        use: 'Yapısal gövde ve şase bağlantılarında yüksek adetli nokta kaynağı.',
+        use: 'Yapısal gövde ve şase bağlantılarında yüksek adetli punta kaynağı.',
         need: 'Tutarlı nugget kalitesi ve parça bazlı izlenebilirlik.',
         modules: 'Weld Quality Analysis · Traceability',
       },
@@ -354,7 +368,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
 
     landing: {
       eyebrow: 'SpotWeldPro AI · Engineering Workstation',
-      heroTitle: 'Nokta Kaynak Parametre Analizi',
+      heroTitle: 'Punta Kaynak Parametre Analizi',
       heroSubtitle:
         'Deterministik mühendislik kuralları ile kaynak kalitesini doğrulayın;'
         + ' deney tasarımı ve hata analizi ile prosesi yönetin.',
@@ -375,6 +389,17 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         timeValue: '14 cyc',
         forceValue: '3.5 kN',
         nuggetValue: '5.4 mm',
+        panelAriaLabel: 'Mühendislik ürün önizlemesi',
+        panelHeading: 'Mühendislik Girdileri',
+        panelBadge: 'Deterministik Kural Kontrolü',
+        panelCurrent: 'Kaynak Akımı',
+        panelTime: 'Kaynak Süresi',
+        panelForce: 'Elektrot Kuvveti',
+        panelTip: 'Elektrot Uç Çapı',
+        panelTraceLabel: 'İzlenebilirlik',
+        panelTraceValue: 'Denetim Kanıtıyla Desteklenmiş',
+        panelStateLabel: 'Durum',
+        panelStateValue: 'Analiz Bekleniyor',
       },
       modulesTitle: 'Modüller',
       modulesSub: 'Bir modülü incelemek için Özellikler sayfasındaki detayı görüntüleyin.',
@@ -476,6 +501,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
   // ENGLISH
   // ─────────────────────────────────────────────────────────────
   en: {
+    langToggle: 'TR',
     brand: 'SpotWeldPro AI',
     brandMark: 'SW',
     nav: [
@@ -672,6 +698,17 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         timeValue: '14 cyc',
         forceValue: '3.5 kN',
         nuggetValue: '5.4 mm',
+        panelAriaLabel: 'Engineering product preview',
+        panelHeading: 'Engineering Inputs',
+        panelBadge: 'Deterministic Rule Validation',
+        panelCurrent: 'Welding Current',
+        panelTime: 'Welding Time',
+        panelForce: 'Electrode Force',
+        panelTip: 'Electrode Tip Diameter',
+        panelTraceLabel: 'Traceability',
+        panelTraceValue: 'Supported by Audit Evidence',
+        panelStateLabel: 'State',
+        panelStateValue: 'Awaiting Analysis',
       },
       modulesTitle: 'Modules',
       modulesSub: 'View the details on the Features page to explore a module.',

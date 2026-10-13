@@ -22,24 +22,24 @@ export function LandingPage() {
               <Link to="/demo" className="btn btn-primary">{t.cta.primary}</Link>
             </div>
           </div>
-          <aside className="hero-preview" aria-label="Engineering product preview">
+          <aside className="hero-preview" aria-label={l.heroSim.panelAriaLabel}>
             <div className="hero-preview-head">
-              <span>Engineering Inputs</span>
-              <span className="badge accent">Deterministic Rule Check</span>
+              <span>{l.heroSim.panelHeading}</span>
+              <span className="badge accent">{l.heroSim.panelBadge}</span>
             </div>
             <div className="hero-preview-grid">
-              <div className="hero-field"><span>Current</span><span className="hero-field-val">— kA</span></div>
-              <div className="hero-field"><span>Time</span><span className="hero-field-val">— cyc</span></div>
-              <div className="hero-field"><span>Force</span><span className="hero-field-val">— kN</span></div>
-              <div className="hero-field"><span>Tip</span><span className="hero-field-val">— mm</span></div>
+              <div className="hero-field"><span>{l.heroSim.panelCurrent}</span><span className="hero-field-val">— kA</span></div>
+              <div className="hero-field"><span>{l.heroSim.panelTime}</span><span className="hero-field-val">— cyc</span></div>
+              <div className="hero-field"><span>{l.heroSim.panelForce}</span><span className="hero-field-val">— kN</span></div>
+              <div className="hero-field"><span>{l.heroSim.panelTip}</span><span className="hero-field-val">— mm</span></div>
             </div>
             <div className="hero-window" aria-hidden="true">
-              <span>Process Window</span>
+              <span>{l.heroSim.processWindowLabel}</span>
               <div className="hero-window-frame" />
             </div>
             <div className="hero-preview-foot">
-              <span className="ctx-chip">Traceability: <strong>audit-backed</strong></span>
-              <span className="ctx-chip accent">State: <strong>Awaiting analysis</strong></span>
+              <span className="ctx-chip">{l.heroSim.panelTraceLabel}: <strong>{l.heroSim.panelTraceValue}</strong></span>
+              <span className="ctx-chip accent">{l.heroSim.panelStateLabel}: <strong>{l.heroSim.panelStateValue}</strong></span>
             </div>
           </aside>
         </div>

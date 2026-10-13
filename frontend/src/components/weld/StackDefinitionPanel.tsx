@@ -8,7 +8,7 @@
 import React from 'react'
 import type { AppContent } from '../../i18n/appContent'
 
-export type StackCount = '2T' | '3T' | '4T'
+export type StackCount = '2T' | '3T'
 
 export interface LayerDraft {
   material_family: string
@@ -29,7 +29,7 @@ export interface StackDefinitionPanelProps {
   onLayerChange: (index: number, layer: LayerDraft) => void
 }
 
-const STACK_OPTIONS: StackCount[] = ['2T', '3T', '4T']
+const STACK_OPTIONS: StackCount[] = ['2T', '3T']
 
 /** True only when material is mild-steel-family and stack is 2T. */
 export function isReferenceBandEligible(stackCount: StackCount, layers: LayerDraft[]): boolean {
@@ -48,7 +48,7 @@ export function StackDefinitionPanel({
   onStackCountChange,
   onLayerChange,
 }: StackDefinitionPanelProps): React.ReactElement {
-  const requiresEngineeringReview = stackCount === '3T' || stackCount === '4T'
+  const requiresEngineeringReview = stackCount === '3T'
   const layerCount = parseInt(stackCount[0], 10)
 
   return (

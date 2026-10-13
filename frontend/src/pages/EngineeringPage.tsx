@@ -1,6 +1,7 @@
 
 import { useState } from 'react'
 import client from '../api/client'
+import { useAppLanguage } from '../i18n/useAppLanguage'
 
 type LobePoint = {
   current_ka: number
@@ -12,6 +13,8 @@ type LobePoint = {
 }
 
 export function EngineeringPage() {
+  const { t } = useAppLanguage()
+  const ep = t.engineeringLobeLabPage
   const [result, setResult] = useState<{
     optimum: LobePoint | null
     safe_count: number
@@ -48,22 +51,22 @@ export function EngineeringPage() {
 
   return (
     <div className="page active">
-      <div className="ws-kicker">Engineering · Spot Welding Parametre Analysis</div>
+      <div className="ws-kicker">{ep.kicker}</div>
       <header className="page-header">
         <div>
-          <h1>Weld Lobe Lab</h1>
-          <p className="subtitle">Process window, sensitivity and optimum-point analysis from the backend simulation only</p>
+          <h1>{ep.title}</h1>
+          <p className="subtitle">{ep.subtitle}</p>
         </div>
         <div className="page-actions">
           <button className="btn btn-primary" onClick={calculate} disabled={busy}>
-            {busy ? 'Hesaplanıyor…' : 'Weld Lobe Hesapla'}
+            {busy ? ep.calculating : ep.calculateBtn}
           </button>
         </div>
       </header>
       <div className="ws-context-bar" aria-label="Engineering context">
-        <span className="ctx-chip accent">Authority: <strong>backend simulation</strong></span>
-        <span className="ctx-chip">Method: <strong>process-window sweep</strong></span>
-        <span className="ctx-chip">Curves: <strong>only when backend returns data</strong></span>
+        <span className="ctx-chip accent">{ep.authorityChip.split(':')[0]}: <strong>{ep.authorityChip.split(':')[1]?.trim()}</strong></span>
+        <span className="ctx-chip">Method: <strong>{ep.methodChip.split(':')[1]?.trim()}</strong></span>
+        <span className="ctx-chip">Curves: <strong>{ep.curvesChip.split(':')[1]?.trim()}</strong></span>
       </div>
       {error && (
         <div className="alert danger" role="alert">
@@ -77,23 +80,37 @@ export function EngineeringPage() {
       {!result && !busy && (
         <div className="ws-grid-main">
           <section className="panel" aria-label="Engineering context">
-            <div className="panel-header"><h3>Engineering context</h3><span className="panel-meta">parameter range</span></div>
+            <div className="panel-header">
+              <h3>{ep.contextTitle}</h3>
+              <span className="panel-meta">{ep.contextMeta}</span>
+            </div>
             <div className="panel-body">
             <div className="trace-block">
-              <div className="trace-row"><span className="label">Material</span><span className="value">low/medium carbon steel · 1.0 mm</span></div>
-              <div className="trace-row"><span className="label">Force</span><span className="value">3.0 kN</span></div>
-              <div className="trace-row"><span className="label">Current sweep</span><span className="value">6.0 – 12.0 kA · step 0.5</span></div>
-              <div className="trace-row"><span className="label">Time sweep</span><span className="value">8 – 18 cycles · step 1</span></div>
+              <div className="trace-row"><span className="label">Material</span><span className="value">{ep.contextMaterial}</span></div>
+              <div className="trace-row"><span className="label">Force</span><span className="value">{ep.contextForce}</span></div>
+              <div className="trace-row"><span className="label">Current sweep</span><span className="value">{ep.contextCurrentSweep}</span></div>
+              <div className="trace-row"><span className="label">Time sweep</span><span className="value">{ep.contextTimeSweep}</span></div>
             </div>
             </div>
-            <div className="panel-footer">Sweep definition only — no simulated curves.</div>
+            <div className="panel-footer">{ep.contextFooter}</div>
           </section>
           <section className="panel" aria-label="Process window workspace">
-            <div className="panel-header"><h3>Process window</h3><span className="panel-meta">chart-ready</span></div>
-            <div className="panel-body">
-            <div className="chart-ready" role="status"><div className="chart-frame" aria-hidden="true"><div className="chart-axes" /><div className="chart-caption">Current × Time · safe-window frame</div></div><strong>No process-window data</strong><span>Process-window visualization becomes available after valid engineering input.</span><span className="empty-action">Next action: run the backend simulation.</span></div>
+            <div className="panel-header">
+              <h3>{ep.processWindowTitle}</h3>
+              <span className="panel-meta">{ep.processWindowMeta}</span>
             </div>
-            <div className="panel-footer">Curves render only from backend output.</div>
+            <div className="panel-body">
+            <div className="chart-ready" role="status">
+              <div className="chart-frame" aria-hidden="true">
+                <div className="chart-axes" />
+                <div className="chart-caption">Current × Time · safe-window frame</div>
+              </div>
+              <strong>{ep.noDataMessage}</strong>
+              <span>{ep.noDataHint}</span>
+              <span className="empty-action">{ep.noDataAction}</span>
+            </div>
+            </div>
+            <div className="panel-footer">{ep.processWindowFooter}</div>
           </section>
         </div>
       )}
@@ -101,7 +118,7 @@ export function EngineeringPage() {
       {busy && (
         <div className="state-msg" role="status">
           <div className="spinner" aria-hidden="true" />
-          <span>Lobe simülasyonu çalıştırılıyor…</span>
+          <span>{ep.calculatingVerbose}</span>
         </div>
       )}
 
@@ -109,47 +126,47 @@ export function EngineeringPage() {
         <div className="ws-grid-main">
           <section className="panel" aria-label="Process window summary">
             <div className="panel-header">
-              <h3>Kaynak Penceresi Özeti</h3>
-              <span className="panel-meta">Simülasyon</span>
+              <h3>{ep.summaryTitle}</h3>
+              <span className="panel-meta">{ep.summaryMeta}</span>
             </div>
             <div className="panel-body">
             <div className="grid-2">
               <article className="metric-card state-ok">
-                <span className="metric-label">Güvenli Nokta</span>
+                <span className="metric-label">{ep.safeCount}</span>
                 <strong className="metric-value">{result.safe_count}</strong>
               </article>
               <article className="metric-card state-warn">
-                <span className="metric-label">Uyarı Noktası</span>
+                <span className="metric-label">{ep.warningCount}</span>
                 <strong className="metric-value">{result.warning_count}</strong>
               </article>
               <article className="metric-card state-danger">
-                <span className="metric-label">Uygun Olmayan</span>
+                <span className="metric-label">{ep.unsafeCount}</span>
                 <strong className="metric-value">{result.unsafe_count}</strong>
               </article>
               <article className="metric-card">
-                <span className="metric-label">Optimum Nokta</span>
+                <span className="metric-label">{ep.optimumPoint}</span>
                 <strong className="metric-value" style={{ fontSize: 'var(--fs-h4)' }}>
                   {result.optimum ? `${result.optimum.current_ka} kA / ${result.optimum.weld_cycles} cyc` : '—'}
                 </strong>
               </article>
             </div>
             </div>
-            <div className="panel-footer">Backend simulation counts only.</div>
+            <div className="panel-footer">{ep.summaryFooter}</div>
           </section>
 
-          <section className="panel" aria-label="Parametre Duyarlılığı">
+          <section className="panel" aria-label={ep.sensitivityTitle}>
             <div className="panel-header">
-              <h3>Parametre Duyarlılığı</h3>
-              <span className="panel-meta">Eksensel etki</span>
+              <h3>{ep.sensitivityTitle}</h3>
+              <span className="panel-meta">{ep.sensitivityMeta}</span>
             </div>
             <div className="panel-body">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Sıra</th>
-                  <th>Parametre</th>
-                  <th>Etki</th>
-                  <th>Duyarlılık</th>
+                  <th>{ep.sensitivityRank}</th>
+                  <th>{ep.sensitivityParam}</th>
+                  <th>{ep.sensitivityImpact}</th>
+                  <th>{ep.sensitivitySensitivity}</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,11 +181,10 @@ export function EngineeringPage() {
               </tbody>
             </table>
             </div>
-            <div className="panel-footer">Backend sensitivity output only.</div>
+            <div className="panel-footer">{ep.sensitivityFooter}</div>
           </section>
         </div>
       )}
     </div>
   )
 }
-

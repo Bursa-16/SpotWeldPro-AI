@@ -168,6 +168,38 @@ export interface AppContent {
     thickness: string
     coated: string
     engineeringReviewRequired: string
+    /** Displayed for historical weld point records with stack_count '4T'. */
+    legacyUnsupportedNotice: string
+  }
+  electrodeGuide: {
+    openLabel: string
+    title: string
+    subtitle: string
+    closeLabel: string
+    geometryTitle: string
+    faceProfileTitle: string
+    faceProfileFlat: string
+    faceProfileRadius: string
+    faceProfileBevel: string
+    bodyFormTitle: string
+    bodyFormStraight: string
+    bodyFormOffset: string
+    bodyFormAngled: string
+    capTypeTitle: string
+    capTypeStandard: string
+    capTypeExtended: string
+    capTypeMushroom: string
+    materialTitle: string
+    materialCopper: string
+    materialCuCrZr: string
+    materialCuZrComp: string
+    maintenanceTitle: string
+    maintenanceDress: string
+    maintenancePeeling: string
+    maintenanceExpansion: string
+    diameterId: string
+    enterDiameterHint: string
+    infoNote: string
   }
   parameterPanel: {
     sectionTitle: string
@@ -219,6 +251,80 @@ export interface AppContent {
     rangeStatus: string
     guidanceInfoNote: string
   }
+  failurePage: {
+    kicker: string
+    title: string
+    subtitle: string
+    calculateBtn: string
+    calculating: string
+    authorityChip: string
+    inputSourceReady: string
+    inputSourceNone: string
+    outputChip: string
+    noContextTitle: string
+    noContextMessage: string
+    noContextMessageDetail: string
+    noContextNavigate: string
+    inputsTitle: string
+    inputsMeta: string
+    labelMaterial: string
+    labelProcess: string
+    labelRecommendationWindow: string
+    inputsFooter: string
+    resultTitle: string
+    resultMeta: string
+    notYetRun: string
+    notYetRunHint: string
+    notYetRunAction: string
+    priorityRisksTitle: string
+    priorityRisksMetaSuffix: string
+    confidenceLabel: string
+    mainFactorsLabel: string
+    noActiveFactors: string
+    preventiveActionsTitle: string
+    coated: string
+    uncoated: string
+    ultrasonicGuidance: string
+    qualificationDisclaimer: string
+  }
+  engineeringLobeLabPage: {
+    kicker: string
+    title: string
+    subtitle: string
+    calculateBtn: string
+    calculating: string
+    calculatingVerbose: string
+    authorityChip: string
+    methodChip: string
+    curvesChip: string
+    contextTitle: string
+    contextMeta: string
+    contextMaterial: string
+    contextForce: string
+    contextCurrentSweep: string
+    contextTimeSweep: string
+    contextFooter: string
+    processWindowTitle: string
+    processWindowMeta: string
+    noDataMessage: string
+    noDataHint: string
+    noDataAction: string
+    processWindowFooter: string
+    summaryTitle: string
+    summaryMeta: string
+    safeCount: string
+    warningCount: string
+    unsafeCount: string
+    optimumPoint: string
+    summaryFooter: string
+    sensitivityTitle: string
+    sensitivityMeta: string
+    sensitivityRank: string
+    sensitivityParam: string
+    sensitivityImpact: string
+    sensitivitySensitivity: string
+    sensitivityFooter: string
+  }
   /** Display mapping for canonical backend risk level values. */
   visualWeldInspector: {
     sectionTitle: string
@@ -269,9 +375,9 @@ const TR: AppContent = {
     },
   },
   analysisPage: {
-    kicker: 'Üretim · Nokta Kaynak Parametre Analizi',
+    kicker: 'Üretim · Punta Kaynak Parametre Analizi',
     title: 'Kaynak Kalite Analizi',
-    subtitle: 'Kural tabanlı nokta kaynak değerlendirmesi — model desteği ile deterministik limitler',
+    subtitle: 'Kural tabanlı punta kaynak değerlendirmesi — model desteği ile deterministik limitler',
     runAnalysis: 'Analizi Çalıştır',
     analyzing: 'Analiz ediliyor…',
     authorityChip: 'Otorite: deterministik kurallar',
@@ -319,7 +425,7 @@ const TR: AppContent = {
   },
   dashboardPage: {
     kicker: 'KOMUTA MERKEZİ',
-    kickerData: 'Genel Bakış · Nokta Kaynak Parametre Analizi',
+    kickerData: 'Genel Bakış · Punta Kaynak Parametre Analizi',
     title: 'Komuta Merkezi',
     subtitle: 'Üretim kalitesi ve mühendislik genel görünümü',
     loading: 'Komuta merkezi yükleniyor…',
@@ -390,9 +496,9 @@ const TR: AppContent = {
     empty: 'Analiz sonucu bekleniyor…',
     score: 'Skor',
     risk: 'Risk',
-    nuggetMin: 'Nugget min (mm)',
-    nuggetOpt: 'Nugget opt (mm)',
-    modelPrediction: 'Model tahmini (mm)',
+    nuggetMin: 'OEM minimum nugget (mm)',
+    nuggetOpt: 'OEM hedef nugget (mm)',
+    modelPrediction: 'Tahmini hesaplama — doğrulanmamış (mm)',
     margin: 'Marj (mm)',
     complianceSummary: 'Uyum özeti',
     complianceScore: 'Skor',
@@ -425,6 +531,37 @@ const TR: AppContent = {
     thickness: 'Kalınlık (mm)',
     coated: 'Kaplı',
     engineeringReviewRequired: 'Bu konfigürasyon mühendislik incelemesi gerektirir.',
+    legacyUnsupportedNotice: '4T Punta Kaynak desteklenmemektedir (UNSUPPORTED_PRODUCT_SCOPE). Bu kayıt yeniden analiz edilemez.',
+  },
+  electrodeGuide: {
+    openLabel: 'Elektrot Kılavuzu',
+    title: 'Elektrot Geometrisi ve Bakım Kılavuzu',
+    subtitle: 'Bilgilendirme amaçlıdır; kaynak parametrelerini değiştirmez.',
+    closeLabel: 'Kapat',
+    geometryTitle: 'Elektrot Geometrisi',
+    faceProfileTitle: 'Uç Yüzeyi Profilleri',
+    faceProfileFlat: 'Düz yüzey',
+    faceProfileRadius: 'Radyüslü yüzey',
+    faceProfileBevel: 'Pahlı yüzey',
+    bodyFormTitle: 'Elektrot Gövde Formları',
+    bodyFormStraight: 'Düz',
+    bodyFormOffset: 'Ofsetli',
+    bodyFormAngled: 'Açılı',
+    capTypeTitle: 'Elektrot Başlığı Tipleri',
+    capTypeStandard: 'Standart',
+    capTypeExtended: 'Uzatılmış',
+    capTypeMushroom: 'Mantar başlıklı',
+    materialTitle: 'Elektrot Malzemeleri',
+    materialCopper: 'Bakır esaslı malzemeler',
+    materialCuCrZr: 'Bakır-krom-zirkonyum (CuCrZr)',
+    materialCuZrComp: 'Bakır-zirkonyum esaslı malzemeler',
+    maintenanceTitle: 'Bakım ve Kontrol Göstergeleri',
+    maintenanceDress: 'Uç yüzeyinin düzenli kontrolü ve gerektiğinde taşlanması',
+    maintenancePeeling: 'Yüzeyde malzeme transferi veya soyulma izlerinin kontrolü',
+    maintenanceExpansion: 'Uç yüzeyinde genişleme veya şekil değişimi kontrolü',
+    diameterId: 'Elektrot uç çapı',
+    enterDiameterHint: 'Değeri mevcut parametre alanına mühendislik gerekliliklerine göre manuel girin.',
+    infoNote: 'Bu kılavuz seçim desteği sağlar; sayısal öneri, otomatik kabul veya üretim onayı oluşturmaz.',
   },
   parameterPanel: {
     sectionTitle: 'Kaynak Parametreleri',
@@ -477,9 +614,84 @@ const TR: AppContent = {
     guidanceInfoNote: 'Referans kılavuzu yalnızca bilgi amaçlıdır. Uyum değerlendirmesini veya riski etkilemez.',
   },
   riskLabels: {
-    HIGH: 'Yüksek',
-    MEDIUM: 'Orta',
-    LOW: 'Düşük',
+    HIGH:          'Yüksek',
+    MEDIUM:        'Orta',
+    LOW:           'Düşük',
+    NOT_EVALUATED: 'Değerlendirilmedi',
+  },
+  failurePage: {
+    kicker: 'Mühendislik · Punta Kaynak Parametre Analizi',
+    title: 'Hata Analizi',
+    subtitle: 'Backend risk mühendisliği değerlendirmesi — olasılıklar yalnızca API yanıtından gösterilir',
+    calculateBtn: 'Hata Olasılıklarını Hesapla',
+    calculating: 'Hesaplanıyor…',
+    authorityChip: 'Otorite: backend hata modeli',
+    inputSourceReady: 'Kaynak Kalite Analizi',
+    inputSourceNone: 'analiz çalıştırılmamış',
+    outputChip: 'yalnızca API tarafından döndürülen olasılıklar',
+    noContextTitle: 'Analiz bağlamı gerekli',
+    noContextMessage: 'Kaynak Kalite Analizi henüz çalıştırılmamış',
+    noContextMessageDetail: 'Hata Analizi, Kaynak Kalite Analizi\'nin giriş değerlerini kullanır. Önce bir analiz çalıştırın.',
+    noContextNavigate: 'Kaynak Kalite Analizi\'ne git',
+    inputsTitle: 'Mühendislik girdileri',
+    inputsMeta: 'Kaynak Kalite Analizi\'nden',
+    labelMaterial: 'Malzeme',
+    labelProcess: 'Süreç',
+    labelRecommendationWindow: 'Öneri penceresi',
+    inputsFooter: 'Son gönderilen analiz bağlamı — girdi değiştiyse analizi yeniden çalıştırın.',
+    resultTitle: 'Risk sonucu',
+    resultMeta: 'sonuç hazır',
+    notYetRun: 'Analiz henüz çalıştırılmamış',
+    notYetRunHint: 'Risk modlarını, olasılıkları ve önleyici aksiyonları görmek için backend hata analizini çalıştırın.',
+    notYetRunAction: 'Sonraki adım: backend hata analizini çalıştırın.',
+    priorityRisksTitle: 'Öncelikli Risk Modları',
+    priorityRisksMetaSuffix: 'mod değerlendirildi',
+    confidenceLabel: 'Güven Derecesi',
+    mainFactorsLabel: 'Ana Etkenler',
+    noActiveFactors: 'Bu konfigürasyon için aktif etken yok',
+    preventiveActionsTitle: 'Genel Öncelikli Önleyici Aksiyonlar',
+    coated: 'kaplı',
+    uncoated: 'kaplamasız',
+    ultrasonicGuidance: 'Uygun prosedür ve kalibrasyonla ultrasonik muayene uygulayın. Gerektiğinde soyma, keski veya kesit testiyle doğrulayın.',
+    qualificationDisclaimer: 'Bu risk değerlendirmesi mühendislik kararı değildir. Üretim kabulü için nitelendirme mühendisi onayı gereklidir. Görüntülenen olasılıklar backend modelinden döner; bağımsız doğrulama yapılmamıştır.',
+  },
+  engineeringLobeLabPage: {
+    kicker: 'Mühendislik · Punta Kaynak Parametre Analizi',
+    title: 'Kaynak Lobu Laboratuvarı',
+    subtitle: 'Proses penceresi, duyarlılık ve optimum nokta analizi — yalnızca backend simülasyonundan',
+    calculateBtn: 'Weld Lobe Hesapla',
+    calculating: 'Hesaplanıyor…',
+    calculatingVerbose: 'Lobe simülasyonu çalıştırılıyor…',
+    authorityChip: 'Otorite: backend simülasyonu',
+    methodChip: 'Yöntem: proses penceresi taraması',
+    curvesChip: 'Eğriler: yalnızca backend veri döndürdüğünde',
+    contextTitle: 'Mühendislik bağlamı',
+    contextMeta: 'parametre aralığı',
+    contextMaterial: 'düşük/orta karbonlu çelik · 1,0 mm',
+    contextForce: '3,0 kN',
+    contextCurrentSweep: '6,0 – 12,0 kA · adım 0,5',
+    contextTimeSweep: '8 – 18 çevrim · adım 1',
+    contextFooter: 'Yalnızca tarama tanımı — simüle edilmiş eğri yok.',
+    processWindowTitle: 'Proses penceresi',
+    processWindowMeta: 'grafik hazır',
+    noDataMessage: 'Proses penceresi verisi yok',
+    noDataHint: 'Geçerli mühendislik girdisinden sonra proses penceresi görselleştirmesi kullanılabilir hale gelir.',
+    noDataAction: 'Sonraki adım: backend simülasyonunu çalıştırın.',
+    processWindowFooter: 'Eğriler yalnızca backend çıktısından oluşturulur.',
+    summaryTitle: 'Kaynak Penceresi Özeti',
+    summaryMeta: 'Simülasyon',
+    safeCount: 'Güvenli Nokta',
+    warningCount: 'Uyarı Noktası',
+    unsafeCount: 'Uygun Olmayan',
+    optimumPoint: 'Optimum Nokta',
+    summaryFooter: 'Yalnızca backend simülasyon sayıları.',
+    sensitivityTitle: 'Parametre Duyarlılığı',
+    sensitivityMeta: 'Eksensel etki',
+    sensitivityRank: 'Sıra',
+    sensitivityParam: 'Parametre',
+    sensitivityImpact: 'Etki',
+    sensitivitySensitivity: 'Duyarlılık',
+    sensitivityFooter: 'Yalnızca backend duyarlılık çıktısı.',
   },
   visualWeldInspector: {
     sectionTitle: 'Görsel Punta Kontrolü',
@@ -681,9 +893,9 @@ const EN: AppContent = {
     empty: 'No analysis result yet…',
     score: 'Score',
     risk: 'Risk',
-    nuggetMin: 'Nugget min (mm)',
-    nuggetOpt: 'Nugget opt (mm)',
-    modelPrediction: 'Model prediction (mm)',
+    nuggetMin: 'OEM minimum nugget (mm)',
+    nuggetOpt: 'OEM target nugget (mm)',
+    modelPrediction: 'Calculated estimate — not validated (mm)',
     margin: 'Margin (mm)',
     complianceSummary: 'Compliance summary',
     complianceScore: 'Score',
@@ -716,6 +928,37 @@ const EN: AppContent = {
     thickness: 'Thickness (mm)',
     coated: 'Coated',
     engineeringReviewRequired: 'This configuration requires engineering review.',
+    legacyUnsupportedNotice: '4T Spot Welding is not supported (UNSUPPORTED_PRODUCT_SCOPE). This record cannot be re-analyzed.',
+  },
+  electrodeGuide: {
+    openLabel: 'Electrode Guide',
+    title: 'Electrode Geometry and Maintenance Guide',
+    subtitle: 'Informational only; does not change welding parameters.',
+    closeLabel: 'Close',
+    geometryTitle: 'Electrode Geometry',
+    faceProfileTitle: 'Tip Face Profiles',
+    faceProfileFlat: 'Flat face',
+    faceProfileRadius: 'Radiused face',
+    faceProfileBevel: 'Beveled face',
+    bodyFormTitle: 'Electrode Body Forms',
+    bodyFormStraight: 'Straight',
+    bodyFormOffset: 'Offset',
+    bodyFormAngled: 'Angled',
+    capTypeTitle: 'Electrode Cap Types',
+    capTypeStandard: 'Standard',
+    capTypeExtended: 'Extended',
+    capTypeMushroom: 'Mushroom cap',
+    materialTitle: 'Electrode Materials',
+    materialCopper: 'Copper-based materials',
+    materialCuCrZr: 'Copper-chromium-zirconium (CuCrZr)',
+    materialCuZrComp: 'Copper-zirconium-based materials',
+    maintenanceTitle: 'Maintenance and Inspection Indicators',
+    maintenanceDress: 'Inspect the tip face and dress when required',
+    maintenancePeeling: 'Inspect for material transfer or peeling marks',
+    maintenanceExpansion: 'Inspect for face expansion or geometry changes',
+    diameterId: 'Electrode tip diameter',
+    enterDiameterHint: 'Manually enter the value in the existing parameter field based on engineering requirements.',
+    infoNote: 'This guide provides selection context; it does not establish numeric recommendations, automatic acceptance, or production approval.',
   },
   parameterPanel: {
     sectionTitle: 'Weld Parameters',
@@ -768,9 +1011,84 @@ const EN: AppContent = {
     guidanceInfoNote: 'Reference guidance is informational only. It does not affect compliance evaluation or risk.',
   },
   riskLabels: {
-    HIGH: 'High',
-    MEDIUM: 'Medium',
-    LOW: 'Low',
+    HIGH:          'High',
+    MEDIUM:        'Medium',
+    LOW:           'Low',
+    NOT_EVALUATED: 'Not Evaluated',
+  },
+  failurePage: {
+    kicker: 'Engineering · Spot Welding Parameter Analysis',
+    title: 'Failure Analysis',
+    subtitle: 'Backend risk-engineering evaluation — probabilities are shown only when returned by the API',
+    calculateBtn: 'Calculate Failure Probabilities',
+    calculating: 'Calculating…',
+    authorityChip: 'Authority: backend failure model',
+    inputSourceReady: 'Weld Quality Analysis',
+    inputSourceNone: 'no analysis run',
+    outputChip: 'only API-returned probabilities',
+    noContextTitle: 'Analysis context required',
+    noContextMessage: 'Weld Quality Analysis has not been run yet',
+    noContextMessageDetail: 'Failure Analysis uses the input values from Weld Quality Analysis. Run an analysis first.',
+    noContextNavigate: 'Go to Weld Quality Analysis',
+    inputsTitle: 'Engineering inputs',
+    inputsMeta: 'from Weld Quality Analysis',
+    labelMaterial: 'Material',
+    labelProcess: 'Process',
+    labelRecommendationWindow: 'Recommendation window',
+    inputsFooter: 'Request context from last submitted analysis — rerun analysis if inputs have changed.',
+    resultTitle: 'Risk result',
+    resultMeta: 'result-ready',
+    notYetRun: 'Analysis not yet run',
+    notYetRunHint: 'Run the backend failure analysis to populate risk modes, probabilities and preventive actions.',
+    notYetRunAction: 'Next action: run the backend failure analysis.',
+    priorityRisksTitle: 'Priority Risk Modes',
+    priorityRisksMetaSuffix: 'modes evaluated',
+    confidenceLabel: 'Confidence',
+    mainFactorsLabel: 'Key Factors',
+    noActiveFactors: 'No active factors for this configuration',
+    preventiveActionsTitle: 'General Priority Preventive Actions',
+    coated: 'coated',
+    uncoated: 'uncoated',
+    ultrasonicGuidance: 'Perform ultrasonic inspection using an appropriate qualified procedure and calibration. Confirm with peel, chisel or cross-section testing when required.',
+    qualificationDisclaimer: 'This risk assessment is not an engineering decision. Qualification engineer approval is required for production acceptance. Displayed probabilities are returned from the backend model; no independent validation has been performed.',
+  },
+  engineeringLobeLabPage: {
+    kicker: 'Engineering · Spot Welding Parameter Analysis',
+    title: 'Weld Lobe Lab',
+    subtitle: 'Process window, sensitivity and optimum-point analysis from the backend simulation only',
+    calculateBtn: 'Calculate Weld Lobe',
+    calculating: 'Calculating…',
+    calculatingVerbose: 'Running lobe simulation…',
+    authorityChip: 'Authority: backend simulation',
+    methodChip: 'Method: process-window sweep',
+    curvesChip: 'Curves: only when backend returns data',
+    contextTitle: 'Engineering context',
+    contextMeta: 'parameter range',
+    contextMaterial: 'low/medium carbon steel · 1.0 mm',
+    contextForce: '3.0 kN',
+    contextCurrentSweep: '6.0 – 12.0 kA · step 0.5',
+    contextTimeSweep: '8 – 18 cycles · step 1',
+    contextFooter: 'Sweep definition only — no simulated curves.',
+    processWindowTitle: 'Process window',
+    processWindowMeta: 'chart-ready',
+    noDataMessage: 'No process-window data',
+    noDataHint: 'Process-window visualization becomes available after valid engineering input.',
+    noDataAction: 'Next action: run the backend simulation.',
+    processWindowFooter: 'Curves render only from backend output.',
+    summaryTitle: 'Process Window Summary',
+    summaryMeta: 'Simulation',
+    safeCount: 'Safe Points',
+    warningCount: 'Warning Points',
+    unsafeCount: 'Non-conforming',
+    optimumPoint: 'Optimum Point',
+    summaryFooter: 'Backend simulation counts only.',
+    sensitivityTitle: 'Parameter Sensitivity',
+    sensitivityMeta: 'Axial influence',
+    sensitivityRank: 'Rank',
+    sensitivityParam: 'Parameter',
+    sensitivityImpact: 'Impact',
+    sensitivitySensitivity: 'Sensitivity',
+    sensitivityFooter: 'Backend sensitivity output only.',
   },
   visualWeldInspector: {
     sectionTitle: 'Visual Weld Inspector',

@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { clearAuthStorage, currentUser, classifyMeError } from './api/client'
+import type { UserResponse } from './api/client'
 import { DashboardPage } from './pages/DashboardPage'
 import { EngineeringPage } from './pages/EngineeringPage'
 import { LoginPage } from './pages/LoginPage'
@@ -7,12 +9,12 @@ import { FailureProbabilityPage } from './pages/FailureProbabilityPage'
 import { AnalysisPage } from './pages/AnalysisPage'
 import { ProjectsPage } from './pages/ProjectsPage'
 import { WeldPointWizard } from './pages/WeldPointWizard'
-import { LandingPage } from './pages/LandingPage'
 import { FeaturesPage } from './pages/FeaturesPage'
 import { HowItWorksPage } from './pages/HowItWorksPage'
 import { PackagesPage } from './pages/PackagesPage'
 import { DemoPage } from './pages/DemoPage'
 import { AppLanguageContext, getInitialAppLang, persistAppLang } from './i18n/AppLanguageContext'
+import { WeldAnalysisProvider } from './context/WeldAnalysisContext'
 import { useAppLanguage } from './i18n/useAppLanguage'
 import { LangContext, getInitialLang, persistLang } from './i18n/useLang'
 import type { AppLanguage } from './i18n/appContent'
@@ -112,12 +114,16 @@ function Sidebar({
       )}
       <aside className={'sidebar' + (mobileOpen ? ' sb-mobile-open' : '')} aria-label="Primary navigation">
         <div className="sidebar-brand">
-          <div className="brand-mark" aria-hidden="true">SW</div>
-          {!iconOnly && (
-            <div className="brand-name">
-              <strong>SpotWeldPro AI</strong>
-              <span>Spot Welding Analysis</span>
+          {iconOnly ? (
+            <div className="sidebar-logo-icon-wrap">
+              <img src="/spotweldpro-logo.png" alt="SpotWeldPro AI" />
             </div>
+          ) : (
+            <img
+              src="/spotweldpro-logo.png"
+              alt="SpotWeldPro AI"
+              className="sidebar-logo"
+            />
           )}
         </div>
         <nav className="sidebar-nav">
@@ -243,10 +249,16 @@ function Topbar({ page, userName, onSignOut, onHamburger }: { page: Page; userNa
   )
 }
 
-/* Authenticated application shell — preserved from the existing app.
-   Runs ONLY under /app; guarded by the demo session marker. */
+/* AUTH-UX-04-R3A: 5-state authenticated shell.
+   checking → calls GET /auth/me; authenticated → renders app;
+   unauthenticated → redirects /login; retryable → network/5xx, tokens preserved;
+   error → 403/422/other, tokens preserved. */
+type AuthState = 'checking' | 'authenticated' | 'unauthenticated' | 'retryable' | 'error'
+
 function AuthenticatedApp() {
-  const [authenticated, setAuthenticated] = useState(Boolean(localStorage.getItem('access_token')))
+  const [authState, setAuthState] = useState<AuthState>(() =>
+    localStorage.getItem('access_token') ? 'checking' : 'unauthenticated'
+  )
   const [page, setPage] = useState<Page>('dashboard')
   const [project, setProject] = useState<Project | null>(null)
   const [userName, setUserName] = useState('')
@@ -257,12 +269,51 @@ function AuthenticatedApp() {
   const [lang, setLang] = useState<AppLanguage>(getInitialAppLang)
   const navigate = useNavigate()
 
-  if (!authenticated) return <Navigate to="/login" replace />
-  if (project) return <WeldPointWizard project={project} onBack={() => setProject(null)} />
+  useEffect(() => {
+    if (authState !== 'checking') return
+    let cancelled = false
+    currentUser()
+      .then((user: UserResponse) => {
+        if (cancelled) return
+        setUserName(user.full_name || user.username || user.email)
+        setAuthState('authenticated')
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        const kind = classifyMeError(err)
+        if (kind === 'unauthorized') {
+          clearAuthStorage()
+          setAuthState('unauthenticated')
+        } else if (kind === 'retryable') {
+          setAuthState('retryable')
+        } else {
+          setAuthState('error')
+        }
+      })
+    return () => { cancelled = true }
+  }, [authState])
 
-  if (!userName) {
-    setUserName('Demo Engineer — Engineering')
-  }
+  if (authState === 'unauthenticated') return <Navigate to="/login" replace />
+  if (authState === 'checking') return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+      <span>Validating session…</span>
+    </div>
+  )
+  if (authState === 'retryable') return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '1rem' }}>
+      <span>Backend unavailable. Check connection and retry.</span>
+      <button className="btn btn-primary" onClick={() => setAuthState('checking')}>Retry</button>
+    </div>
+  )
+  if (authState === 'error') return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '1rem' }}>
+      <span>Session error. Please return to login.</span>
+      <button className="btn btn-primary" onClick={() => setAuthState('checking')}>Retry</button>
+      <button className="btn" onClick={() => navigate('/login')}>Go to login</button>
+    </div>
+  )
+
+  if (project) return <WeldPointWizard project={project} onBack={() => setProject(null)} />
 
   return (
     <AppLanguageContext.Provider value={{ lang, setLang }}>
@@ -271,7 +322,7 @@ function AuthenticatedApp() {
           page={page}
           userName={userName || '…'}
           onSignOut={() => {
-            localStorage.clear()
+            clearAuthStorage()
             navigate('/login')
           }}
           onHamburger={() => setMobileOpen(true)}
@@ -282,11 +333,13 @@ function AuthenticatedApp() {
           mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}
         />
         <main className="main">
-          {page === 'dashboard' && <DashboardPage />}
-          {page === 'projects' && <ProjectsPage onOpen={setProject} />}
-          {page === 'analysis' && <AnalysisPage />}
-          {page === 'engineering' && <EngineeringPage />}
-          {page === 'failure' && <FailureProbabilityPage />}
+          <WeldAnalysisProvider>
+            {page === 'dashboard' && <DashboardPage />}
+            {page === 'projects' && <ProjectsPage onOpen={setProject} />}
+            {page === 'analysis' && <AnalysisPage />}
+            {page === 'engineering' && <EngineeringPage />}
+            {page === 'failure' && <FailureProbabilityPage onNavigateToAnalysis={() => setPage('analysis')} />}
+          </WeldAnalysisProvider>
         </main>
       </div>
     </AppLanguageContext.Provider>
@@ -331,12 +384,19 @@ function PublicLangProvider() {
   )
 }
 
+/* AUTH-UX-04-R3A: Synchronous fast-path root redirect.
+   No network call — token presence only. Actual validation happens in AuthenticatedApp. */
+function RootRedirect() {
+  const hasToken = Boolean(localStorage.getItem('access_token'))
+  return <Navigate to={hasToken ? '/app' : '/login'} replace />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<PublicLangProvider />}>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<RootRedirect />} />
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/how-it-works" element={<HowItWorksPage />} />
           <Route path="/packages" element={<PackagesPage />} />
@@ -344,7 +404,7 @@ export default function App() {
           <Route path="/login" element={<PublicLogin />} />
         </Route>
         <Route path="/app" element={<AuthenticatedApp />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   )

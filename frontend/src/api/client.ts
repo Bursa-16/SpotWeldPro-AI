@@ -41,16 +41,81 @@ export function extractErrorCode(err: unknown): FrontendErrorCode {
   return 'UNKNOWN_ERROR'
 }
 
+// AUTH-UX-04-R3A: verified from backend/app/schemas/auth.py — all fields required, non-optional
+export interface UserResponse {
+  id: number
+  username: string
+  email: string
+  full_name: string   // min_length=2 at creation — always non-empty
+  role: string
+  is_active: boolean
+}
+
+// AUTH-UX-04-R3A: /auth/me error classification by HTTP status (not extractErrorCode)
+// unauthorized → 401: invalid/expired token — clear auth and redirect /login
+// retryable    → no response (network/CORS/timeout) or 500/502/503 — tokens preserved
+// error        → 403, 422, other — tokens preserved, show safe error
+export type MeErrorKind = 'unauthorized' | 'retryable' | 'error'
+
+export function classifyMeError(err: unknown): MeErrorKind {
+  if (!isAxiosError(err)) return 'retryable'
+  const status = err.response?.status
+  if (status === 401) return 'unauthorized'
+  if (err.response === undefined) return 'retryable'
+  if (status === 500 || status === 502 || status === 503) return 'retryable'
+  return 'error'
+}
+
+// AUTH-UX-04-R3: targeted removal — never use localStorage.clear()
+const AUTH_KEYS = ['access_token', 'refresh_token'] as const
+export function clearAuthStorage() {
+  AUTH_KEYS.forEach((k) => localStorage.removeItem(k))
+}
+
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1',
   timeout: 15000,
 })
+
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
-// AUTH-UX-03: login now authenticates by username (not email).
+
+// AUTH-UX-04-R3A: 401 interceptor — exact pathname matching, duplicate-redirect guard
+function getRequestPath(url: string | undefined): string {
+  if (!url) return ''
+  let path: string
+  try {
+    path = new URL(url, 'http://x').pathname
+  } catch {
+    path = url.split('?')[0].split('#')[0]
+  }
+  return path.replace(/^\/api\/v1/, '')
+}
+
+const INTERCEPTOR_EXCLUDED = new Set(['/auth/login', '/auth/me'])
+let redirecting401 = false
+
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      isAxiosError(error) &&
+      error.response?.status === 401 &&
+      !redirecting401 &&
+      !INTERCEPTOR_EXCLUDED.has(getRequestPath(error.config?.url))
+    ) {
+      redirecting401 = true
+      clearAuthStorage()
+      window.location.replace('/login')
+    }
+    return Promise.reject(error)
+  }
+)
+
+// AUTH-UX-03: login authenticates by username (not email).
 // JWT subject (sub) remains user.email internally — see AUTH-UX-03B.
 export async function login(username: string, password: string) {
   const response = await client.post('/auth/login', { username, password })
@@ -58,8 +123,10 @@ export async function login(username: string, password: string) {
   localStorage.setItem('refresh_token', response.data.refresh_token)
   return response.data
 }
-export function logout() { localStorage.clear() }
-export async function currentUser() { return (await client.get('/auth/me')).data }
+export function logout() { clearAuthStorage() }
+export async function currentUser(): Promise<UserResponse> {
+  return (await client.get<UserResponse>('/auth/me')).data
+}
 export async function dashboard() { return (await client.get('/dashboard')).data }
 export async function analyzeWeld(payload: WeldAnalysisRequest): Promise<WeldAnalysisResponse> {
   return (await client.post<WeldAnalysisResponse>('/weld-analysis', payload)).data

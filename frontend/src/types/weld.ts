@@ -8,7 +8,7 @@ export type LayerInput = {
 export type WeldAnalysisRequest = {
   material_family: string
   material_subtype: string
-  stack_count: '2T' | '3T' | '4T'
+  stack_count: '2T' | '3T'
   layers: LayerInput[]
   current_ka: number
   weld_cycles: number
@@ -94,4 +94,14 @@ export type ModelResultRow = {
   prediction_mm?: number
   validation_status?: string
   [key: string]: unknown
+}
+
+/**
+ * Type for stored weld point analysis inputs.
+ * Identical to WeldAnalysisRequest but allows stack_count '4T' for historical
+ * records created before 4T was removed from the supported product scope.
+ * Historical 4T records are readable but cannot be re-analyzed.
+ */
+export type StoredWeldAnalysisInput = Omit<WeldAnalysisRequest, 'stack_count'> & {
+  stack_count: '2T' | '3T' | '4T'
 }
