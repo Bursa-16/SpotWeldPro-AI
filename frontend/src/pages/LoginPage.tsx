@@ -6,10 +6,14 @@ import { PUBLIC_CONTENT } from '../i18n/publicContent'
 
 type Props = { onLogin: () => void }
 
-/* Demo username prefilled for the public demo experience.
-   Authentication is decided exclusively by the backend.
-   Password is intentionally NOT prefilled. */
+// DEMO_MODE: enabled only when VITE_DEMO_MODE=true is set at Render build time.
+// In development and all other environments this is always false.
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
+
+// Public demo credentials — not a security boundary.
+// These are baked into the bundle only when DEMO_MODE=true.
 const DEMO_USERNAME = 'demo'
+const DEMO_PASSWORD = DEMO_MODE ? 'A1234' : ''
 
 /* Spot-welding process stage labels — engineering display only */
 const PROCESS_STAGES = {
@@ -21,7 +25,7 @@ export function LoginPage({ onLogin }: Props) {
   const { lang } = useLang()
   const t = PUBLIC_CONTENT[lang].login
   const [username, setUsername] = useState(DEMO_USERNAME)
-  const [password, setPassword] = useState('')
+  const [password, setPassword] = useState(DEMO_PASSWORD)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -57,11 +61,34 @@ export function LoginPage({ onLogin }: Props) {
         {/* ── 1. PRIMARY: login card ── */}
         <section className="login-pro-card" aria-label={t.ariaLabel}>
           <img
-            src="/spotweldpro-logo.png"
+            src={`${import.meta.env.BASE_URL}spotweldpro-logo.png`}
             alt="SpotWeldPro AI"
             className="login-card-logo"
           />
           <p className="login-pro-subtitle">{t.note}</p>
+
+          {DEMO_MODE && (
+            <div
+              className="login-pro-demo-banner"
+              role="status"
+              aria-label={t.demoBannerTitle}
+              style={{
+                background: 'var(--bg-surface-2)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--r-sm)',
+                padding: '8px 12px',
+                marginBottom: '12px',
+                fontSize: 'var(--fs-xs)',
+                color: 'var(--text-secondary)',
+                textAlign: 'center',
+              }}
+            >
+              <strong style={{ color: 'var(--accent)', marginRight: '6px' }}>
+                {t.demoBannerTitle}
+              </strong>
+              {t.demoBannerText}
+            </div>
+          )}
 
           <div className="login-pro-fields">
             <div className="login-pro-field">
@@ -73,6 +100,7 @@ export function LoginPage({ onLogin }: Props) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyDown={handleKey}
+                data-testid="login-username"
               />
             </div>
             <div className="login-pro-field">
@@ -84,6 +112,7 @@ export function LoginPage({ onLogin }: Props) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKey}
+                data-testid="login-password"
               />
             </div>
           </div>
@@ -99,15 +128,16 @@ export function LoginPage({ onLogin }: Props) {
             className="btn btn-primary login-pro-submit"
             onClick={submit}
             disabled={busy}
+            data-testid="login-submit"
           >
-            {busy ? t.submitBusy : t.submitIdle}
+            {busy ? t.submitBusy : DEMO_MODE ? t.submitDemo : t.submitIdle}
           </button>
         </section>
 
         {/* ── 2. SECONDARY: compact 5-step welding process strip ── */}
         <div className="login-pro-visual" aria-hidden="true">
           <img
-            src="/spotweld-hero.png"
+            src={`${import.meta.env.BASE_URL}spotweld-hero.png`}
             alt=""
             className="login-pro-visual-img"
           />

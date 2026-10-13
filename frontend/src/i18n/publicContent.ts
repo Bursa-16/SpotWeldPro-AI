@@ -233,6 +233,7 @@ export interface LangContent {
     ackMessage: string
     exploreBtn: string
     howBtn: string
+    loginBtn: string
   }
 
   // Login page strings
@@ -243,8 +244,11 @@ export interface LangContent {
     passwordLabel: string
     submitBusy: string
     submitIdle: string
+    submitDemo: string
     errorNetwork: string
     errorCredentials: string
+    demoBannerTitle: string
+    demoBannerText: string
   }
 }
 
@@ -602,6 +606,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         'Demo talebiniz başarıyla alındı. Ekibimiz en kısa sürede sizinle iletişime geçecektir.',
       exploreBtn: 'Özellikleri İncele',
       howBtn: 'Nasıl Kullanılır',
+      loginBtn: 'Demo Uygulamasına Giriş Yap',
     },
 
     login: {
@@ -611,9 +616,12 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       passwordLabel: 'Şifre',
       submitBusy: 'Giriş yapılıyor…',
       submitIdle: 'Giriş Yap',
+      submitDemo: 'Başlat / Giriş Yap',
       errorNetwork:
         'Backend bağlantısı yok. Mühendislik verisi yüklenemedi; API servisini doğrulayın ve tekrar deneyin.',
       errorCredentials: 'Kullanıcı adı veya şifre hatalı.',
+      demoBannerTitle: 'Demo Hesabı',
+      demoBannerText: 'Kullanıcı adı ve şifre otomatik dolduruldu. Giriş yapmak için düğmeye tıklayın.',
     },
 
     contact: {
@@ -987,6 +995,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         'Your demo request has been successfully received. Our team will contact you as soon as possible.',
       exploreBtn: 'Explore Features',
       howBtn: 'How It Works',
+      loginBtn: 'Log In to Demo',
     },
 
     login: {
@@ -996,9 +1005,12 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       passwordLabel: 'Password',
       submitBusy: 'Signing in…',
       submitIdle: 'Sign In',
+      submitDemo: 'Start / Sign In',
       errorNetwork:
         'No backend connection. Engineering data could not be loaded; verify the API service and retry.',
       errorCredentials: 'Incorrect username or password.',
+      demoBannerTitle: 'Demo Account',
+      demoBannerText: 'Username and password are pre-filled. Click the button to sign in.',
     },
 
     contact: {

@@ -26,6 +26,20 @@ export function DemoPage() {
               <span>{d.ackMessage}</span>
             </div>
             <div className="pub-cta">
+              {import.meta.env.VITE_DEMO_APP_URL ? (
+                <a
+                  href={import.meta.env.VITE_DEMO_APP_URL as string}
+                  className="btn btn-primary btn-sm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {d.loginBtn}
+                </a>
+              ) : (
+                <Link to="/login" className="btn btn-primary btn-sm">
+                  {d.loginBtn}
+                </Link>
+              )}
               <Link to="/features" className="btn btn-secondary btn-sm">
                 {d.exploreBtn}
               </Link>

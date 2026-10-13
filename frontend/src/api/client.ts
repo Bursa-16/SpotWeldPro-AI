@@ -72,8 +72,19 @@ export function clearAuthStorage() {
   AUTH_KEYS.forEach((k) => localStorage.removeItem(k))
 }
 
+const _apiUrl = import.meta.env.VITE_API_URL as string | undefined
+// DEMO_RENDER_02: warn loudly in production if VITE_API_URL was not set at build time.
+// All requests will target localhost:8000 (unreachable on Render) without it.
+if (import.meta.env.PROD && !_apiUrl) {
+  console.error(
+    '[SpotWeldPro AI] VITE_API_URL is not configured. ' +
+    'API requests will target localhost:8000, which will fail in production. ' +
+    'Set VITE_API_URL as a Render build-time environment variable.'
+  )
+}
+
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1',
+  baseURL: _apiUrl ?? 'http://localhost:8000/api/v1',
   timeout: 15000,
 })
 
