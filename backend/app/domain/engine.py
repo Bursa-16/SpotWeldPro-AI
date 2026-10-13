@@ -1,5 +1,5 @@
 import math
-from app.domain.materials import MATERIAL_FAMILIES
+from app.domain.materials import MATERIAL_FAMILIES, resolve_material_family
 from app.models.enums import RiskLevel
 from app.domain.reference_profile import (
     REF_PROFILE_MS_2T_50HZ_V1,
@@ -23,7 +23,8 @@ def status(v,l,h): return "Uygun" if l<=v<=h else ("Düşük" if v<l else "Yüks
 def evaluate_weld(i):
     if i["stack_count"] == "4T":
         raise ValueError("4T Punta Kaynak desteklenmemektedir. UNSUPPORTED_PRODUCT_SCOPE.")
-    t=min(float(x["thickness_mm"]) for x in i["layers"]); dmin,dopt=interp(t); fam=i["material_family"]
+    t=min(float(x["thickness_mm"]) for x in i["layers"]); dmin,dopt=interp(t)
+    fam=resolve_material_family(i["material_family"])
     tip=(6,6) if t<=1.7 else (8,8)
     tm=(10,12) if t<=1.5 else ((12,15) if t<2 else (14,18)); force=(2,2.5) if t<=1.2 else ((3,4) if t<2 else (4,5))
     cur=(25,45) if fam=="Alüminyum Alaşımları" else ((7+t,12+1.5*t) if fam=="AHSS / UHSS / PHS" else ((8+t,13+1.5*t) if fam=="Galvanizli / Kaplamalı Çelik" else (6+t,11+1.5*t)))

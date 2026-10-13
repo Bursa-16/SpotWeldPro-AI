@@ -1,5 +1,6 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+from app.domain.materials import resolve_material_family
 from app.models.enums import RiskLevel
 
 class LayerInput(BaseModel):
@@ -27,6 +28,11 @@ class WeldAnalysisRequest(BaseModel):
     approach_cycles: Optional[float] = Field(default=None, ge=0, le=500)
     cooling_cycles: Optional[float] = Field(default=None, ge=0, le=500)
     air_pressure_bar: Optional[float] = Field(default=None, ge=0, le=20)
+
+    @field_validator("material_family", mode="before")
+    @classmethod
+    def validate_material_family(cls, v: str) -> str:
+        return resolve_material_family(v)
 
     @model_validator(mode="after")
     def validate_stack(self):
