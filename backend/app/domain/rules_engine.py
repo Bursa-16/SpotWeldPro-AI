@@ -31,6 +31,8 @@ class Rule:
     stack_count: str
     note: str
     enabled: bool = True
+    t_min_applicability_mm: Optional[float] = None
+    t_max_applicability_mm: Optional[float] = None
 
     @property
     def priority(self) -> int:
@@ -92,7 +94,40 @@ DEFAULT_RULES: List[Rule] = [
         unit="mm",
         material_family="Düşük / Orta Karbonlu Çelik",
         stack_count="Tümü",
-        note="En ince sac 0,7–0,9 mm olduğunda."
+        note="En ince sac 0,7–0,9 mm olduğunda.",
+        enabled=False,
+    ),
+    Rule(
+        rule_id="TIP_DIAMETER_OEM_06_17_01",
+        name="OEM elektrot uç çapı 0,6–1,7 mm",
+        authority_level="REFERENCE_LEVEL_01",
+        reference_profile_id="REF_PROFILE_MS_2T_OEM_SHEET03",
+        parameter="tip_diameter_mm",
+        operator="range",
+        min_value=6.0,
+        max_value=6.0,
+        unit="mm",
+        material_family="Düşük / Orta Karbonlu Çelik",
+        stack_count="Tümü",
+        note="OEM Uç Seçimi (Levha 03): referans kalınlığı 0,6–1,7 mm için Ø6,0 mm.",
+        t_min_applicability_mm=0.6,
+        t_max_applicability_mm=1.7,
+    ),
+    Rule(
+        rule_id="TIP_DIAMETER_OEM_18_30_01",
+        name="OEM elektrot uç çapı 1,8–3,0 mm",
+        authority_level="REFERENCE_LEVEL_01",
+        reference_profile_id="REF_PROFILE_MS_2T_OEM_SHEET03",
+        parameter="tip_diameter_mm",
+        operator="range",
+        min_value=8.0,
+        max_value=8.0,
+        unit="mm",
+        material_family="Düşük / Orta Karbonlu Çelik",
+        stack_count="Tümü",
+        note="OEM Uç Seçimi (Levha 03): referans kalınlığı 1,8–3,0 mm için Ø8,0 mm.",
+        t_min_applicability_mm=1.8,
+        t_max_applicability_mm=3.0,
     ),
     Rule(
         rule_id="NUGGET_MIN_DERIVED_01",
@@ -115,10 +150,17 @@ def rules_to_rows(rules: Optional[List[Rule]] = None) -> List[Dict[str, Any]]:
     return [asdict(r) | {"priority": r.priority} for r in (rules or DEFAULT_RULES)]
 
 
-def _matches(rule: Rule, material_family: str, stack_count: str) -> bool:
+def _matches(rule: Rule, material_family: str, stack_count: str, t_min: Optional[float] = None) -> bool:
     material_ok = rule.material_family in ("Tümü", material_family)
     stack_ok = rule.stack_count in ("Tümü", stack_count)
-    return rule.enabled and material_ok and stack_ok
+    if not (rule.enabled and material_ok and stack_ok):
+        return False
+    if t_min is not None:
+        if rule.t_min_applicability_mm is not None and t_min < rule.t_min_applicability_mm:
+            return False
+        if rule.t_max_applicability_mm is not None and t_min > rule.t_max_applicability_mm:
+            return False
+    return True
 
 
 def _evaluate_rule(rule: Rule, values: Dict[str, Any], t_min: float) -> Dict[str, Any]:
@@ -220,7 +262,7 @@ def evaluate_compliance(
     if custom_rules:
         all_rules.extend(custom_rules)
 
-    applicable = [r for r in all_rules if _matches(r, material_family, stack_count)]
+    applicable = [r for r in all_rules if _matches(r, material_family, stack_count, t_min)]
     results = [_evaluate_rule(r, values, t_min) for r in applicable]
 
     total = len(results)

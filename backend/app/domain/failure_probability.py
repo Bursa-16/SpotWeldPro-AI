@@ -241,7 +241,7 @@ def analyze_failure_probabilities(
         RiskContribution("Akım üst limit sapması", 2.6 * current_high, "Akım önerilen üst aralığın üzerinde."),
         RiskContribution("Kaynak süresi üst limit sapması", 1.7 * time_high, "Uzun süre toplam ısı girdisini yükseltiyor."),
         RiskContribution("Düşük elektrot kuvveti", 2.2 * force_low, "Düşük kuvvet temas direncini ve sıçrama riskini artırıyor."),
-        RiskContribution("Kaplama etkisi", 0.45 if coated else 0.0, "Kaplama arayüz davranışını kararsızlaştırabilir."),
+        RiskContribution("Kaplama etkisi", 0.45 if coated else 0.0, "Kaplama arayüz davranışını kararsızlaştırabilir." if coated else "Kaplamasız sac — bu etken aktif değil."),
         RiskContribution("Çok katlı istif", stack_complexity, "Çoklu arayüzlerde ısı dağılımı daha karmaşıktır."),
         RiskContribution("Malzeme ailesi", _material_value(material_family, "expulsion"), "Malzeme ailesine özgü proses penceresi etkisi."),
     ]
@@ -337,7 +337,7 @@ def analyze_failure_probabilities(
         RiskContribution("Süre üst limit sapması", 1.2 * time_high, "Uzun kaynak süresi elektrot sıcaklığını yükseltir."),
         RiskContribution("Düşük soğutma debisi", 1.5 * cooling_flow_shortfall, "Yetersiz su debisi elektrot sıcaklığını artırır."),
         RiskContribution("Yüksek soğutma sıcaklığı", 1.1 * cooling_temp_excess, "Sıcak soğutma suyu ısı uzaklaştırmayı düşürür."),
-        RiskContribution("Kaplama etkisi", 0.45 if coated else 0.0, "Kaplama elektrot yüzeyinde malzeme toplamasına yol açabilir."),
+        RiskContribution("Kaplama etkisi", 0.45 if coated else 0.0, "Kaplama elektrot yüzeyinde malzeme toplamasına yol açabilir." if coated else "Kaplamasız sac — bu etken aktif değil."),
         RiskContribution("Düşük hold", 0.35 * low_hold, "Yetersiz hold erken ayrılma ve yapışma davranışını etkileyebilir."),
         RiskContribution("Malzeme ailesi", _material_value(material_family, "sticking"), "Malzeme ailesine özgü yapışma eğilimi."),
     ]
@@ -358,7 +358,7 @@ def analyze_failure_probabilities(
 
     # 6. Electrode wear
     wear_contrib = [
-        RiskContribution("Kaplama etkisi", 0.75 if coated else 0.0, "Kaplama elektrot aşınmasını hızlandırabilir."),
+        RiskContribution("Kaplama etkisi", 0.75 if coated else 0.0, "Kaplama elektrot aşınmasını hızlandırabilir." if coated else "Kaplamasız sac — bu etken aktif değil."),
         RiskContribution("Akım üst limit sapması", 1.2 * current_high, "Yüksek akım elektrot termal yükünü artırır."),
         RiskContribution("Yetersiz soğutma debisi", 1.4 * cooling_flow_shortfall, "Düşük debi elektrot ömrünü düşürür."),
         RiskContribution("Yüksek su sıcaklığı", 1.0 * cooling_temp_excess, "Yetersiz soğutma kapasitesi elektrot ömrünü düşürür."),
@@ -383,7 +383,7 @@ def analyze_failure_probabilities(
     # 7. LME / surface crack risk
     lme_contrib = [
         RiskContribution("Malzeme ailesi", _material_value(material_family, "lme"), "Kaplamalı AHSS/PHS gruplarında LME hassasiyeti artabilir."),
-        RiskContribution("Kaplama", 0.45 if coated else -0.20, "Çinko kaplama ve yüksek gerilme LME riskini artırabilir."),
+        RiskContribution("Kaplama", 0.45 if coated else -0.20, "Çinko kaplama ve yüksek gerilme LME riskini artırabilir." if coated else "Kaplama yok — LME riski bu etken tarafından azaltılıyor."),
         RiskContribution("Akım üst limit sapması", 1.4 * current_high, "Yüksek tepe sıcaklığı çatlak riskini artırabilir."),
         RiskContribution("Süre üst limit sapması", 0.9 * time_high, "Uzun ısı girdisi sıvı metal temas süresini artırabilir."),
         RiskContribution("Yüksek kuvvet", 0.8 * force_high, "Yüksek mekanik gerilme çatlak oluşumunu destekleyebilir."),
@@ -406,7 +406,7 @@ def analyze_failure_probabilities(
 
     # 8. Coating damage
     coating_contrib = [
-        RiskContribution("Kaplama varlığı", 0.80 if coated else -0.80, "Kaplamasız sacda bu risk düşük kabul edilir."),
+        RiskContribution("Kaplama varlığı", 0.80 if coated else -0.80, "Kaplama mevcut — kaplama hasarı ve sıçrama riski aktif." if coated else "Kaplamasız sac — kaplama hasarı riski düşük kabul edilir."),
         RiskContribution("Akım üst limit sapması", 1.2 * current_high, "Yüksek akım kaplama yanığı ve sıçramasını artırır."),
         RiskContribution("Süre üst limit sapması", 0.8 * time_high, "Uzun ısı girdisi kaplama hasarını artırır."),
         RiskContribution("Düşük kuvvet", 0.8 * force_low, "Düşük kuvvet temas direncini yükseltir."),

@@ -2,7 +2,9 @@
 Reference Profile: REF_PROFILE_MS_2T_50HZ_V1
 Neutral 2T parameter foundation for mild steel, 50 Hz cycle basis.
 
-No source provenance is encoded in this module.
+Source provenance is recorded in SOURCE_REGISTRY (SourceCellRef entries).
+Verification, geometry mapping, and engineering approval are independent axes.
+No SOURCE_REGISTRY entry grants production parameter authority.
 Generic labels only: Reference Profile, Reference Band,
 Engineering Review Required, Reference Parameter Range.
 """
@@ -10,7 +12,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Tuple, Union
+from types import MappingProxyType
+from typing import Dict, List, Optional, Tuple, Union
 
 
 # ---------------------------------------------------------------------------
@@ -37,6 +40,105 @@ class ReferenceGuidanceStatus(str, Enum):
 # cycle basis is unavailable (not a ReferenceGuidanceStatus enum value
 # because it is returned in place of a numeric result).
 UNIT_BASIS_UNRESOLVED = "UNIT_BASIS_UNRESOLVED"
+
+
+# ---------------------------------------------------------------------------
+# Source provenance status constants (three independent axes)
+# ---------------------------------------------------------------------------
+
+#: Cell value confirmed by direct workbook inspection at the stated address.
+SOURCE_CELL_VERIFIED: str = "SOURCE_CELL_VERIFIED"
+#: Cell address has not been independently re-inspected against the workbook.
+SOURCE_CELL_UNVERIFIED: str = "SOURCE_CELL_UNVERIFIED"
+
+#: Column/row mapping to an electrode geometry has not been confirmed.
+#: S-1 (BASE_Ø6_SEMANTICS) is unresolved — "Base Ø6" column header does NOT
+#: imply equivalence to Ø6 tip-face electrode selection.
+GEOMETRY_MAPPING_UNVERIFIED: str = "GEOMETRY_MAPPING_UNVERIFIED"
+#: Column/row mapping to an electrode geometry has been independently confirmed.
+GEOMETRY_MAPPING_CONFIRMED: str = "GEOMETRY_MAPPING_CONFIRMED"
+
+#: Engineering sign-off has not been granted for production use.
+ENGINEERING_APPROVAL_PENDING: str = "ENGINEERING_APPROVAL_PENDING"
+#: Engineering sign-off has been explicitly granted for production use.
+ENGINEERING_APPROVAL_GRANTED: str = "ENGINEERING_APPROVAL_GRANTED"
+
+
+# ---------------------------------------------------------------------------
+# Source cell reference — frozen, independent of ParameterBand
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class SourceCellRef:
+    """
+    Immutable reference to a single verified workbook cell.
+
+    Keys in SOURCE_REGISTRY are (worksheet_name, cell_address) tuples,
+    NOT band IDs, to avoid implying geometry or engineering authority
+    before those axes have been independently resolved.
+
+    The three status axes are independent:
+    - SOURCE_CELL_VERIFIED does not imply GEOMETRY_MAPPING_CONFIRMED.
+    - GEOMETRY_MAPPING_CONFIRMED does not imply ENGINEERING_APPROVAL_GRANTED.
+    """
+    workbook_filename: str
+    workbook_sha256: str
+    worksheet_name: str
+    cell_address: str
+    raw_value: str
+    original_unit: str
+    source_column_header: str
+    cell_verification_status: str
+    geometry_mapping_status: str
+    engineering_approval_status: str
+
+
+# ---------------------------------------------------------------------------
+# Source registry — read-only, keyed by (worksheet_name, cell_address)
+#
+# Only cells confirmed by direct workbook inspection are registered here.
+# Unverified band-boundary cells (rows 5–9, 11–17 in worksheets 04/05)
+# are NOT registered until re-inspection produces STAGED_FILE_EVIDENCE
+# or LIVE_GIT_EVIDENCE with exact cell addresses and raw values.
+#
+# source_column_header: "Base\nØ 6" reflects the visible column F heading
+# in worksheets 04 and 05 as reported in workbook inspection (02C evidence).
+# The exact internal character sequence (line-break vs. display-wrap) has
+# not been confirmed from raw bytes; it is recorded as observed.
+#
+# BASE_Ø6_SEMANTICS is UNRESOLVED (S-1): "Base Ø 6" does NOT imply
+# equivalence to Ø6 tip-face electrode selection from worksheet 03.
+# Do not equate this column with electrode body diameter.
+# ---------------------------------------------------------------------------
+
+_SOURCE_REGISTRY_RAW: Dict[Tuple[str, str], SourceCellRef] = {
+    ("04_Kuvvet", "F10"): SourceCellRef(
+        workbook_filename="PuntaKaynak_CheckList_Rev03_22062017(2).xlsx",
+        workbook_sha256="ee440f5451db54c3bd23b17f4773655eb424932f3e6c4f524faaf321d138fcfa",
+        worksheet_name="04_Kuvvet",
+        cell_address="F10",
+        raw_value="230",
+        original_unit="daN",
+        source_column_header="Base\nØ 6",
+        cell_verification_status=SOURCE_CELL_VERIFIED,
+        geometry_mapping_status=GEOMETRY_MAPPING_UNVERIFIED,
+        engineering_approval_status=ENGINEERING_APPROVAL_PENDING,
+    ),
+    ("05-Akım", "F10"): SourceCellRef(
+        workbook_filename="PuntaKaynak_CheckList_Rev03_22062017(2).xlsx",
+        workbook_sha256="ee440f5451db54c3bd23b17f4773655eb424932f3e6c4f524faaf321d138fcfa",
+        worksheet_name="05-Akım",
+        cell_address="F10",
+        raw_value="8.3",
+        original_unit="kA",
+        source_column_header="Base\nØ 6",
+        cell_verification_status=SOURCE_CELL_VERIFIED,
+        geometry_mapping_status=GEOMETRY_MAPPING_UNVERIFIED,
+        engineering_approval_status=ENGINEERING_APPROVAL_PENDING,
+    ),
+}
+
+SOURCE_REGISTRY: MappingProxyType = MappingProxyType(_SOURCE_REGISTRY_RAW)
 
 
 # ---------------------------------------------------------------------------
@@ -223,10 +325,12 @@ def get_effective_thickness(
     """
     Stack-aware entry point for effective thickness.
 
-    3T and 4T always return ENGINEERING_REVIEW_REQUIRED.
+    3T returns ENGINEERING_REVIEW_REQUIRED. 4T is rejected (UNSUPPORTED_PRODUCT_SCOPE).
     No adjacent-pair minimum, no averaging, no interpolation across stack.
     """
-    if stack_count in ("3T", "4T"):
+    if stack_count == "4T":
+        raise ValueError("4T Punta Kaynak desteklenmemektedir. UNSUPPORTED_PRODUCT_SCOPE.")
+    if stack_count == "3T":
         return EffectiveThicknessResult(
             effective_thickness_mm=None,
             band_selection_status=BandSelectionStatus.ENGINEERING_REVIEW_REQUIRED,

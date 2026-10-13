@@ -1,8 +1,17 @@
 from __future__ import annotations
 
 from fastapi import HTTPException, status
+from pydantic import ValidationError as _PydanticValidationError
 from app.models.error_codes import ApiErrorCode, ResourceType
-from app.models.error_codes import ApiErrorCode, ResourceType
+
+
+def _safe_validation_errors(exc: _PydanticValidationError) -> list[dict]:
+    return [
+        {"type": e["type"], "loc": list(e.get("loc", [])), "msg": e["msg"]}
+        for e in exc.errors(include_url=False)
+    ]
+
+
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -53,7 +62,17 @@ class ProjectService:
 
     def create_weld_point(self, project_id: int, payload: WeldPointCreate) -> WeldPoint:
         self.get_project(project_id)
-        request = WeldAnalysisRequest.model_validate(payload.analysis_input)
+        try:
+            request = WeldAnalysisRequest.model_validate(payload.analysis_input)
+        except _PydanticValidationError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "error_code": ApiErrorCode.INVALID_REQUEST,
+                    "message": "Girdi doğrulama hatası.",
+                    "context": {"detail": _safe_validation_errors(exc)},
+                },
+            ) from exc
         analysis_result = self.analysis_service.analyze(request)
         data = payload.model_dump(exclude={"changed_by", "change_reason", "analysis_input"})
         point = WeldPoint(
@@ -84,6 +103,24 @@ class ProjectService:
 
     def update_weld_point(self, point_id: int, payload: WeldPointUpdate) -> WeldPoint:
         point = self.get_weld_point(point_id)
+        update_data = payload.model_dump(exclude={"changed_by", "change_reason"}, exclude_unset=True)
+
+        # Validate analysis_input BEFORE any DB mutation or revision staging.
+        new_analysis_result = None
+        if "analysis_input" in update_data:
+            try:
+                request = WeldAnalysisRequest.model_validate(update_data["analysis_input"])
+            except _PydanticValidationError as exc:
+                raise HTTPException(
+                    status_code=422,
+                    detail={
+                        "error_code": ApiErrorCode.INVALID_REQUEST,
+                        "message": "Girdi doğrulama hatası.",
+                        "context": {"detail": _safe_validation_errors(exc)},
+                    },
+                ) from exc
+            new_analysis_result = self.analysis_service.analyze(request)
+
         snapshot = {
             "point_code": point.point_code,
             "part_no": point.part_no,
@@ -107,11 +144,9 @@ class ProjectService:
         )
         self.db.add(revision)
 
-        update_data = payload.model_dump(exclude={"changed_by", "change_reason"}, exclude_unset=True)
-        if "analysis_input" in update_data:
-            request = WeldAnalysisRequest.model_validate(update_data["analysis_input"])
+        if new_analysis_result is not None:
             point.analysis_input = update_data.pop("analysis_input")
-            point.analysis_result = self.analysis_service.analyze(request)
+            point.analysis_result = new_analysis_result
         for key, value in update_data.items():
             setattr(point, key, value)
         point.version_no += 1

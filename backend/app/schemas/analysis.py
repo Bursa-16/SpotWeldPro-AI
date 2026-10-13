@@ -30,8 +30,8 @@ class WeldAnalysisRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_stack(self):
-        if self.stack_count not in {"2T","3T","4T"}:
-            raise ValueError("stack_count must be 2T, 3T or 4T")
+        if self.stack_count not in {"2T","3T"}:
+            raise ValueError("stack_count must be 2T or 3T")
         if len(self.layers) != int(self.stack_count[0]):
             raise ValueError("Layer count must match stack_count")
         return self
