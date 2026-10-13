@@ -439,3 +439,57 @@ class TestDatabaseUrlValidation:
         monkeypatch.delenv("HOSTED_DEMO", raising=False)
         import app.db.session as s
         importlib.reload(s)  # must not raise; falls back to SQLite dev DB
+
+
+# ── PostgreSQL Boolean compatibility — migration 0015 (DEMO_NEON_04) ──────────
+
+class TestBooleanMigrationCompatibility:
+    """DEMO_NEON_04: regression guard for PostgreSQL BOOLEAN server_default values.
+
+    PostgreSQL rejects integer server defaults (DEFAULT 1 / DEFAULT 0) on BOOLEAN
+    columns with DatatypeMismatch.  The migration must use SQL literals 'true'/'false'.
+    SQLite accepts these literals too, so the fix is cross-database compatible.
+    """
+
+    _MIGRATION = (
+        Path(__file__).parent.parent
+        / "alembic/versions/0015_organization_and_profile_tables.py"
+    )
+
+    def _content(self) -> str:
+        return self._MIGRATION.read_text()
+
+    def test_no_integer_true_server_default_for_boolean_columns(self):
+        content = self._content()
+        assert 'server_default="1"' not in content, (
+            "server_default='1' on a BOOLEAN column is rejected by PostgreSQL "
+            "(DatatypeMismatch: boolean vs smallint). Use sa.text('true') instead."
+        )
+
+    def test_no_integer_false_server_default_for_boolean_columns(self):
+        content = self._content()
+        assert 'server_default="0"' not in content, (
+            "server_default='0' on a BOOLEAN column is rejected by PostgreSQL "
+            "(DatatypeMismatch: boolean vs smallint). Use sa.text('false') instead."
+        )
+
+    def test_system_org_insert_uses_sql_literal_not_bound_boolean(self):
+        content = self._content()
+        # The INSERT must use the SQL literal 'true', not a :active parameter.
+        # psycopg3 may bind Python bool (subclass of int) as smallint in text() queries.
+        assert '"active": True' not in content, (
+            "INSERT uses :active parameter with Python True, which psycopg3 may bind "
+            "as smallint. Use the SQL literal 'true' directly in the INSERT statement."
+        )
+        assert "true" in content, "INSERT must contain SQL literal 'true' for is_active"
+
+    def test_boolean_server_defaults_use_postgresql_literals(self):
+        content = self._content()
+        assert 'sa.text("true")' in content, (
+            "organizations.is_active and org_members.is_active must use "
+            "server_default=sa.text('true')"
+        )
+        assert 'sa.text("false")' in content, (
+            "reference_profiles.is_system_default must use "
+            "server_default=sa.text('false')"
+        )

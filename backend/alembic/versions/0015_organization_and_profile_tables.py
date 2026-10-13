@@ -49,7 +49,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("slug", sa.String(80), nullable=False),
         sa.Column("display_name", sa.String(200), nullable=False),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default="1"),
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.UniqueConstraint("slug", name="uq_organizations_slug"),
@@ -73,7 +73,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("org_role", sa.String(40), nullable=False),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default="1"),
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
         sa.Column(
             "granted_by", sa.Integer(),
             sa.ForeignKey("users.id", ondelete="RESTRICT"),
@@ -134,7 +134,7 @@ def upgrade() -> None:
         sa.Column("t_min_mm", sa.Float(), nullable=False),
         sa.Column("t_max_mm", sa.Float(), nullable=False),
         sa.Column("status", sa.String(40), nullable=False),
-        sa.Column("is_system_default", sa.Boolean(), nullable=False, server_default="0"),
+        sa.Column("is_system_default", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("parameter_bands", sa.JSON(), nullable=False),
         sa.Column("nugget_criterion", sa.JSON(), nullable=False),
         sa.Column("source_provenance", sa.JSON(), nullable=False),
@@ -205,9 +205,9 @@ def upgrade() -> None:
     conn.execute(
         text(
             "INSERT INTO organizations (slug, display_name, is_active, created_at, updated_at) "
-            "VALUES (:slug, :name, :active, :now, :now)"
+            "VALUES (:slug, :name, true, :now, :now)"
         ),
-        {"slug": "system", "name": "SpotWeldPro AI System", "active": 1, "now": now},
+        {"slug": "system", "name": "SpotWeldPro AI System", "now": now},
     )
 
 
