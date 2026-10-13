@@ -90,15 +90,6 @@ export function PublicLayout({ children }: Props) {
           <div className="pub-footer-brand">
             <img src={`${import.meta.env.BASE_URL}spotweldpro-logo.png`} alt="SpotWeldPro AI" className="pub-footer-logo" />
             <p className="pub-footer-tagline">{f.tagline}</p>
-            <a
-              href="https://github.com/SpotWeldPro-AI/SpotWeldPro-AI"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="pub-footer-gh"
-              aria-label="GitHub repository"
-            >
-              {f.githubLabel} ↗
-            </a>
           </div>
 
           {/* Product navigation column */}

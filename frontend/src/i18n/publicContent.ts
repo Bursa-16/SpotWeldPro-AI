@@ -135,7 +135,6 @@ export interface LangContent {
     navTitle: string
     capTitle: string
     contactTitle: string
-    githubLabel: string
     copyright: string
   }
 
@@ -637,7 +636,6 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       navTitle: 'Navigasyon',
       capTitle: 'Yetenekler',
       contactTitle: 'İletişim',
-      githubLabel: 'GitHub',
       copyright: '© 2024–2026 SpotWeldPro AI. Tüm hakları saklıdır.',
     },
   },
@@ -1026,7 +1024,6 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       navTitle: 'Navigation',
       capTitle: 'Capabilities',
       contactTitle: 'Contact',
-      githubLabel: 'GitHub',
       copyright: '© 2024–2026 SpotWeldPro AI. All rights reserved.',
     },
   },
