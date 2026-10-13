@@ -1853,3 +1853,50 @@ header.pub-hero { display: block; padding: 48px 24px; border-bottom: 1px solid v
   border-color: var(--border-strong);
   color: var(--text-primary);
 }
+
+/* ─── WEBSITE_DESIGN_02 — Engineering Visualization Panel ────── */
+.viz-panel {
+  margin: var(--sp-8) 0;
+}
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.viz-chart-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.viz-chart-title {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+.viz-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.viz-demo-note {
+  font-size: var(--fs-caption, 0.72rem);
+  color: var(--text-tertiary, var(--text-secondary));
+  opacity: 0.7;
+  max-width: 680px;
+  line-height: 1.5;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+}
+@media (max-width: 640px) {
+  .viz-grid { grid-template-columns: 1fr; }
+}

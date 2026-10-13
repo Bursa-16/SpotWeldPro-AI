@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { PublicLayout } from '../components/PublicLayout'
 import { useLang } from '../i18n/useLang'
 import { PUBLIC_CONTENT } from '../i18n/publicContent'
+import { WeldVisualizationPanel } from '../components/public/WeldVisualizationPanel'
 
 export function FeaturesPage() {
   const { lang } = useLang()
@@ -41,6 +42,8 @@ export function FeaturesPage() {
             ))}
           </div>
         </section>
+
+        <WeldVisualizationPanel v={f.viz} />
 
         <aside className="pub-trust" role="note">
           <span className="pub-icon" aria-hidden="true">i</span>

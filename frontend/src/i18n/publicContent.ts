@@ -124,6 +124,43 @@ export interface LangContent {
     overviewSub: string
     flowBtn: string
     demoBtn: string
+    // WEBSITE_DESIGN_02 — visualization panel (illustrative only)
+    viz: {
+      sectionTitle: string
+      sectionSub: string
+      demoNote: string
+      nuggetChart: {
+        title: string
+        xLabel: string
+        yLabel: string
+        threshLabel: string
+        trendLabel: string
+      }
+      lobeChart: {
+        title: string
+        xLabel: string
+        yLabel: string
+        safeLabel: string
+        insuffLabel: string
+        expulsionLabel: string
+        opLabel: string
+      }
+      sensChart: {
+        title: string
+        currentLabel: string
+        timeLabel: string
+        forceLabel: string
+        tipLabel: string
+      }
+      riskChart: {
+        title: string
+        lowLabel: string
+        mediumLabel: string
+        highLabel: string
+        indicatorLabel: string
+        failureModeNote: string
+      }
+    }
   }
 
   // How It Works page strings
@@ -427,6 +464,46 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         + ' nihai karar her zaman deterministik kurallara dayanır.',
       flowBtn: 'Akışı Gör',
       demoBtn: 'Demo Talep Et',
+      viz: {
+        sectionTitle: 'Mühendislik Görselleştirmeleri',
+        sectionSub:
+          'Tipik punta kaynak analizi çıktılarından örnek görseller.'
+          + ' Tüm değerler yalnızca temsilidir; gerçek hesaplama sonucu değildir.',
+        demoNote:
+          'Örnek / Temsili — Mühendislik hesaplama sonucu değildir.'
+          + ' Yazılım analizi, zorunlu fiziksel doğrulamanın yerini almaz.',
+        nuggetChart: {
+          title: 'Kaynak Akımı ↔ Çekirdek Çapı',
+          xLabel: 'Kaynak Akımı (kA)',
+          yLabel: 'Çekirdek Ø (mm)',
+          threshLabel: 'Min. kabul',
+          trendLabel: 'Trend bandı',
+        },
+        lobeChart: {
+          title: 'Kaynak Lobu / Proses Penceresi',
+          xLabel: 'Kaynak Süresi (cyc)',
+          yLabel: 'Kaynak Akımı (kA)',
+          safeLabel: 'Güvenli',
+          insuffLabel: 'Yetersiz Füzyon',
+          expulsionLabel: 'Fışkırma Riski',
+          opLabel: 'İşletim Noktası',
+        },
+        sensChart: {
+          title: 'Parametre Duyarlılığı (Göreceli)',
+          currentLabel: 'Kaynak Akımı',
+          timeLabel: 'Kaynak Süresi',
+          forceLabel: 'Elektrot Kuvveti',
+          tipLabel: 'Uç Çapı',
+        },
+        riskChart: {
+          title: 'Kaynak Kalitesi Risk Göstergesi',
+          lowLabel: 'DÜŞÜK',
+          mediumLabel: 'ORTA',
+          highLabel: 'YÜKSEK',
+          indicatorLabel: 'Risk Seviyesi (Örnek)',
+          failureModeNote: '10 hata modu · önceliğe göre sıralı',
+        },
+      },
     },
 
     howItWorks: {
@@ -736,6 +813,46 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         + ' the final decision is always based on deterministic rules.',
       flowBtn: 'View Flow',
       demoBtn: 'Request Demo',
+      viz: {
+        sectionTitle: 'Engineering Visualizations',
+        sectionSub:
+          'Example outputs from typical spot welding analysis.'
+          + ' All values are illustrative only and are not computed engineering results.',
+        demoNote:
+          'Example / Illustrative — not an engineering computation result.'
+          + ' Software analysis does not replace mandatory physical validation.',
+        nuggetChart: {
+          title: 'Welding Current ↔ Nugget Diameter',
+          xLabel: 'Welding Current (kA)',
+          yLabel: 'Nugget Ø (mm)',
+          threshLabel: 'Min. acceptance',
+          trendLabel: 'Trend band',
+        },
+        lobeChart: {
+          title: 'Weld Lobe / Process Window',
+          xLabel: 'Weld Time (cyc)',
+          yLabel: 'Welding Current (kA)',
+          safeLabel: 'Safe Window',
+          insuffLabel: 'Insufficient Fusion',
+          expulsionLabel: 'Expulsion Risk',
+          opLabel: 'Operating Point',
+        },
+        sensChart: {
+          title: 'Parameter Sensitivity (Relative)',
+          currentLabel: 'Welding Current',
+          timeLabel: 'Weld Time',
+          forceLabel: 'Electrode Force',
+          tipLabel: 'Tip Diameter',
+        },
+        riskChart: {
+          title: 'Weld Quality Risk Indicator',
+          lowLabel: 'LOW',
+          mediumLabel: 'MEDIUM',
+          highLabel: 'HIGH',
+          indicatorLabel: 'Risk Level (Example)',
+          failureModeNote: '10 failure modes · ranked by priority',
+        },
+      },
     },
 
     howItWorks: {
