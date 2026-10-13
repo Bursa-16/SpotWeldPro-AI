@@ -2,13 +2,13 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: spotweld
-      POSTGRES_USER: spotweld
-      POSTGRES_PASSWORD: spotweld
+      POSTGRES_DB:       ${POSTGRES_DB:-spotweld}
+      POSTGRES_USER:     ${POSTGRES_USER:-spotweld}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required — set it in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U spotweld -d spotweld"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spotweld} -d ${POSTGRES_DB:-spotweld}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -16,10 +16,13 @@ services:
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql+psycopg://spotweld:spotweld@postgres:5432/spotweld
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      DATABASE_URL:     postgresql+psycopg://${POSTGRES_USER:-spotweld}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spotweld}
+      JWT_SECRET_KEY:   ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required — set it in .env}
+      ADMIN_EMAIL:      ${ADMIN_EMAIL:-}
+      ADMIN_USERNAME:   ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD:   ${ADMIN_PASSWORD:-}
+      CORS_ORIGINS:     ${CORS_ORIGINS:-}
+      DISABLE_DOCS:     ${DISABLE_DOCS:-false}
     ports: ["8000:8000"]
     depends_on:
       postgres:

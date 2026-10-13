@@ -13,6 +13,27 @@ from typing import Any
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("JWT_SECRET_KEY environment variable is required")
+
+_KNOWN_PLACEHOLDERS = frozenset({
+    "replace-with-a-long-random-secret",
+    "replace-with-a-long-random-secret-before-hosting",
+    "seed-script-placeholder-not-used-for-tokens",
+    "test-secret-key-with-sufficient-length",
+    "changeme",
+    "secret",
+})
+# HOSTED_DEMO=true activates stricter secret validation.
+# In development mode the check is intentionally skipped so local fixtures work.
+if os.getenv("HOSTED_DEMO", "").strip().lower() in ("1", "true", "yes"):
+    if SECRET_KEY.lower() in _KNOWN_PLACEHOLDERS:
+        raise RuntimeError(
+            "JWT_SECRET_KEY is a known placeholder — generate a real secret before hosting: "
+            "python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+    if len(SECRET_KEY) < 32:
+        raise RuntimeError(
+            f"JWT_SECRET_KEY is too short ({len(SECRET_KEY)} chars); minimum 32 characters required."
+        )
 ACCESS_TOKEN_MINUTES = int(os.getenv("ACCESS_TOKEN_MINUTES", "30"))
 REFRESH_TOKEN_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS", "7"))
 
