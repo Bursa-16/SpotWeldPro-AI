@@ -25,8 +25,10 @@ from app.api.v1.projects import router as projects_router
 from app.api.v1.rule_evaluation import router as rule_evaluation_router
 from app.api.v1.rule_registry import router as rule_registry_router
 from app.api.v1.tests import router as tests_router
+from app.api.v1.organizations import router as organizations_router
+from app.api.v1.reference_profiles import router as reference_profiles_router
 from app.api.v1.weld_analysis import router as weld_analysis_router
-from app.core.security import hash_password
+from app.core.security import canonicalize_username, hash_password
 from app.db.session import SessionLocal
 from app.models.entities import User
 from app.models.enums import UserRole
@@ -34,16 +36,45 @@ from app.schemas.governed_api import GovernedAPIError
 
 _log = logging.getLogger(__name__)
 
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# Development default: all local Vite dev-server ports.
+# Override for private demo hosting via CORS_ORIGINS env var (comma-separated).
+_CORS_DEFAULT = ",".join([
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5180",
+    "http://127.0.0.1:4175",
+    "http://127.0.0.1:4177",
+])
+_ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.getenv("CORS_ORIGINS", _CORS_DEFAULT).split(",")
+    if o.strip()
+]
+
+# ── API documentation ─────────────────────────────────────────────────────────
+# Set DISABLE_DOCS=true in a private-demo .env to hide /docs, /redoc and
+# /openapi.json from the hosted instance.
+_disable_docs = os.getenv("DISABLE_DOCS", "").strip().lower() in ("1", "true", "yes")
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     with SessionLocal() as db:
-        admin_email = os.getenv("ADMIN_EMAIL")
+        admin_email    = os.getenv("ADMIN_EMAIL")
+        admin_username = os.getenv("ADMIN_USERNAME")
         admin_password = os.getenv("ADMIN_PASSWORD")
-        if admin_email and admin_password:
-            admin = db.scalar(select(User).where(User.email == admin_email))
+        if admin_email and admin_username and admin_password:
+            canonical = canonicalize_username(admin_username)
+            admin = db.scalar(select(User).where(User.username == canonical))
             if not admin:
-                db.add(User(email=admin_email, full_name="System Administrator", password_hash=hash_password(admin_password), role=UserRole.SYSTEM_ADMIN))
+                db.add(User(
+                    username=canonical,
+                    email=admin_email,
+                    full_name="System Administrator",
+                    password_hash=hash_password(admin_password),
+                    role=UserRole.SYSTEM_ADMIN,
+                ))
                 db.commit()
     yield
 
@@ -53,11 +84,14 @@ app = FastAPI(
     version="1.3.0",
     description="Spot welding parameter analysis and engineering decision-support API",
     lifespan=lifespan,
+    docs_url=None if _disable_docs else "/docs",
+    redoc_url=None if _disable_docs else "/redoc",
+    openapi_url=None if _disable_docs else "/openapi.json",
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5180"],
+    allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,7 +105,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
         payload = GovernedAPIError(
             error_code=detail["error_code"],
             message=detail.get("message", ""),
-            context=detail.get("context"),
+            detail=detail.get("context"),
         )
         headers = {}
         if exc.headers and "WWW-Authenticate" in exc.headers:
@@ -86,7 +120,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
         error_code="INTERNAL_ERROR",
         message="An unexpected error occurred.",
     )
-    return JSONResponse(status_code=500, content=payload.model_dump())
+    return JSONResponse(status_code=exc.status_code, content=payload.model_dump())
 
 
 app.include_router(health_router, prefix="/api/v1")
@@ -104,3 +138,5 @@ app.include_router(weld_analysis_router, prefix="/api/v1")
 app.include_router(projects_router, prefix="/api/v1")
 app.include_router(tests_router, prefix="/api/v1")
 app.include_router(engineering_library_router, prefix="/api/v1")
+app.include_router(organizations_router, prefix="/api/v1")
+app.include_router(reference_profiles_router, prefix="/api/v1")

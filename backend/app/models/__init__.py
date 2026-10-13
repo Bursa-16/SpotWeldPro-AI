@@ -37,3 +37,10 @@ from app.models.verification import (  # noqa: F401
     EvidenceVerificationDecision,
     EvidenceVerificationDelegation,
 )
+from app.models.profile_entities import (  # noqa: F401
+    Organization,
+    OrganizationMember,
+    ReferenceProfileDocument,
+    ReferenceProfileRecord,
+    ProfileApprovalEvent,
+)
