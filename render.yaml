@@ -1,10 +1,12 @@
-# SpotWeldPro AI — Render Blueprint (DEMO_RENDER_02)
+# SpotWeldPro AI — Render Blueprint (DEMO_NEON_02)
 # https://render.com/docs/blueprint-spec
 #
-# Three services:
+# Two Render services + one external Neon PostgreSQL database:
 #   1. spotweldpro-ai-api   — FastAPI backend  (Docker runtime)
 #   2. spotweldpro-ai-demo  — React SPA        (Static Site)
-#   3. spotweldpro-ai-db    — PostgreSQL 16    (Database)
+#   Database: Neon Free PostgreSQL (external, no expiry)
+#             https://neon.tech → create free project → copy connection string
+#             Set DATABASE_URL in the Render dashboard before first deploy.
 #
 # One-time post-deploy setup (chicken-and-egg URLs):
 #   After first deploy the two public URLs are known:
@@ -12,13 +14,14 @@
 #     Frontend: https://spotweldpro-ai-demo.onrender.com
 #   Set the following env vars manually in the Render dashboard and trigger
 #   a new deploy for each affected service:
-#     Backend  → CORS_ORIGINS = https://spotweldpro-ai-demo.onrender.com
-#     Frontend → VITE_API_URL = https://spotweldpro-ai-api.onrender.com/api/v1
+#     Backend  → CORS_ORIGINS    = https://spotweldpro-ai-demo.onrender.com
+#     Frontend → VITE_API_URL    = https://spotweldpro-ai-api.onrender.com/api/v1
 #     Frontend → VITE_DEMO_APP_URL = https://spotweldpro-ai-demo.onrender.com/login
 #
 # Free tier notes:
-#   • Web services spin down after 15 min inactivity (cold-start ~30s).
-#   • PostgreSQL free instance expires after 90 days; upgrade to paid ($7/mo) before then.
+#   • Render web services spin down after 15 min inactivity (cold start ~30s).
+#   • Neon compute endpoint suspends after 5 min inactivity (wake ~2-4s via pool_pre_ping).
+#   • Neon Free: 0.5 GiB storage, no expiry — replaces the 90-day Render PostgreSQL limit.
 #   • Demo user is seeded by backend/scripts/start.sh when DEMO_PASSWORD is set.
 
 services:
@@ -31,10 +34,11 @@ services:
     plan: free
     healthCheckPath: /api/v1/health
     envVars:
+      # OPERATOR: set DATABASE_URL to the Neon connection string from the Neon dashboard.
+      # Format: postgresql+psycopg://user:password@ep-xxx.region.aws.neon.tech/dbname?sslmode=require
+      # The ?sslmode=require suffix is required; Neon rejects unencrypted connections.
       - key: DATABASE_URL
-        fromDatabase:
-          name: spotweldpro-ai-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: HOSTED_DEMO
@@ -92,9 +96,4 @@ services:
       - key: VITE_DEMO_MODE
         value: "true"
 
-databases:
-  # ── PostgreSQL 16 ────────────────────────────────────────────────────────────
-  - name: spotweldpro-ai-db
-    plan: free
-    databaseName: spotweld
-    user: spotweld
+# Database is external (Neon Free). No Render-managed database resource.

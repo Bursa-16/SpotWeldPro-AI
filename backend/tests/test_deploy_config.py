@@ -1,4 +1,4 @@
-"""DEMO_RENDER_02 — deployment configuration regression tests.
+"""DEMO_RENDER_02 / DEMO_NEON_03 — deployment configuration regression tests.
 
 Covers the production-safety configuration introduced for the Render
 customer demo:
@@ -12,6 +12,7 @@ customer demo:
   - Protected endpoints reject anonymous requests
   - start.sh script exists and is a valid shell script
   - seed_demo_user.py idempotency guard
+  - DEMO_NEON_03: DATABASE_URL fail-fast for hosted demo (missing / SQLite / no SSL)
 
 These extend the existing GATE-08 security tests with deployment-specific
 assertions.  Module reload is used to test env-driven configuration;
@@ -33,16 +34,23 @@ import pytest
 def restore_modules():
     import app.core.security as sec
     import app.main as main_mod
+    import app.db.session as db_mod
 
     original_secret = sec.SECRET_KEY
     original_origins = list(main_mod._ALLOWED_ORIGINS)
     original_disable = main_mod._disable_docs
+    original_db_url = db_mod.DATABASE_URL
+    original_engine = db_mod.engine
+    original_session_local = db_mod.SessionLocal
 
     yield
 
     sec.SECRET_KEY = original_secret
     main_mod._ALLOWED_ORIGINS = original_origins
     main_mod._disable_docs = original_disable
+    db_mod.DATABASE_URL = original_db_url
+    db_mod.engine = original_engine
+    db_mod.SessionLocal = original_session_local
 
 
 # ── Health endpoint (always public) ───────────────────────────────────────────
@@ -374,3 +382,60 @@ class TestOneClickDemoLogin:
         # by using a fabricated invalid token
         r = client.get("/api/v1/auth/me", headers={"Authorization": "Bearer invalid.token.here"})
         assert r.status_code == 401
+
+
+# ── DATABASE_URL validation for hosted demo (DEMO_NEON_03) ────────────────────
+
+class TestDatabaseUrlValidation:
+    """DEMO_NEON_03: fail-fast checks for hosted-demo DATABASE_URL.
+
+    When HOSTED_DEMO=true the backend must refuse to start if DATABASE_URL
+    is missing, uses SQLite, or lacks TLS/SSL.  Local development (HOSTED_DEMO
+    unset) must not be affected.  No live Neon connection is required — SQLAlchemy
+    create_engine is lazy and does not connect at construction time.
+    """
+
+    def test_missing_database_url_rejected_in_hosted_mode(self, monkeypatch):
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        monkeypatch.setenv("HOSTED_DEMO", "true")
+        import app.db.session as s
+        with pytest.raises(RuntimeError, match="DATABASE_URL is required"):
+            importlib.reload(s)
+
+    def test_sqlite_url_rejected_in_hosted_mode(self, monkeypatch):
+        monkeypatch.setenv("DATABASE_URL", "sqlite:///./spot_welding_dev.db")
+        monkeypatch.setenv("HOSTED_DEMO", "true")
+        import app.db.session as s
+        with pytest.raises(RuntimeError, match="PostgreSQL"):
+            importlib.reload(s)
+
+    def test_postgresql_without_ssl_rejected_in_hosted_mode(self, monkeypatch):
+        monkeypatch.setenv(
+            "DATABASE_URL",
+            "postgresql+psycopg://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb",
+        )
+        monkeypatch.setenv("HOSTED_DEMO", "true")
+        import app.db.session as s
+        with pytest.raises(RuntimeError, match="SSL"):
+            importlib.reload(s)
+
+    def test_valid_neon_url_accepted_in_hosted_mode(self, monkeypatch):
+        monkeypatch.setenv(
+            "DATABASE_URL",
+            "postgresql+psycopg://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require",
+        )
+        monkeypatch.setenv("HOSTED_DEMO", "true")
+        import app.db.session as s
+        importlib.reload(s)  # must not raise; create_engine is lazy, no live connection needed
+
+    def test_sqlite_allowed_without_hosted_mode(self, monkeypatch):
+        monkeypatch.delenv("HOSTED_DEMO", raising=False)
+        monkeypatch.setenv("DATABASE_URL", "sqlite:///./spot_welding_dev.db")
+        import app.db.session as s
+        importlib.reload(s)  # must not raise
+
+    def test_missing_database_url_allowed_without_hosted_mode(self, monkeypatch):
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        monkeypatch.delenv("HOSTED_DEMO", raising=False)
+        import app.db.session as s
+        importlib.reload(s)  # must not raise; falls back to SQLite dev DB
