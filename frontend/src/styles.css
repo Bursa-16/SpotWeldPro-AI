@@ -2115,15 +2115,6 @@ header.pub-hero { display: block; padding: 48px 24px; border-bottom: 1px solid v
   gap: var(--sp-2);
   align-items: center;
 }
-.land-contact-approval-note {
-  font-size: var(--fs-xs);
-  color: var(--warn);
-  background: var(--warn-soft);
-  border: 1px solid var(--warn);
-  border-radius: var(--r-sm);
-  padding: var(--sp-2) var(--sp-3);
-  display: inline-block;
-}
 @media (max-width: 720px) {
   .land-contact-grid { grid-template-columns: 1fr; }
 }

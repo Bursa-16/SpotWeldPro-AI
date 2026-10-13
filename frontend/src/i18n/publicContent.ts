@@ -120,7 +120,6 @@ export interface LangContent {
     contactSub: string
     locationLabel: string
     location: string
-    contactApprovalNote: string
   }
 
   contact: {
@@ -493,8 +492,6 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       contactSub: 'SpotWeldPro AI hakkında detaylı bilgi veya demo talebiniz için bizimle iletişime geçin.',
       locationLabel: 'Konum',
       location: 'Nilüfer / Bursa / Türkiye',
-      contactApprovalNote:
-        '⚠ İletişim bilgileri kullanıcı onayı beklenmektedir. Kamuya açık yayın öncesinde doğrulanmalıdır.',
     },
 
     features: {
@@ -880,8 +877,6 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       contactSub: 'Get in touch for detailed information about SpotWeldPro AI or to request a demo.',
       locationLabel: 'Location',
       location: 'Nilüfer / Bursa / Türkiye',
-      contactApprovalNote:
-        '⚠ Contact information is pending user approval. Must be verified before public deployment.',
     },
 
     features: {

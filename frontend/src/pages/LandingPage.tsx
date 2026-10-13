@@ -210,7 +210,6 @@ export function LandingPage() {
           <p className="land-contact-location">
             <span className="land-contact-label">{l.locationLabel}:</span> {l.location}
           </p>
-          <p className="land-contact-approval-note" role="note">{l.contactApprovalNote}</p>
         </section>
 
         {/* ── Demo CTA ──────────────────────────────────────────── */}
