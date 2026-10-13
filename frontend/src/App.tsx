@@ -13,6 +13,7 @@ import { FeaturesPage } from './pages/FeaturesPage'
 import { HowItWorksPage } from './pages/HowItWorksPage'
 import { PackagesPage } from './pages/PackagesPage'
 import { DemoPage } from './pages/DemoPage'
+import { LandingPage } from './pages/LandingPage'
 import { AppLanguageContext, getInitialAppLang, persistAppLang } from './i18n/AppLanguageContext'
 import { WeldAnalysisProvider } from './context/WeldAnalysisContext'
 import { useAppLanguage } from './i18n/useAppLanguage'
@@ -396,7 +397,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<PublicLangProvider />}>
-          <Route path="/" element={<RootRedirect />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/how-it-works" element={<HowItWorksPage />} />
           <Route path="/packages" element={<PackagesPage />} />

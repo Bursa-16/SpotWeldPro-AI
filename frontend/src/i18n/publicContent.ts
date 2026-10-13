@@ -113,6 +113,31 @@ export interface LangContent {
     packagesTitle: string
     packagesSub: string
     packagesCompareBtn: string
+    qualityTitle: string
+    qualitySub: string
+    qualityItems: string[]
+    contactTitle: string
+    contactSub: string
+    locationLabel: string
+    location: string
+    contactApprovalNote: string
+  }
+
+  contact: {
+    person1: { name: string; role: string }
+    person2: { name: string; role: string }
+    emailLabel: string
+    phoneLabel: string
+    linkedinLabel: string
+  }
+
+  footerSection: {
+    tagline: string
+    navTitle: string
+    capTitle: string
+    contactTitle: string
+    githubLabel: string
+    copyright: string
   }
 
   // Features page strings
@@ -238,6 +263,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       { to: '/how-it-works', label: 'Nasıl Kullanılır' },
       { to: '/packages', label: 'Paketler' },
       { to: '/demo', label: 'Demo' },
+      { to: '/#contact', label: 'İletişim' },
     ],
     footer: 'SpotWeldPro AI',
     cta: {
@@ -449,6 +475,26 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       packagesTitle: 'Paketler',
       packagesSub: 'Detaylı karşılaştırma için Paketler sayfasını açın.',
       packagesCompareBtn: 'Paket Karşılaştırması',
+      qualityTitle: 'Kaynak Kalitesini Daha Erken Değerlendirin',
+      qualitySub:
+        'Gereksiz denemeleri azaltın. Proses geliştirme sürecini optimize edin.'
+        + ' Fiziksel doğrulama zorunlu olmaya devam eder — yazılım bu süreci destekler.',
+      qualityItems: [
+        'Potansiyel kaynak hatalarını erken aşamada tespit edin',
+        'Hurda ve yeniden işleme risklerini mühendislik kurallarıyla değerlendirin',
+        'Uygunsuz kaynak parametrelerini önceden belirleyin',
+        'Fiziksel deneme planlamasını daha verimli yürütün',
+        'Tekrarlayan mühendislik çabasını azaltın',
+        'Kaynak proses standardizasyonunu iyileştirin',
+        'Kalite maliyetini (COPQ) minimize etme potansiyelini artırın',
+        'Daha yapılandırılmış mühendislik kararları alın',
+      ],
+      contactTitle: 'İletişim',
+      contactSub: 'SpotWeldPro AI hakkında detaylı bilgi veya demo talebiniz için bizimle iletişime geçin.',
+      locationLabel: 'Konum',
+      location: 'Nilüfer / Bursa / Türkiye',
+      contactApprovalNote:
+        '⚠ İletişim bilgileri kullanıcı onayı beklenmektedir. Kamuya açık yayın öncesinde doğrulanmalıdır.',
     },
 
     features: {
@@ -572,6 +618,23 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
         'Backend bağlantısı yok. Mühendislik verisi yüklenemedi; API servisini doğrulayın ve tekrar deneyin.',
       errorCredentials: 'Kullanıcı adı veya şifre hatalı.',
     },
+
+    contact: {
+      person1: { name: 'İlhan Çekiç', role: 'Mühendislik, Ürün ve İş Geliştirme' },
+      person2: { name: 'Koray Tokol', role: 'Danışmanlık ve Teknoloji' },
+      emailLabel: 'E-posta',
+      phoneLabel: 'Telefon',
+      linkedinLabel: 'LinkedIn',
+    },
+
+    footerSection: {
+      tagline: 'Akıllı Direnç Punta Kaynağı Mühendisliği',
+      navTitle: 'Navigasyon',
+      capTitle: 'Yetenekler',
+      contactTitle: 'İletişim',
+      githubLabel: 'GitHub',
+      copyright: '© 2024–2026 SpotWeldPro AI. Tüm hakları saklıdır.',
+    },
   },
 
   // ─────────────────────────────────────────────────────────────
@@ -587,6 +650,7 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       { to: '/how-it-works', label: 'How It Works' },
       { to: '/packages', label: 'Packages' },
       { to: '/demo', label: 'Demo' },
+      { to: '/#contact', label: 'Contact' },
     ],
     footer: 'SpotWeldPro AI',
     cta: {
@@ -798,6 +862,26 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       packagesTitle: 'Packages',
       packagesSub: 'Open the Packages page for a detailed comparison.',
       packagesCompareBtn: 'Compare Packages',
+      qualityTitle: 'Evaluate Welding Quality Earlier',
+      qualitySub:
+        'Reduce unnecessary trials. Optimize process development.'
+        + ' Physical validation remains mandatory — software supports this process.',
+      qualityItems: [
+        'Identify potential weld defects at an earlier stage',
+        'Assess scrap and rework risks using engineering rules',
+        'Identify unsuitable welding parameters in advance',
+        'Plan physical trials more efficiently',
+        'Reduce repetitive engineering effort',
+        'Improve welding process standardization',
+        'Increase the potential for minimizing cost of poor quality (COPQ)',
+        'Make more structured engineering decisions',
+      ],
+      contactTitle: 'Contact',
+      contactSub: 'Get in touch for detailed information about SpotWeldPro AI or to request a demo.',
+      locationLabel: 'Location',
+      location: 'Nilüfer / Bursa / Türkiye',
+      contactApprovalNote:
+        '⚠ Contact information is pending user approval. Must be verified before public deployment.',
     },
 
     features: {
@@ -920,6 +1004,23 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       errorNetwork:
         'No backend connection. Engineering data could not be loaded; verify the API service and retry.',
       errorCredentials: 'Incorrect username or password.',
+    },
+
+    contact: {
+      person1: { name: 'İlhan Çekiç', role: 'Engineering, Product & Business Development' },
+      person2: { name: 'Koray Tokol', role: 'Consulting & Technology' },
+      emailLabel: 'Email',
+      phoneLabel: 'Phone',
+      linkedinLabel: 'LinkedIn',
+    },
+
+    footerSection: {
+      tagline: 'Intelligent Resistance Spot Welding Engineering',
+      navTitle: 'Navigation',
+      capTitle: 'Capabilities',
+      contactTitle: 'Contact',
+      githubLabel: 'GitHub',
+      copyright: '© 2024–2026 SpotWeldPro AI. All rights reserved.',
     },
   },
 }
