@@ -1,10 +1,15 @@
 import { useState } from 'react'
-import { login, extractErrorCode } from '../api/client'
+import { login, extractErrorCode, pingBackend } from '../api/client'
 import { PublicLayout } from '../components/PublicLayout'
 import { useLang } from '../i18n/useLang'
 import { PUBLIC_CONTENT } from '../i18n/publicContent'
 
 type Props = { onLogin: () => void }
+
+// Phases the login flow transitions through.
+// 'connecting' and 'retrying' probe GET /health — safe to retry (idempotent).
+// 'authenticating' is the login POST — executed exactly once.
+type SubmitPhase = 'idle' | 'connecting' | 'retrying' | 'authenticating'
 
 // DEMO_MODE: enabled only when VITE_DEMO_MODE=true is set at Render build time.
 // In development and all other environments this is always false.
@@ -27,23 +32,42 @@ export function LoginPage({ onLogin }: Props) {
   const [username, setUsername] = useState(DEMO_USERNAME)
   const [password, setPassword] = useState(DEMO_PASSWORD)
   const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [phase, setPhase] = useState<SubmitPhase>('idle')
+
+  const busy = phase !== 'idle'
 
   async function submit() {
     setError('')
-    setBusy(true)
+    setPhase('connecting')
+
+    // Step 1 — probe GET /health with bounded retry (idempotent, safe to retry).
+    // Covers Render free-tier cold-start (~30 s); 4 attempts with 0/3/6/12 s back-off.
+    const ping = await pingBackend(4, () => setPhase('retrying'))
+
+    if (ping !== 'ok') {
+      setError(
+        ping === 'timeout' ? t.errorTimeout
+        : ping === 'server' ? t.errorServer
+        : t.errorNetwork,
+      )
+      setPhase('idle')
+      return
+    }
+
+    // Step 2 — login POST: single attempt, never retried.
+    setPhase('authenticating')
     try {
       await login(username, password)
+      setPhase('idle')
       onLogin()
     } catch (err) {
-      const errorCode = extractErrorCode(err)
+      const code = extractErrorCode(err)
       setError(
-        errorCode === 'NETWORK_ERROR'
-          ? t.errorNetwork
-          : t.errorCredentials
+        code === 'TIMEOUT_ERROR' || code === 'NETWORK_ERROR' ? t.errorNetwork
+        : code === 'SERVER_ERROR' ? t.errorServer
+        : t.errorCredentials,
       )
-    } finally {
-      setBusy(false)
+      setPhase('idle')
     }
   }
 
@@ -130,7 +154,11 @@ export function LoginPage({ onLogin }: Props) {
             disabled={busy}
             data-testid="login-submit"
           >
-            {busy ? t.submitBusy : DEMO_MODE ? t.submitDemo : t.submitIdle}
+            {phase === 'connecting' ? t.connecting
+              : phase === 'retrying' ? t.retrying
+              : phase === 'authenticating' ? t.submitBusy
+              : DEMO_MODE ? t.submitDemo
+              : t.submitIdle}
           </button>
         </section>
 

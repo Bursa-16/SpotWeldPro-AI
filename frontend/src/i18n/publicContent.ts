@@ -244,7 +244,11 @@ export interface LangContent {
     submitBusy: string
     submitIdle: string
     submitDemo: string
+    connecting: string
+    retrying: string
     errorNetwork: string
+    errorTimeout: string
+    errorServer: string
     errorCredentials: string
     demoBannerTitle: string
     demoBannerText: string
@@ -616,8 +620,14 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       submitBusy: 'Giriş yapılıyor…',
       submitIdle: 'Giriş Yap',
       submitDemo: 'Başlat / Giriş Yap',
+      connecting: 'Sunucuya bağlanılıyor…',
+      retrying: 'Yeniden deneniyor…',
       errorNetwork:
         'Backend bağlantısı yok. Mühendislik verisi yüklenemedi; API servisini doğrulayın ve tekrar deneyin.',
+      errorTimeout:
+        'Sunucu başlatılıyor olabilir. Lütfen birkaç saniye bekleyin ve tekrar deneyin.',
+      errorServer:
+        'Sunucu hatası. Servis geçici olarak kullanılamıyor; kısa bir süre sonra tekrar deneyin.',
       errorCredentials: 'Kullanıcı adı veya şifre hatalı.',
       demoBannerTitle: 'Demo Hesabı',
       demoBannerText: 'Kullanıcı adı ve şifre otomatik dolduruldu. Giriş yapmak için düğmeye tıklayın.',
@@ -1004,8 +1014,14 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
       submitBusy: 'Signing in…',
       submitIdle: 'Sign In',
       submitDemo: 'Start / Sign In',
+      connecting: 'Connecting to server…',
+      retrying: 'Retrying…',
       errorNetwork:
         'No backend connection. Engineering data could not be loaded; verify the API service and retry.',
+      errorTimeout:
+        'The server may be starting up. Please wait a few seconds and try again.',
+      errorServer:
+        'Server error. The service is temporarily unavailable; please try again shortly.',
       errorCredentials: 'Incorrect username or password.',
       demoBannerTitle: 'Demo Account',
       demoBannerText: 'Username and password are pre-filled. Click the button to sign in.',

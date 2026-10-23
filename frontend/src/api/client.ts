@@ -26,7 +26,7 @@ export type BackendApiErrorCode =
   | 'RESOURCE_CONFLICT'
   | 'LIBRARY_CONFLICT'
 
-export type FrontendErrorCode = BackendApiErrorCode | 'NETWORK_ERROR' | 'UNKNOWN_ERROR'
+export type FrontendErrorCode = BackendApiErrorCode | 'NETWORK_ERROR' | 'TIMEOUT_ERROR' | 'SERVER_ERROR' | 'UNKNOWN_ERROR'
 
 export function extractErrorCode(err: unknown): FrontendErrorCode {
   if (isAxiosError(err)) {
@@ -35,8 +35,10 @@ export function extractErrorCode(err: unknown): FrontendErrorCode {
       return data.error_code as BackendApiErrorCode
     }
     if (!err.response) {
+      if (err.code === 'ECONNABORTED' || err.code === 'ERR_CANCELED') return 'TIMEOUT_ERROR'
       return 'NETWORK_ERROR'
     }
+    if (err.response.status >= 500) return 'SERVER_ERROR'
   }
   return 'UNKNOWN_ERROR'
 }
@@ -148,4 +150,59 @@ export async function listWeldPoints(projectId: number): Promise<WeldPoint[]> { 
 export async function createWeldPoint(projectId: number, payload: WeldPointCreate): Promise<WeldPoint> {
   return (await client.post<WeldPoint>(`/projects/${projectId}/weld-points`, payload)).data
 }
+
+// ── Backend connectivity probe ─────────────────────────────────────────────
+// Used before the login POST to detect Render free-tier cold-start delays.
+// Hits GET /health — unauthenticated, idempotent, safe to retry.
+// The login POST itself is never retried.
+
+const _pingClient = axios.create({
+  baseURL: _apiUrl ?? 'http://localhost:8000/api/v1',
+  timeout: 10_000,
+})
+
+export type PingResult = 'ok' | 'timeout' | 'network' | 'server'
+
+// Delay before each retry attempt (attempt index 1, 2, 3…)
+const _PING_DELAYS_MS = [0, 3_000, 6_000, 12_000] as const
+
+/**
+ * Probe GET /health with bounded retries and exponential backoff.
+ *
+ * @param maxAttempts - total probe attempts (default 4 covers ~30 s Render cold-start)
+ * @param onRetry     - called before each retry; receives the 1-based retry index
+ * @param _fetch      - injectable fetch for unit tests; defaults to _pingClient.get
+ * @param _delaysMs   - injectable delay table for unit tests; defaults to _PING_DELAYS_MS
+ */
+export async function pingBackend(
+  maxAttempts = 4,
+  onRetry?: (attempt: number) => void,
+  _fetch: (url: string) => Promise<unknown> = (url) => _pingClient.get(url),
+  _delaysMs: readonly number[] = _PING_DELAYS_MS,
+): Promise<PingResult> {
+  let lastResult: PingResult = 'network'
+  for (let i = 0; i < maxAttempts; i++) {
+    if (i > 0) {
+      await new Promise<void>((r) => setTimeout(r, _delaysMs[i] ?? 12_000))
+      onRetry?.(i)
+    }
+    try {
+      await _fetch('/health')
+      return 'ok'
+    } catch (err) {
+      if (isAxiosError(err)) {
+        if (err.response) {
+          // Any HTTP response proves TCP+HTTP is working — backend is reachable.
+          return err.response.status >= 500 ? 'server' : 'ok'
+        }
+        // No response: connection refused or timed out — retry.
+        lastResult = err.code === 'ECONNABORTED' || err.code === 'ERR_CANCELED'
+          ? 'timeout'
+          : 'network'
+      }
+    }
+  }
+  return lastResult
+}
+
 export default client
