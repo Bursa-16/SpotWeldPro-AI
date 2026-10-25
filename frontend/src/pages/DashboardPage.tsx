@@ -21,12 +21,15 @@ export function DashboardPage() {
   const { t } = useAppLanguage()
 
   useEffect(() => {
+    let cancelled = false
     Promise.all([dashboard(), currentUser()])
       .then(([d, u]) => {
+        if (cancelled) return
         setData(d)
         setUser(u)
       })
-      .catch(() => setError(true))
+      .catch(() => { if (!cancelled) setError(true) })
+    return () => { cancelled = true }
   }, [])
 
   if (error) {

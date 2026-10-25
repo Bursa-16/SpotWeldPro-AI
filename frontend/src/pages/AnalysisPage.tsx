@@ -4,6 +4,7 @@ import type { WeldAnalysisRequest, WeldAnalysisResponse, LayerInput } from '../t
 import type { ReactNode } from 'react'
 import { RISK_LEVEL_LABELS } from '../constants/riskLevel'
 import { useWeldAnalysis } from '../context/WeldAnalysisContext'
+import { useAppLanguage } from '../i18n/useAppLanguage'
 const baseLayer: LayerInput = { material_family: 'Düşük / Orta Karbonlu Çelik', material_subtype: 'Düşük karbonlu çelik', thickness_mm: 1, coated: false }
 const base: WeldAnalysisRequest = { ...baseLayer, stack_count: '2T', layers: [{ ...baseLayer }, { ...baseLayer }], current_ka: 8, weld_cycles: 12, force_kn: 3, tip_diameter_mm: 6, squeeze_cycles: 15, hold_cycles: 15, cooling_flow_lpm: 6, cooling_temp_c: 20, dc_current: true, adhesive: false, shunt_risk: false }
 
@@ -35,6 +36,7 @@ const PRIMARY_FIELDS: Array<[string, keyof WeldAnalysisRequest, string]> = [
 
 export function AnalysisPage() {
   const { setLastAnalysis } = useWeldAnalysis()
+  const { t } = useAppLanguage()
   const [p, setP] = useState<WeldAnalysisRequest>(base)
   const [r, setR] = useState<WeldAnalysisResponse | null>(null)
   const [busy, setBusy] = useState(false)
@@ -69,7 +71,7 @@ export function AnalysisPage() {
       setR(result)
       setLastAnalysis(p, result)
     } catch {
-      setErr('Engineering data could not be loaded. Verify the API service and retry.')
+      setErr(t.analysisPage.backendUnavailableText)
     } finally {
       setBusy(false)
     }
@@ -107,7 +109,7 @@ export function AnalysisPage() {
       <span className="ctx-chip">Material: <strong>{p.material_family}</strong></span>
       <span className="ctx-chip">Total thickness: <strong>{totalThickness.toFixed(2)} mm</strong></span>
     </div>
-    {err && <div className="alert danger" role="alert"><div><div className="alert-title">Backend connection unavailable</div><div className="alert-text">{err}</div></div></div>}
+    {err && <div className="alert danger" role="alert"><div><div className="alert-title">{t.analysisPage.backendUnavailableTitle}</div><div className="alert-text">{err}</div></div></div>}
     <div className="anx-grid">
       <section className="panel" aria-label="Engineering inputs">
         <div className="panel-header"><h3>Engineering inputs</h3><span className="panel-meta">stack · parameters</span></div>

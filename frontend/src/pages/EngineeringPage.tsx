@@ -43,7 +43,7 @@ export function EngineeringPage() {
       })
       setResult(response.data)
     } catch {
-      setError('Backend connection unavailable. Engineering data could not be loaded. Verify the API service and retry.')
+      setError(ep.backendUnavailableText)
     } finally {
       setBusy(false)
     }
@@ -71,8 +71,8 @@ export function EngineeringPage() {
       {error && (
         <div className="alert danger" role="alert">
           <div>
-            <div className="alert-title">Backend connection unavailable</div>
-            <div className="alert-text">Engineering data could not be loaded. Verify the API service and retry.</div>
+            <div className="alert-title">{ep.backendUnavailableTitle}</div>
+            <div className="alert-text">{error}</div>
           </div>
         </div>
       )}

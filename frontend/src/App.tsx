@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { clearAuthStorage, currentUser, classifyMeError } from './api/client'
 import type { UserResponse } from './api/client'
 import { DashboardPage } from './pages/DashboardPage'
@@ -270,6 +270,16 @@ function AuthenticatedApp() {
   const [lang, setLang] = useState<AppLanguage>(getInitialAppLang)
   const navigate = useNavigate()
 
+  // Auto-retry once after 8 s on a retryable failure (backend waking up after Render sleep).
+  const autoRetryCount = useRef(0)
+  useEffect(() => {
+    if (authState !== 'retryable') return
+    if (autoRetryCount.current >= 1) return
+    autoRetryCount.current++
+    const t = setTimeout(() => setAuthState('checking'), 8_000)
+    return () => clearTimeout(t)
+  }, [authState])
+
   useEffect(() => {
     if (authState !== 'checking') return
     let cancelled = false
@@ -302,8 +312,14 @@ function AuthenticatedApp() {
   )
   if (authState === 'retryable') return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '1rem' }}>
-      <span>Backend unavailable. Check connection and retry.</span>
-      <button className="btn btn-primary" onClick={() => setAuthState('checking')}>Retry</button>
+      <span>
+        {autoRetryCount.current < 1
+          ? 'Backend waking up — retrying in a moment…'
+          : 'Backend unavailable. Check connection and retry.'}
+      </span>
+      {autoRetryCount.current >= 1 && (
+        <button className="btn btn-primary" onClick={() => setAuthState('checking')}>Retry</button>
+      )}
     </div>
   )
   if (authState === 'error') return (

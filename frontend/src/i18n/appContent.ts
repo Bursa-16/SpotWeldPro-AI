@@ -286,6 +286,9 @@ export interface AppContent {
     uncoated: string
     ultrasonicGuidance: string
     qualificationDisclaimer: string
+    backendUnavailableTitle: string
+    /** CE-04-C1: this string is fixed — do not translate the error text. */
+    backendUnavailableText: string
   }
   engineeringLobeLabPage: {
     kicker: string
@@ -324,6 +327,9 @@ export interface AppContent {
     sensitivityImpact: string
     sensitivitySensitivity: string
     sensitivityFooter: string
+    backendUnavailableTitle: string
+    /** CE-04-C1: this string is fixed — do not translate the error text. */
+    backendUnavailableText: string
   }
   /** Display mapping for canonical backend risk level values. */
   visualWeldInspector: {
@@ -654,6 +660,9 @@ const TR: AppContent = {
     uncoated: 'kaplamasız',
     ultrasonicGuidance: 'Uygun prosedür ve kalibrasyonla ultrasonik muayene uygulayın. Gerektiğinde soyma, keski veya kesit testiyle doğrulayın.',
     qualificationDisclaimer: 'Bu risk değerlendirmesi mühendislik kararı değildir. Üretim kabulü için nitelendirme mühendisi onayı gereklidir. Görüntülenen olasılıklar backend modelinden döner; bağımsız doğrulama yapılmamıştır.',
+    backendUnavailableTitle: 'Backend bağlantısı kullanılamıyor',
+    backendUnavailableText:
+      'Engineering data could not be loaded. Verify the API service and retry.',
   },
   engineeringLobeLabPage: {
     kicker: 'Mühendislik · Punta Kaynak Parametre Analizi',
@@ -692,6 +701,9 @@ const TR: AppContent = {
     sensitivityImpact: 'Etki',
     sensitivitySensitivity: 'Duyarlılık',
     sensitivityFooter: 'Yalnızca backend duyarlılık çıktısı.',
+    backendUnavailableTitle: 'Backend bağlantısı kullanılamıyor',
+    backendUnavailableText:
+      'Engineering data could not be loaded. Verify the API service and retry.',
   },
   visualWeldInspector: {
     sectionTitle: 'Görsel Punta Kontrolü',
@@ -1051,6 +1063,9 @@ const EN: AppContent = {
     uncoated: 'uncoated',
     ultrasonicGuidance: 'Perform ultrasonic inspection using an appropriate qualified procedure and calibration. Confirm with peel, chisel or cross-section testing when required.',
     qualificationDisclaimer: 'This risk assessment is not an engineering decision. Qualification engineer approval is required for production acceptance. Displayed probabilities are returned from the backend model; no independent validation has been performed.',
+    backendUnavailableTitle: 'Backend connection unavailable',
+    backendUnavailableText:
+      'Engineering data could not be loaded. Verify the API service and retry.',
   },
   engineeringLobeLabPage: {
     kicker: 'Engineering · Spot Welding Parameter Analysis',
@@ -1089,6 +1104,9 @@ const EN: AppContent = {
     sensitivityImpact: 'Impact',
     sensitivitySensitivity: 'Sensitivity',
     sensitivityFooter: 'Backend sensitivity output only.',
+    backendUnavailableTitle: 'Backend connection unavailable',
+    backendUnavailableText:
+      'Engineering data could not be loaded. Verify the API service and retry.',
   },
   visualWeldInspector: {
     sectionTitle: 'Visual Weld Inspector',

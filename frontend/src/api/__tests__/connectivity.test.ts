@@ -11,8 +11,8 @@ import axios from 'axios'
 import { extractErrorCode, pingBackend } from '../client'
 import { PUBLIC_CONTENT } from '../../i18n/publicContent'
 
-// Instant delays — avoids real setTimeout waits in tests
-const NO_DELAY = [0, 0, 0, 0] as const
+// Instant delays — avoids real setTimeout waits in tests (6 entries for maxAttempts=6)
+const NO_DELAY = [0, 0, 0, 0, 0, 0] as const
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -135,6 +135,86 @@ describe('pingBackend', () => {
     const fetch = vi.fn().mockRejectedValue(makeAxiosError('ECONNREFUSED'))
     await pingBackend(2, undefined, fetch, NO_DELAY)
     expect(fetch).toHaveBeenCalledTimes(2)
+  })
+})
+
+// ── pingBackend — extended cold-start coverage (FIX-F) ─────────────────────
+
+describe('pingBackend — 90 s cold-start coverage', () => {
+  it('defaults to 6 attempts', async () => {
+    const fetch = vi.fn().mockRejectedValue(makeAxiosError('ECONNREFUSED'))
+    await pingBackend(undefined, undefined, fetch, NO_DELAY)
+    expect(fetch).toHaveBeenCalledTimes(6)
+  })
+
+  it('returns ok when backend wakes on attempt 6', async () => {
+    const fetch = vi.fn()
+      .mockRejectedValueOnce(makeAxiosError('ECONNREFUSED'))
+      .mockRejectedValueOnce(makeAxiosError('ECONNREFUSED'))
+      .mockRejectedValueOnce(makeAxiosError('ECONNREFUSED'))
+      .mockRejectedValueOnce(makeAxiosError('ECONNREFUSED'))
+      .mockRejectedValueOnce(makeAxiosError('ECONNREFUSED'))
+      .mockResolvedValueOnce({ status: 200 })
+    const result = await pingBackend(6, undefined, fetch, NO_DELAY)
+    expect(result).toBe('ok')
+    expect(fetch).toHaveBeenCalledTimes(6)
+  })
+
+  it('returns network when all 6 attempts fail', async () => {
+    const fetch = vi.fn().mockRejectedValue(makeAxiosError('ECONNREFUSED'))
+    const result = await pingBackend(6, undefined, fetch, NO_DELAY)
+    expect(result).toBe('network')
+    expect(fetch).toHaveBeenCalledTimes(6)
+  })
+
+  it('returns timeout when all 6 attempts exhaust with ECONNABORTED', async () => {
+    const fetch = vi.fn().mockRejectedValue(makeAxiosError('ECONNABORTED'))
+    const result = await pingBackend(6, undefined, fetch, NO_DELAY)
+    expect(result).toBe('timeout')
+    expect(fetch).toHaveBeenCalledTimes(6)
+  })
+})
+
+// ── pingBackend — AbortSignal cancellation (FIX-F) ─────────────────────────
+
+describe('pingBackend — AbortSignal', () => {
+  it('returns immediately without calling fetch when signal is already aborted', async () => {
+    const ctrl = new AbortController()
+    ctrl.abort()
+    const fetch = vi.fn().mockResolvedValue({ status: 200 })
+    const result = await pingBackend(4, undefined, fetch, NO_DELAY, ctrl.signal)
+    expect(result).toBe('network')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('stops retrying after first failed fetch when signal is aborted inside fetch', async () => {
+    const ctrl = new AbortController()
+    const fetch = vi.fn().mockImplementationOnce(() => {
+      ctrl.abort()
+      return Promise.reject(makeAxiosError('ECONNREFUSED'))
+    })
+    const result = await pingBackend(4, undefined, fetch, NO_DELAY, ctrl.signal)
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(result).toBe('network')
+  })
+
+  it('does not invoke onRetry after signal is aborted', async () => {
+    const ctrl = new AbortController()
+    const fetch = vi.fn().mockImplementation(() => {
+      ctrl.abort()
+      return Promise.reject(makeAxiosError('ECONNREFUSED'))
+    })
+    const onRetry = vi.fn()
+    await pingBackend(4, onRetry, fetch, NO_DELAY, ctrl.signal)
+    expect(onRetry).not.toHaveBeenCalled()
+  })
+
+  it('returns ok normally when signal is provided but never aborted', async () => {
+    const ctrl = new AbortController()
+    const fetch = vi.fn().mockResolvedValue({ status: 200 })
+    const result = await pingBackend(4, undefined, fetch, NO_DELAY, ctrl.signal)
+    expect(result).toBe('ok')
+    expect(fetch).toHaveBeenCalledTimes(1)
   })
 })
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { login, extractErrorCode, pingBackend } from '../api/client'
 import { PublicLayout } from '../components/PublicLayout'
 import { useLang } from '../i18n/useLang'
@@ -36,13 +36,22 @@ export function LoginPage({ onLogin }: Props) {
 
   const busy = phase !== 'idle'
 
+  const abortRef = useRef<AbortController | null>(null)
+  useEffect(() => () => { abortRef.current?.abort() }, [])
+
   async function submit() {
+    abortRef.current?.abort()
+    const ctrl = new AbortController()
+    abortRef.current = ctrl
+
     setError('')
     setPhase('connecting')
 
     // Step 1 — probe GET /health with bounded retry (idempotent, safe to retry).
-    // Covers Render free-tier cold-start (~30 s); 4 attempts with 0/3/6/12 s back-off.
-    const ping = await pingBackend(4, () => setPhase('retrying'))
+    // Covers Render free-tier cold-start (~90 s); 6 attempts with 0/5/10/15/20/30 s back-off.
+    const ping = await pingBackend(6, () => setPhase('retrying'), undefined, undefined, ctrl.signal)
+
+    if (ctrl.signal.aborted) return
 
     if (ping !== 'ok') {
       setError(

@@ -164,26 +164,35 @@ const _pingClient = axios.create({
 export type PingResult = 'ok' | 'timeout' | 'network' | 'server'
 
 // Delay before each retry attempt (attempt index 1, 2, 3…)
-const _PING_DELAYS_MS = [0, 3_000, 6_000, 12_000] as const
+// 6 entries cover a ~90 s Render Free cold-start (attempts start at 0/5/15/30/50/80 s)
+const _PING_DELAYS_MS = [0, 5_000, 10_000, 15_000, 20_000, 30_000] as const
 
 /**
  * Probe GET /health with bounded retries and exponential backoff.
  *
- * @param maxAttempts - total probe attempts (default 4 covers ~30 s Render cold-start)
+ * @param maxAttempts - total probe attempts (default 6 covers ~90 s Render cold-start)
  * @param onRetry     - called before each retry; receives the 1-based retry index
  * @param _fetch      - injectable fetch for unit tests; defaults to _pingClient.get
  * @param _delaysMs   - injectable delay table for unit tests; defaults to _PING_DELAYS_MS
+ * @param signal      - optional AbortSignal; cancels the probe loop between attempts
  */
 export async function pingBackend(
-  maxAttempts = 4,
+  maxAttempts = 6,
   onRetry?: (attempt: number) => void,
   _fetch: (url: string) => Promise<unknown> = (url) => _pingClient.get(url),
   _delaysMs: readonly number[] = _PING_DELAYS_MS,
+  signal?: AbortSignal,
 ): Promise<PingResult> {
   let lastResult: PingResult = 'network'
   for (let i = 0; i < maxAttempts; i++) {
+    if (signal?.aborted) return lastResult
     if (i > 0) {
-      await new Promise<void>((r) => setTimeout(r, _delaysMs[i] ?? 12_000))
+      const delay = _delaysMs[i] ?? 12_000
+      await new Promise<void>((resolve) => {
+        const t = setTimeout(resolve, delay)
+        signal?.addEventListener('abort', () => { clearTimeout(t); resolve() }, { once: true })
+      })
+      if (signal?.aborted) return lastResult
       onRetry?.(i)
     }
     try {
