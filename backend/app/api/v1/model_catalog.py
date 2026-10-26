@@ -117,5 +117,27 @@ def predict_guard(model_id: str):
                 ),
             },
         )
+    if (entry.governance_status == ModelGovernanceStatus.EXPERIMENTAL
+            and not entry.router_active):
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error_code": "MODEL_EXPERIMENTAL",
+                "message": (
+                    f"'{entry.name_tr}' modeli henüz üretim kullanımına açık değil. "
+                    f"Durum: {entry.governance_status}. "
+                    f"{entry.notes_tr or 'router_active=False — validasyon verisi bekleniyor.'}"
+                ),
+                "context": {
+                    "message_en": (
+                        f"'{entry.name_en}' is not yet available for production use. "
+                        f"Status: {entry.governance_status}. "
+                        f"{entry.notes_en or 'router_active=False — validation data required.'}"
+                    ),
+                    "model_id": model_id,
+                    "router_active": entry.router_active,
+                },
+            },
+        )
     return {"model_id": model_id, "governance_status": entry.governance_status,
             "message": "Bu model tahmin isteğine uygun görünüyor."}

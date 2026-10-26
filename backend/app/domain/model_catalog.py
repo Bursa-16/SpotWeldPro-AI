@@ -254,12 +254,12 @@ MODEL_CATALOG: List[CatalogEntry] = [
     # ── M05: Çoklu Doğrusal Regresyon ───────────────────────────────────────
     CatalogEntry(
         model_id="mlr_v1",
-        version="N/A",
+        version="1.0-experimental",
         name_tr="Çoklu Doğrusal Regresyon",
         name_en="Multiple Linear Regression",
         model_basis=ModelBasis.LINEAR_REGRESSION,
         capability_type=ModelCapabilityType.NUGGET_PREDICTOR,
-        governance_status=ModelGovernanceStatus.NOT_AVAILABLE,
+        governance_status=ModelGovernanceStatus.EXPERIMENTAL,
         measurement_target="nugget_diameter_mm",
         supported_materials=(),
         thickness_range_mm=(0.0, 0.0),
@@ -268,28 +268,28 @@ MODEL_CATALOG: List[CatalogEntry] = [
         optional_inputs=("tip_diameter_mm", "frequency_hz"),
         uncertainty_supported=False,
         router_active=False,
-        not_available_reason_tr="Henüz geliştirilmedi. Eğitim için minimum 30 metalografik "
-                                "kayıt gerekli (kuvvet > 0.5 kN, frekans kayıtlı).",
-        not_available_reason_en="Not yet developed. Minimum 30 metallographic records required "
-                                "for training (force > 0.5 kN, frequency recorded).",
+        not_available_reason_tr=None,
+        not_available_reason_en=None,
         validation_evidence=None,
         rejection_reason_tr=None,
         rejection_reason_en=None,
-        notes_tr="Doğrusal ekstrapolasyon — patlama bölgesinde güvenilmez. "
-                 "Faz 2'de RSM / GPR ile birlikte geliştirilecek.",
-        notes_en="Linear extrapolation — unreliable in expulsion zone. "
-                 "To be developed in Phase 2 alongside RSM / GPR.",
+        notes_tr="mlr_engine.py::fit_mlr() + predict_mlr() — OLS; doğrusal ekstrapolasyon; "
+                 "patlama bölgesinde güvenilmez. router_active=False; "
+                 "G-D1..G-D4 + G-M3 geçilmeden üretim aktivasyonu yok.",
+        notes_en="mlr_engine.py::fit_mlr() + predict_mlr() — OLS; linear extrapolation; "
+                 "unreliable in expulsion zone. router_active=False; "
+                 "G-D1..G-D4 + G-M3 required for production activation.",
     ),
 
     # ── M06: Polinom Regresyon (RSM) ─────────────────────────────────────────
     CatalogEntry(
         model_id="rsm_polynomial_v1",
-        version="N/A",
+        version="1.0-experimental",
         name_tr="Polinom Regresyon (RSM)",
         name_en="Polynomial Regression (RSM)",
         model_basis=ModelBasis.RSM_POLYNOMIAL,
         capability_type=ModelCapabilityType.NUGGET_PREDICTOR,
-        governance_status=ModelGovernanceStatus.NOT_AVAILABLE,
+        governance_status=ModelGovernanceStatus.EXPERIMENTAL,
         measurement_target="nugget_diameter_mm",
         supported_materials=(),
         thickness_range_mm=(0.0, 0.0),
@@ -298,19 +298,17 @@ MODEL_CATALOG: List[CatalogEntry] = [
         optional_inputs=("tip_diameter_mm", "frequency_hz"),
         uncertainty_supported=False,
         router_active=False,
-        not_available_reason_tr="Henüz kalibre edilmedi. CCD veya Box-Behnken deney "
-                                "sonuçlarından ikinci dereceden polinom fit edilecek. "
-                                "Mevcut polynomial_model.py altyapısı yeniden kullanılabilir.",
-        not_available_reason_en="Not yet calibrated. Second-order polynomial to be fit from "
-                                "CCD or Box-Behnken experiment results. "
-                                "Existing polynomial_model.py infrastructure is reusable.",
+        not_available_reason_tr=None,
+        not_available_reason_en=None,
         validation_evidence=None,
         rejection_reason_tr=None,
         rejection_reason_en=None,
-        notes_tr="RSM ikinci dereceden polinom — Model-4 ile aynı altyapı. "
-                 "Etkileşim terimlerini ve karesel etkileri içerir.",
-        notes_en="RSM second-order polynomial — same infrastructure as Model-4. "
-                 "Includes interaction and quadratic terms.",
+        notes_tr="rsm_engine.py::fit_rsm() + predict_rsm() — ikinci dereceden polinom; "
+                 "CCD/BBD verisi ile kalibrasyon gerekli. router_active=False; "
+                 "G-D1..G-D4 + G-M3 geçilmeden üretim aktivasyonu yok.",
+        notes_en="rsm_engine.py::fit_rsm() + predict_rsm() — second-order polynomial; "
+                 "CCD/BBD calibration data required. router_active=False; "
+                 "G-D1..G-D4 + G-M3 required for production activation.",
     ),
 
     # ── M07: Taguchi DOE ──────────────────────────────────────────────────────

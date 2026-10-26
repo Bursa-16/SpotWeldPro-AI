@@ -276,11 +276,49 @@ class TestAPIEndpoints:
         data = resp.json()
         assert data["error_code"] == "MODEL_NOT_AVAILABLE"
 
-    def test_predict_guard_experimental_passes(self):
+    def test_predict_guard_experimental_inactive_returns_422(self):
+        """EXPERIMENTAL + router_active=False → 422 MODEL_EXPERIMENTAL."""
         resp = client.post("/api/v1/model-catalog/predict-guard/model4_doe_polynomial")
+        assert resp.status_code == 422
+        data = resp.json()
+        assert data["error_code"] == "MODEL_EXPERIMENTAL"
+
+    def test_predict_guard_mlr_returns_422_experimental(self):
+        resp = client.post("/api/v1/model-catalog/predict-guard/mlr_v1")
+        assert resp.status_code == 422
+        data = resp.json()
+        assert data["error_code"] == "MODEL_EXPERIMENTAL"
+
+    def test_predict_guard_rsm_returns_422_experimental(self):
+        resp = client.post("/api/v1/model-catalog/predict-guard/rsm_polynomial_v1")
+        assert resp.status_code == 422
+        data = resp.json()
+        assert data["error_code"] == "MODEL_EXPERIMENTAL"
+
+    def test_predict_guard_experimental_has_tr_message(self):
+        """message alanı Türkçe içerik içermeli."""
+        resp = client.post("/api/v1/model-catalog/predict-guard/mlr_v1")
+        assert resp.status_code == 422
+        data = resp.json()
+        assert "üretim" in data["message"].lower() or "deneysel" in data["message"].lower() \
+               or "router_active" in data["message"].lower()
+
+    def test_predict_guard_experimental_has_en_message(self):
+        """detail.message_en alanı İngilizce içerik içermeli."""
+        resp = client.post("/api/v1/model-catalog/predict-guard/mlr_v1")
+        assert resp.status_code == 422
+        data = resp.json()
+        assert data["detail"] is not None
+        assert "message_en" in data["detail"]
+        msg_en = data["detail"]["message_en"]
+        assert "production" in msg_en.lower() or "router_active" in msg_en.lower()
+
+    def test_predict_guard_validated_still_passes(self):
+        """VALIDATED + router_active=True → 200 OK."""
+        resp = client.post("/api/v1/model-catalog/predict-guard/oem_table")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["governance_status"] == "EXPERIMENTAL"
+        assert data["governance_status"] == "VALIDATED"
 
     def test_predict_guard_missing_model_404(self):
         resp = client.post("/api/v1/model-catalog/predict-guard/no_such_model")
