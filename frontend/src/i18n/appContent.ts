@@ -428,6 +428,81 @@ export interface AppContent {
     backendUnavailableTitle: string
     backendUnavailableText: string
   }
+  statisticalPage: {
+    kicker: string
+    title: string
+    subtitle: string
+    tabTaguchi: string
+    tabAnova: string
+    taguchiSetupTitle: string
+    taguchiSetupMeta: string
+    arrayTypeLabel: string
+    factorsTitle: string
+    addFactor: string
+    removeFactor: string
+    factorNameLabel: string
+    factorUnitLabel: string
+    factorLevelsLabel: string
+    factorLevelsHint: string
+    generateDesign: string
+    generating: string
+    matrixTitle: string
+    matrixMeta: string
+    colRun: string
+    saturatedWarning: string
+    responseTitle: string
+    responseMeta: string
+    snObjectiveLabel: string
+    snLtb: string
+    snStb: string
+    snNtb: string
+    responseVarLabel: string
+    responseUnitLabel: string
+    analyzeBtn: string
+    analyzing: string
+    resultsTitle: string
+    resultsMeta: string
+    optimalTitle: string
+    levelLabel: string
+    mainEffectTitle: string
+    mainEffectMeta: string
+    snAxisLabel: string
+    anovaTableTitle: string
+    anovaMeta: string
+    colSource: string
+    colSS: string
+    colDF: string
+    colMS: string
+    colF: string
+    colP: string
+    colPct: string
+    grandMeanResponse: string
+    grandMeanSN: string
+    additivePrediction: string
+    anovaSetupTitle: string
+    anovaSetupMeta: string
+    anovaFactorName: string
+    anovaResponseVar: string
+    anovaResponseUnit: string
+    anovaGroupsTitle: string
+    addGroup: string
+    removeGroup: string
+    groupNameLabel: string
+    groupValuesLabel: string
+    groupValuesHint: string
+    runAnovaBtn: string
+    anovaResultsTitle: string
+    anovaResultsMeta: string
+    anovaGrandMean: string
+    anovaAssumptionsTitle: string
+    governanceNote: string
+    errorTitle: string
+    noResultHint: string
+    backendUnavailableTitle: string
+    /** CE-04-C1: this string is fixed — do not translate the error text. */
+    backendUnavailableText: string
+    resetBtn: string
+  }
   riskLabels: Record<string, string>
 }
 
@@ -441,6 +516,7 @@ const TR: AppContent = {
       dash: 'SpotWeldPro AI',
       work: 'ÇALIŞMA',
       analysis: 'ANALİZ',
+      stats: 'İSTATİSTİK',
     },
     items: {
       dashboard: 'Gösterge Paneli',
@@ -449,6 +525,7 @@ const TR: AppContent = {
       analysis: 'Kaynak Kalite Analizi',
       failure: 'Hata Analizi',
       models: 'Model Kataloğu',
+      statistical: 'Taguchi DOE & ANOVA',
     },
   },
   analysisPage: {
@@ -895,6 +972,80 @@ const TR: AppContent = {
     backendUnavailableTitle: 'Backend bağlantısı kullanılamıyor',
     backendUnavailableText: 'Engineering data could not be loaded. Verify the API service and retry.',
   },
+  statisticalPage: {
+    kicker: 'Mühendislik · İstatistiksel Tasarım ve Analiz',
+    title: 'Taguchi DOE & ANOVA',
+    subtitle: 'Deney tasarımı optimizasyonu ve faktör katkı analizi — nugget tahmini değil',
+    tabTaguchi: 'Taguchi DOE',
+    tabAnova: 'Tek Faktörlü ANOVA',
+    taguchiSetupTitle: 'Deney Tasarımı Konfigürasyonu',
+    taguchiSetupMeta: 'ortogonal dizi · faktörler · seviyeler',
+    arrayTypeLabel: 'Ortogonal Dizi Tipi',
+    factorsTitle: 'Faktörler',
+    addFactor: 'Faktör Ekle',
+    removeFactor: 'Kaldır',
+    factorNameLabel: 'Faktör Adı',
+    factorUnitLabel: 'Birim',
+    factorLevelsLabel: 'Seviyeler',
+    factorLevelsHint: 'Virgülle ayırın, örn: 6.5, 8.0, 9.5',
+    generateDesign: 'Tasarımı Oluştur',
+    generating: 'Oluşturuluyor…',
+    matrixTitle: 'Deney Matrisi',
+    matrixMeta: 'ortogonal dizi run planı',
+    colRun: 'Run',
+    saturatedWarning: 'Doymuş tasarım: tüm sütunlar faktörlere atanmış, hata terimi yok.',
+    responseTitle: 'Yanıt Girişi ve Analiz',
+    responseMeta: 'ölçülen deney sonuçları',
+    snObjectiveLabel: 'S/N Hedef Formülü',
+    snLtb: 'Büyük daha iyi (LTB)',
+    snStb: 'Küçük daha iyi (STB)',
+    snNtb: 'Nominal en iyi (NTB)',
+    responseVarLabel: 'Yanıt Değişkeni Adı',
+    responseUnitLabel: 'Yanıt Birimi',
+    analyzeBtn: 'Analiz Et',
+    analyzing: 'Analiz ediliyor…',
+    resultsTitle: 'Analiz Sonuçları',
+    resultsMeta: 'S/N oranları · ana etkiler · ANOVA',
+    optimalTitle: 'Optimal Ayarlar (S/N Tabanlı)',
+    levelLabel: 'Seviye',
+    mainEffectTitle: 'Ana Etki Profilleri (S/N)',
+    mainEffectMeta: 'her faktör için seviye ortalaması',
+    snAxisLabel: 'Ort. S/N (dB)',
+    anovaTableTitle: 'ANOVA Tablosu',
+    anovaMeta: 'SS · df · MS · F · p · katkı %',
+    colSource: 'Kaynak',
+    colSS: 'SS',
+    colDF: 'df',
+    colMS: 'MS',
+    colF: 'F',
+    colP: 'p',
+    colPct: 'Katkı %',
+    grandMeanResponse: 'Genel Ortalama Yanıt',
+    grandMeanSN: 'Genel Ortalama S/N',
+    additivePrediction: 'Katkılı Model Tahmini',
+    anovaSetupTitle: 'ANOVA Konfigürasyonu',
+    anovaSetupMeta: 'faktör · gruplar · ölçüm değerleri',
+    anovaFactorName: 'Faktör Adı',
+    anovaResponseVar: 'Yanıt Değişkeni',
+    anovaResponseUnit: 'Birim',
+    anovaGroupsTitle: 'Gruplar',
+    addGroup: 'Grup Ekle',
+    removeGroup: 'Kaldır',
+    groupNameLabel: 'Grup Adı',
+    groupValuesLabel: 'Değerler',
+    groupValuesHint: 'Virgülle ayırın, örn: 5.2, 6.1, 4.8',
+    runAnovaBtn: 'ANOVA Çalıştır',
+    anovaResultsTitle: 'ANOVA Sonuçları',
+    anovaResultsMeta: 'tek faktörlü ANOVA tablosu',
+    anovaGrandMean: 'Genel Ortalama',
+    anovaAssumptionsTitle: 'Varsayımlar',
+    governanceNote: 'KAPASITE: DESIGN_METHOD + STATISTICAL_ANALYSIS — Nugget çapı tahmin edilmez. Giriş değerleri kullanıcının ölçtüğü gerçek deney sonuçları olmalıdır.',
+    errorTitle: 'Hata',
+    noResultHint: 'Analiz sonucu yok — önce deney tasarımını oluşturun ve yanıtları girin.',
+    backendUnavailableTitle: 'Backend bağlantısı kullanılamıyor',
+    backendUnavailableText: 'Engineering data could not be loaded. Verify the API service and retry.',
+    resetBtn: 'Sıfırla',
+  },
 }
 
 /* ── English ─────────────────────────────────────────────────────────── */
@@ -907,6 +1058,7 @@ const EN: AppContent = {
       dash: 'SpotWeldPro AI',
       work: 'WORK',
       analysis: 'ANALYSIS',
+      stats: 'STATISTICS',
     },
     items: {
       dashboard: 'Dashboard',
@@ -915,6 +1067,7 @@ const EN: AppContent = {
       analysis: 'Weld Quality Analysis',
       failure: 'Failure Analysis',
       models: 'Model Catalog',
+      statistical: 'Taguchi DOE & ANOVA',
     },
   },
   analysisPage: {
@@ -1359,6 +1512,80 @@ const EN: AppContent = {
     routerDisabledNotice: 'API endpoint disabled.',
     backendUnavailableTitle: 'Backend connection unavailable',
     backendUnavailableText: 'Engineering data could not be loaded. Verify the API service and retry.',
+  },
+  statisticalPage: {
+    kicker: 'Engineering · Statistical Design & Analysis',
+    title: 'Taguchi DOE & ANOVA',
+    subtitle: 'Experimental design optimization and factor contribution analysis — not nugget prediction',
+    tabTaguchi: 'Taguchi DOE',
+    tabAnova: 'One-Way ANOVA',
+    taguchiSetupTitle: 'Experiment Design Configuration',
+    taguchiSetupMeta: 'orthogonal array · factors · levels',
+    arrayTypeLabel: 'Orthogonal Array Type',
+    factorsTitle: 'Factors',
+    addFactor: 'Add Factor',
+    removeFactor: 'Remove',
+    factorNameLabel: 'Factor Name',
+    factorUnitLabel: 'Unit',
+    factorLevelsLabel: 'Levels',
+    factorLevelsHint: 'Comma-separated, e.g. 6.5, 8.0, 9.5',
+    generateDesign: 'Generate Design',
+    generating: 'Generating…',
+    matrixTitle: 'Experiment Matrix',
+    matrixMeta: 'orthogonal array run plan',
+    colRun: 'Run',
+    saturatedWarning: 'Saturated design: all columns assigned, no error term.',
+    responseTitle: 'Response Entry & Analysis',
+    responseMeta: 'measured experiment results',
+    snObjectiveLabel: 'S/N Objective',
+    snLtb: 'Larger is better (LTB)',
+    snStb: 'Smaller is better (STB)',
+    snNtb: 'Nominal is best (NTB)',
+    responseVarLabel: 'Response Variable Name',
+    responseUnitLabel: 'Response Unit',
+    analyzeBtn: 'Analyze',
+    analyzing: 'Analyzing…',
+    resultsTitle: 'Analysis Results',
+    resultsMeta: 'S/N ratios · main effects · ANOVA',
+    optimalTitle: 'Optimal Settings (S/N Based)',
+    levelLabel: 'Level',
+    mainEffectTitle: 'Main Effect Profiles (S/N)',
+    mainEffectMeta: 'mean S/N per level per factor',
+    snAxisLabel: 'Mean S/N (dB)',
+    anovaTableTitle: 'ANOVA Table',
+    anovaMeta: 'SS · df · MS · F · p · contribution %',
+    colSource: 'Source',
+    colSS: 'SS',
+    colDF: 'df',
+    colMS: 'MS',
+    colF: 'F',
+    colP: 'p',
+    colPct: 'Contrib. %',
+    grandMeanResponse: 'Grand Mean Response',
+    grandMeanSN: 'Grand Mean S/N',
+    additivePrediction: 'Additive Model Prediction',
+    anovaSetupTitle: 'ANOVA Configuration',
+    anovaSetupMeta: 'factor · groups · measurements',
+    anovaFactorName: 'Factor Name',
+    anovaResponseVar: 'Response Variable',
+    anovaResponseUnit: 'Unit',
+    anovaGroupsTitle: 'Groups',
+    addGroup: 'Add Group',
+    removeGroup: 'Remove',
+    groupNameLabel: 'Group Name',
+    groupValuesLabel: 'Values',
+    groupValuesHint: 'Comma-separated, e.g. 5.2, 6.1, 4.8',
+    runAnovaBtn: 'Run ANOVA',
+    anovaResultsTitle: 'ANOVA Results',
+    anovaResultsMeta: 'one-way ANOVA table',
+    anovaGrandMean: 'Grand Mean',
+    anovaAssumptionsTitle: 'Assumptions',
+    governanceNote: 'CAPABILITY: DESIGN_METHOD + STATISTICAL_ANALYSIS — Does not predict nugget diameter. Input values must be real measured experiment results.',
+    errorTitle: 'Error',
+    noResultHint: 'No results — generate a design and enter responses first.',
+    backendUnavailableTitle: 'Backend connection unavailable',
+    backendUnavailableText: 'Engineering data could not be loaded. Verify the API service and retry.',
+    resetBtn: 'Reset',
   },
 }
 

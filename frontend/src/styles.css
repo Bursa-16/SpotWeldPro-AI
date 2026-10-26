@@ -1357,6 +1357,41 @@ header.pub-hero { display: block; padding: 48px 24px; border-bottom: 1px solid v
   .hero-preview-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* ── StatisticalAnalysisPage ────────────────────────────────────────────────── */
+.page-kicker { font-size: var(--fs-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: var(--sp-1); }
+.stat-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: var(--sp-5); }
+.stat-tab-btn { background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-secondary); padding: var(--sp-3) var(--sp-5); font-size: var(--fs-body); font-weight: 500; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+.stat-tab-btn:hover { color: var(--text-primary); }
+.stat-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.stat-tab-content { display: flex; flex-direction: column; gap: var(--sp-5); }
+.stat-governance-note { background: var(--info-soft); color: var(--info); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-sm); display: flex; gap: var(--sp-2); align-items: flex-start; }
+.stat-array-btns { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.stat-section-label { font-size: var(--fs-sm); font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--sp-3); }
+.stat-factor-row { display: flex; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.stat-remove-btn { align-self: flex-end; margin-bottom: 2px; }
+.stat-actions { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-top: var(--sp-2); }
+.stat-responses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--sp-3); }
+.stat-response-field { min-width: 0; }
+.stat-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.stat-table th { background: var(--bg-surface-2); color: var(--text-secondary); font-weight: 600; padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.stat-table td { padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); vertical-align: middle; }
+.stat-table tbody tr:hover { background: var(--bg-surface-2); }
+.stat-total-row td { font-weight: 600; background: var(--bg-surface-2); }
+.stat-note { color: var(--warn); cursor: help; }
+.stat-summary-row { display: flex; gap: var(--sp-5); flex-wrap: wrap; }
+.stat-kv { display: flex; flex-direction: column; gap: var(--sp-1); }
+.stat-kv-label { font-size: var(--fs-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.stat-kv-value { font-size: var(--fs-h4); font-family: var(--font-mono); color: var(--text-primary); }
+.stat-optimal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--sp-3); }
+.stat-optimal-card { background: var(--bg-surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-1); }
+.stat-optimal-name { font-size: var(--fs-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.stat-optimal-val { font-size: var(--fs-h4); font-family: var(--font-mono); color: var(--accent); }
+.stat-optimal-meta { font-size: var(--fs-xs); color: var(--text-tertiary); }
+.stat-charts-row { display: flex; flex-wrap: wrap; gap: var(--sp-4); }
+.stat-chart-wrap { background: var(--bg-surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3); }
+.stat-chart-title { font-size: var(--fs-xs); font-weight: 600; color: var(--text-secondary); margin-bottom: var(--sp-2); text-align: center; }
+.stat-assumptions { margin: 0; padding-left: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text-secondary); }
+
 /* ============================================================
    RECOVERY_02 — Weld Quality Analysis 3-zone engineering workspace
    ============================================================ */
