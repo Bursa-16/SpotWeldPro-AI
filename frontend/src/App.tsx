@@ -9,6 +9,7 @@ import { FailureProbabilityPage } from './pages/FailureProbabilityPage'
 import { AnalysisPage } from './pages/AnalysisPage'
 import { ProjectsPage } from './pages/ProjectsPage'
 import { WeldPointWizard } from './pages/WeldPointWizard'
+import { ModelCatalogPage } from './pages/ModelCatalogPage'
 import { FeaturesPage } from './pages/FeaturesPage'
 import { HowItWorksPage } from './pages/HowItWorksPage'
 import { PackagesPage } from './pages/PackagesPage'
@@ -25,7 +26,7 @@ import './styles.css'
 
 /* Public pre-login design system — global stylesheet injected once at root.
    Short lines only to keep the file writer stable. */
-type Page = 'dashboard' | 'projects' | 'analysis' | 'engineering' | 'failure'
+type Page = 'dashboard' | 'projects' | 'analysis' | 'engineering' | 'failure' | 'models'
 
 type NavItem = { id: Page; label: string; mk: string }
 type NavGroup = { id: string; label: string; accordion: boolean; items: NavItem[] }
@@ -49,6 +50,10 @@ const NAV: NavGroup[] = [
       { id: 'analysis', label: 'Weld Quality Analysis', mk: 'Q' },
       { id: 'failure', label: 'Failure Analysis', mk: 'F' },
     ],
+  },
+  {
+    id: 'models_group', label: 'MODELS', accordion: false,
+    items: [{ id: 'models', label: 'Model Catalog', mk: 'M' }],
   },
 ]
 
@@ -356,6 +361,7 @@ function AuthenticatedApp() {
             {page === 'analysis' && <AnalysisPage />}
             {page === 'engineering' && <EngineeringPage />}
             {page === 'failure' && <FailureProbabilityPage onNavigateToAnalysis={() => setPage('analysis')} />}
+            {page === 'models' && <ModelCatalogPage />}
           </WeldAnalysisProvider>
         </main>
       </div>

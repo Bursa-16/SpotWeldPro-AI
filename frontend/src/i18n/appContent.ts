@@ -358,6 +358,76 @@ export interface AppContent {
     /** Per-defect visual assessment text (one line per code). */
     defectVisualAssessment: Record<string, string>
   }
+  modelCatalogPage: {
+    kicker: string
+    title: string
+    subtitle: string
+    loadingText: string
+    errorTitle: string
+    errorText: string
+    // Tabs
+    tabPrediction: string
+    tabDoe: string
+    tabStatistics: string
+    tabPhysics: string
+    // Status badge labels
+    statusValidated: string
+    statusConditionallyValidated: string
+    statusExperimental: string
+    statusUnderReview: string
+    statusNotAvailable: string
+    statusRejected: string
+    statusDeprecated: string
+    // Card field labels
+    cardVersion: string
+    cardBasis: string
+    cardMeasurementTarget: string
+    cardMaterials: string
+    cardThicknessRange: string
+    cardMandatoryInputs: string
+    cardOptionalInputs: string
+    cardUncertainty: string
+    cardRouterActive: string
+    cardNotes: string
+    cardNotAvailableReason: string
+    cardRejectionReason: string
+    // Validation evidence labels
+    evidenceTitle: string
+    evidenceRmse: string
+    evidenceMae: string
+    evidenceBias: string
+    evidenceR2: string
+    evidenceNTrain: string
+    evidenceNTest: string
+    evidenceDataset: string
+    evidenceMeasurementBasis: string
+    // Semantic disclaimers
+    disclaimerReferenceThreshold: string
+    disclaimerDesignMethod: string
+    disclaimerStatisticalAnalysis: string
+    disclaimerPhysicsSimulation: string
+    // Capability type labels
+    capabilityNuggetPredictor: string
+    capabilityReferenceThreshold: string
+    capabilityDesignMethod: string
+    capabilityStatisticalAnalysis: string
+    capabilityPhysicsSimulation: string
+    // Measurement target labels
+    measurementTargetNugget: string
+    measurementTargetCriterion: string
+    measurementTargetNa: string
+    // Compare
+    compareTitle: string
+    compareDisclaimer: string
+    compareNa: string
+    // Info notices
+    noMetricsNotice: string
+    rejectedNotice: string
+    notAvailableNotice: string
+    routerDisabledNotice: string
+    backendUnavailableTitle: string
+    backendUnavailableText: string
+  }
   riskLabels: Record<string, string>
 }
 
@@ -378,6 +448,7 @@ const TR: AppContent = {
       engineering: 'Kaynak Lobu Laboratuvarı',
       analysis: 'Kaynak Kalite Analizi',
       failure: 'Hata Analizi',
+      models: 'Model Kataloğu',
     },
   },
   analysisPage: {
@@ -763,6 +834,67 @@ const TR: AppContent = {
       DISTORTION:            'Sac deformasyonu görsel olarak tespit edildi',
     },
   },
+  modelCatalogPage: {
+    kicker: 'Mühendislik · Model Galerisi',
+    title: 'Nugget Tahmin Model Kataloğu',
+    subtitle: 'Tüm istatistiksel, DOE, AI ve fizik tabanlı yöntemler — yönetişim durumu ve doğrulama kanıtıyla',
+    loadingText: 'Katalog yükleniyor…',
+    errorTitle: 'Backend bağlantısı kullanılamıyor',
+    errorText: 'Engineering data could not be loaded. Verify the API service and retry.',
+    tabPrediction: 'Nugget Tahmin',
+    tabDoe: 'DOE & Optimizasyon',
+    tabStatistics: 'İstatistik & ANOVA',
+    tabPhysics: 'Fizik Simülasyonu',
+    statusValidated: 'DOĞRULANMIŞ',
+    statusConditionallyValidated: 'KOŞULLU',
+    statusExperimental: 'DENEYSEL',
+    statusUnderReview: 'İNCELEMEDE',
+    statusNotAvailable: 'MEVCUT DEĞİL',
+    statusRejected: 'REDDEDİLDİ',
+    statusDeprecated: 'KULLANIM DIŞI',
+    cardVersion: 'Sürüm',
+    cardBasis: 'Model temeli',
+    cardMeasurementTarget: 'Ölçüm hedefi',
+    cardMaterials: 'Desteklenen malzemeler',
+    cardThicknessRange: 'Kalınlık aralığı',
+    cardMandatoryInputs: 'Zorunlu girdiler',
+    cardOptionalInputs: 'İsteğe bağlı girdiler',
+    cardUncertainty: 'Belirsizlik tahmini',
+    cardRouterActive: 'API durumu',
+    cardNotes: 'Notlar',
+    cardNotAvailableReason: 'Neden mevcut değil',
+    cardRejectionReason: 'Red gerekçesi',
+    evidenceTitle: 'Doğrulama Kanıtı',
+    evidenceRmse: 'RMSE',
+    evidenceMae: 'MAE',
+    evidenceBias: 'Sapma',
+    evidenceR2: 'R²',
+    evidenceNTrain: 'Eğitim kaydı',
+    evidenceNTest: 'Test kaydı',
+    evidenceDataset: 'Veri seti',
+    evidenceMeasurementBasis: 'Ölçüm temeli',
+    disclaimerReferenceThreshold: 'Bu bir nugget çapı tahmini değildir — OEM veya standart kabul eşiği.',
+    disclaimerDesignMethod: 'Bu bir nugget tahmincisi değildir — deney tasarımı ve parametre optimizasyon aracı.',
+    disclaimerStatisticalAnalysis: 'Bu bir nugget tahmincisi değildir — faktör katkı analizi aracı.',
+    disclaimerPhysicsSimulation: 'Bu görsel bölge haritalama aracıdır; mutlak çap tahmini değildir.',
+    capabilityNuggetPredictor: 'Nugget Tahmincisi',
+    capabilityReferenceThreshold: 'Referans Eşiği',
+    capabilityDesignMethod: 'Deney Tasarım Yöntemi',
+    capabilityStatisticalAnalysis: 'İstatistik Analiz Aracı',
+    capabilityPhysicsSimulation: 'Fizik Simülasyonu',
+    measurementTargetNugget: 'Nugget çapı (mm)',
+    measurementTargetCriterion: 'Kabul kriteri (mm)',
+    measurementTargetNa: 'Uygulanamaz',
+    compareTitle: 'Model Karşılaştırma',
+    compareDisclaimer: 'Yalnızca aynı ölçüm hedefli ve ölçüm temelli modeller karşılaştırılabilir. OEM eşikleri tahminlerle karşılaştırılamaz.',
+    compareNa: 'Karşılaştırılamaz',
+    noMetricsNotice: 'Doğrulama verisi yok — metrikler uydurulmaz.',
+    rejectedNotice: 'Bu model üretim tahmininde kullanılamaz.',
+    notAvailableNotice: 'Bu model henüz kullanılabilir değil.',
+    routerDisabledNotice: 'API endpoint devre dışı.',
+    backendUnavailableTitle: 'Backend bağlantısı kullanılamıyor',
+    backendUnavailableText: 'Engineering data could not be loaded. Verify the API service and retry.',
+  },
 }
 
 /* ── English ─────────────────────────────────────────────────────────── */
@@ -782,6 +914,7 @@ const EN: AppContent = {
       engineering: 'Weld Lobe Lab',
       analysis: 'Weld Quality Analysis',
       failure: 'Failure Analysis',
+      models: 'Model Catalog',
     },
   },
   analysisPage: {
@@ -1165,6 +1298,67 @@ const EN: AppContent = {
       EDGE_WELD:             'Additional edge-distance verification required',
       DISTORTION:            'Sheet distortion visually detected',
     },
+  },
+  modelCatalogPage: {
+    kicker: 'Engineering · Model Gallery',
+    title: 'Nugget Prediction Model Catalog',
+    subtitle: 'All statistical, DOE, AI and physics-based methods — with governance status and validation evidence',
+    loadingText: 'Loading catalog…',
+    errorTitle: 'Backend connection unavailable',
+    errorText: 'Engineering data could not be loaded. Verify the API service and retry.',
+    tabPrediction: 'Nugget Prediction',
+    tabDoe: 'DOE & Optimization',
+    tabStatistics: 'Statistics & ANOVA',
+    tabPhysics: 'Physics Simulation',
+    statusValidated: 'VALIDATED',
+    statusConditionallyValidated: 'CONDITIONAL',
+    statusExperimental: 'EXPERIMENTAL',
+    statusUnderReview: 'UNDER REVIEW',
+    statusNotAvailable: 'NOT AVAILABLE',
+    statusRejected: 'REJECTED',
+    statusDeprecated: 'DEPRECATED',
+    cardVersion: 'Version',
+    cardBasis: 'Model basis',
+    cardMeasurementTarget: 'Measurement target',
+    cardMaterials: 'Supported materials',
+    cardThicknessRange: 'Thickness range',
+    cardMandatoryInputs: 'Mandatory inputs',
+    cardOptionalInputs: 'Optional inputs',
+    cardUncertainty: 'Uncertainty estimate',
+    cardRouterActive: 'API status',
+    cardNotes: 'Notes',
+    cardNotAvailableReason: 'Why unavailable',
+    cardRejectionReason: 'Rejection reason',
+    evidenceTitle: 'Validation Evidence',
+    evidenceRmse: 'RMSE',
+    evidenceMae: 'MAE',
+    evidenceBias: 'Bias',
+    evidenceR2: 'R²',
+    evidenceNTrain: 'Training records',
+    evidenceNTest: 'Test records',
+    evidenceDataset: 'Dataset',
+    evidenceMeasurementBasis: 'Measurement basis',
+    disclaimerReferenceThreshold: 'This is not a nugget diameter prediction — it is an OEM or standard acceptance threshold.',
+    disclaimerDesignMethod: 'This is not a nugget predictor — it is an experimental design and parameter optimization tool.',
+    disclaimerStatisticalAnalysis: 'This is not a nugget predictor — it is a factor contribution analysis tool.',
+    disclaimerPhysicsSimulation: 'This is a visual zone mapping tool; not an absolute diameter prediction.',
+    capabilityNuggetPredictor: 'Nugget Predictor',
+    capabilityReferenceThreshold: 'Reference Threshold',
+    capabilityDesignMethod: 'Design Method',
+    capabilityStatisticalAnalysis: 'Statistical Analysis Tool',
+    capabilityPhysicsSimulation: 'Physics Simulation',
+    measurementTargetNugget: 'Nugget diameter (mm)',
+    measurementTargetCriterion: 'Acceptance criterion (mm)',
+    measurementTargetNa: 'Not applicable',
+    compareTitle: 'Model Comparison',
+    compareDisclaimer: 'Only models with the same measurement target and basis can be compared. OEM thresholds cannot be compared with predictions.',
+    compareNa: 'Not comparable',
+    noMetricsNotice: 'No validation data — metrics are not fabricated.',
+    rejectedNotice: 'This model cannot be used for production predictions.',
+    notAvailableNotice: 'This model is not yet available.',
+    routerDisabledNotice: 'API endpoint disabled.',
+    backendUnavailableTitle: 'Backend connection unavailable',
+    backendUnavailableText: 'Engineering data could not be loaded. Verify the API service and retry.',
   },
 }
 

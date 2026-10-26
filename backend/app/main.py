@@ -28,6 +28,7 @@ from app.api.v1.tests import router as tests_router
 from app.api.v1.organizations import router as organizations_router
 from app.api.v1.reference_profiles import router as reference_profiles_router
 from app.api.v1.weld_analysis import router as weld_analysis_router
+from app.api.v1.model_catalog import router as model_catalog_router
 from app.core.security import canonicalize_username, hash_password
 from app.db.session import SessionLocal
 from app.models.entities import User
@@ -140,3 +141,4 @@ app.include_router(tests_router, prefix="/api/v1")
 app.include_router(engineering_library_router, prefix="/api/v1")
 app.include_router(organizations_router, prefix="/api/v1")
 app.include_router(reference_profiles_router, prefix="/api/v1")
+app.include_router(model_catalog_router, prefix="/api/v1")
