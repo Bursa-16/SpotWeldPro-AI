@@ -26,6 +26,7 @@ import os
 from pathlib import Path
 
 import pytest
+from fastapi.testclient import TestClient
 
 
 # ── Module-state isolation ─────────────────────────────────────────────────────
@@ -493,3 +494,112 @@ class TestBooleanMigrationCompatibility:
             "reference_profiles.is_system_default must use "
             "server_default=sa.text('false')"
         )
+
+
+# ── CORS preflight for login endpoint (DEMO_CORS_01) ──────────────────────────
+
+class TestCorsPreflightLogin:
+    """DEMO_CORS_01: regression guard for CORS preflight failure on /api/v1/auth/login.
+
+    Confirmed failure: OPTIONS preflight from https://spotweldpro-ai-demo.onrender.com
+    returned no Access-Control-Allow-Origin, blocking the login POST in the browser.
+
+    Root causes:
+      1. CORS_ORIGINS is sync: false in render.yaml — operator must set it manually.
+         If absent, the backend silently uses localhost-only defaults and rejects
+         every cross-origin preflight.
+      2. A trailing slash in the operator-entered value (e.g.
+         https://spotweldpro-ai-demo.onrender.com/) would cause a mismatch with the
+         browser Origin header (which never has a trailing slash).
+
+    Fix (DEMO_CORS_01):
+      - Trailing slashes are stripped from each parsed origin.
+      - HOSTED_DEMO=true + missing CORS_ORIGINS now raises RuntimeError (fail-fast),
+        consistent with the JWT_SECRET_KEY and DATABASE_URL guards.
+      - HOSTED_DEMO=true + HTTP-only origins raises RuntimeError.
+    """
+
+    _RENDER_ORIGIN = "https://spotweldpro-ai-demo.onrender.com"
+
+    def test_login_preflight_from_render_origin_returns_allow_origin(self, monkeypatch):
+        monkeypatch.setenv("CORS_ORIGINS", self._RENDER_ORIGIN)
+        import app.main as m
+        importlib.reload(m)
+        with TestClient(m.app) as c:
+            r = c.options(
+                "/api/v1/auth/login",
+                headers={
+                    "Origin": self._RENDER_ORIGIN,
+                    "Access-Control-Request-Method": "POST",
+                    "Access-Control-Request-Headers": "content-type",
+                },
+            )
+        assert r.headers.get("access-control-allow-origin") == self._RENDER_ORIGIN
+
+    def test_login_preflight_returns_allow_credentials(self, monkeypatch):
+        monkeypatch.setenv("CORS_ORIGINS", self._RENDER_ORIGIN)
+        import app.main as m
+        importlib.reload(m)
+        with TestClient(m.app) as c:
+            r = c.options(
+                "/api/v1/auth/login",
+                headers={
+                    "Origin": self._RENDER_ORIGIN,
+                    "Access-Control-Request-Method": "POST",
+                    "Access-Control-Request-Headers": "content-type",
+                },
+            )
+        assert r.headers.get("access-control-allow-credentials") == "true"
+
+    def test_login_preflight_allows_post_method(self, monkeypatch):
+        monkeypatch.setenv("CORS_ORIGINS", self._RENDER_ORIGIN)
+        import app.main as m
+        importlib.reload(m)
+        with TestClient(m.app) as c:
+            r = c.options(
+                "/api/v1/auth/login",
+                headers={
+                    "Origin": self._RENDER_ORIGIN,
+                    "Access-Control-Request-Method": "POST",
+                    "Access-Control-Request-Headers": "content-type",
+                },
+            )
+        acam = r.headers.get("access-control-allow-methods", "")
+        assert "POST" in acam or acam == "*"
+
+    def test_login_preflight_from_unlisted_origin_rejected(self, monkeypatch):
+        monkeypatch.setenv("CORS_ORIGINS", self._RENDER_ORIGIN)
+        import app.main as m
+        importlib.reload(m)
+        with TestClient(m.app) as c:
+            r = c.options(
+                "/api/v1/auth/login",
+                headers={
+                    "Origin": "https://attacker.example.com",
+                    "Access-Control-Request-Method": "POST",
+                    "Access-Control-Request-Headers": "content-type",
+                },
+            )
+        acao = r.headers.get("access-control-allow-origin", "")
+        assert acao != "https://attacker.example.com"
+
+    def test_cors_missing_in_hosted_mode_raises(self, monkeypatch):
+        monkeypatch.setenv("HOSTED_DEMO", "true")
+        monkeypatch.delenv("CORS_ORIGINS", raising=False)
+        import app.main as m
+        with pytest.raises(RuntimeError, match="CORS_ORIGINS is required"):
+            importlib.reload(m)
+
+    def test_cors_http_only_origins_in_hosted_mode_raises(self, monkeypatch):
+        monkeypatch.setenv("HOSTED_DEMO", "true")
+        monkeypatch.setenv("CORS_ORIGINS", "http://insecure.example.com")
+        import app.main as m
+        with pytest.raises(RuntimeError, match="HTTPS"):
+            importlib.reload(m)
+
+    def test_cors_trailing_slash_stripped_from_origin(self, monkeypatch):
+        monkeypatch.setenv("CORS_ORIGINS", self._RENDER_ORIGIN + "/")
+        import app.main as m
+        importlib.reload(m)
+        assert self._RENDER_ORIGIN in m._ALLOWED_ORIGINS
+        assert (self._RENDER_ORIGIN + "/") not in m._ALLOWED_ORIGINS

@@ -41,6 +41,9 @@ _log = logging.getLogger(__name__)
 # ── CORS ──────────────────────────────────────────────────────────────────────
 # Development default: all local Vite dev-server ports.
 # Override for private demo hosting via CORS_ORIGINS env var (comma-separated).
+# Trailing slashes on each origin are stripped: browser Origin headers never
+# include a trailing slash, so an operator-entered trailing slash would silently
+# reject every preflight from the deployed frontend.
 _CORS_DEFAULT = ",".join([
     "http://localhost:5173",
     "http://localhost:5174",
@@ -48,11 +51,32 @@ _CORS_DEFAULT = ",".join([
     "http://127.0.0.1:4175",
     "http://127.0.0.1:4177",
 ])
+_cors_env = os.getenv("CORS_ORIGINS", "").strip()
 _ALLOWED_ORIGINS = [
-    o.strip()
-    for o in os.getenv("CORS_ORIGINS", _CORS_DEFAULT).split(",")
+    o.strip().rstrip("/")
+    for o in (_cors_env or _CORS_DEFAULT).split(",")
     if o.strip()
 ]
+
+# DEMO_CORS_01: fail-fast when HOSTED_DEMO=true — mirrors the JWT_SECRET_KEY and
+# DATABASE_URL guards in security.py and db/session.py.  Without CORS_ORIGINS the
+# server falls back to localhost-only defaults and every browser preflight from
+# the deployed frontend fails with no Access-Control-Allow-Origin header.
+if os.getenv("HOSTED_DEMO", "").strip().lower() in ("1", "true", "yes"):
+    if not _cors_env:
+        raise RuntimeError(
+            "CORS_ORIGINS is required when HOSTED_DEMO=true. "
+            "Set it to the deployed frontend HTTPS URL in the Render dashboard, "
+            "e.g. https://spotweldpro-ai-demo.onrender.com"
+        )
+    _https_origins = [o for o in _ALLOWED_ORIGINS if o.startswith("https://")]
+    if not _https_origins:
+        raise RuntimeError(
+            "CORS_ORIGINS must include at least one HTTPS origin when HOSTED_DEMO=true. "
+            "All configured origins are HTTP — the deployed frontend uses HTTPS."
+        )
+    del _https_origins
+del _cors_env
 
 # ── API documentation ─────────────────────────────────────────────────────────
 # Set DISABLE_DOCS=true in a private-demo .env to hide /docs, /redoc and
