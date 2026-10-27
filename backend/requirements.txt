@@ -7,3 +7,5 @@ sqlalchemy>=2.0
 alembic>=1.13
 psycopg[binary]>=3.2
 email-validator>=2.2
+numpy>=1.26
+scipy>=1.13
