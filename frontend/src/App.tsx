@@ -11,6 +11,8 @@ import { ProjectsPage } from './pages/ProjectsPage'
 import { WeldPointWizard } from './pages/WeldPointWizard'
 import { ModelCatalogPage } from './pages/ModelCatalogPage'
 import { StatisticalAnalysisPage } from './pages/StatisticalAnalysisPage'
+import { EnergyPage } from './pages/EnergyPage'
+import { HelpCenterPage } from './pages/HelpCenterPage'
 import { FeaturesPage } from './pages/FeaturesPage'
 import { HowItWorksPage } from './pages/HowItWorksPage'
 import { PackagesPage } from './pages/PackagesPage'
@@ -27,7 +29,7 @@ import './styles.css'
 
 /* Public pre-login design system — global stylesheet injected once at root.
    Short lines only to keep the file writer stable. */
-type Page = 'dashboard' | 'projects' | 'analysis' | 'engineering' | 'failure' | 'models' | 'statistical'
+type Page = 'dashboard' | 'projects' | 'analysis' | 'engineering' | 'failure' | 'models' | 'statistical' | 'energy' | 'help'
 
 type NavItem = { id: Page; label: string; mk: string }
 type NavGroup = { id: string; label: string; accordion: boolean; items: NavItem[] }
@@ -59,6 +61,14 @@ const NAV: NavGroup[] = [
   {
     id: 'stats', label: 'STATISTICS', accordion: false,
     items: [{ id: 'statistical', label: 'Taguchi DOE & ANOVA', mk: 'S' }],
+  },
+  {
+    id: 'energy_group', label: 'ENERGY', accordion: false,
+    items: [{ id: 'energy', label: 'Energy Intelligence', mk: 'E' }],
+  },
+  {
+    id: 'help_group', label: 'HELP', accordion: false,
+    items: [{ id: 'help', label: 'Help Center', mk: 'H' }],
   },
 ]
 
@@ -368,6 +378,8 @@ function AuthenticatedApp() {
             {page === 'failure' && <FailureProbabilityPage onNavigateToAnalysis={() => setPage('analysis')} />}
             {page === 'models' && <ModelCatalogPage />}
             {page === 'statistical' && <StatisticalAnalysisPage />}
+            {page === 'energy' && <EnergyPage />}
+            {page === 'help' && <HelpCenterPage />}
           </WeldAnalysisProvider>
         </main>
       </div>

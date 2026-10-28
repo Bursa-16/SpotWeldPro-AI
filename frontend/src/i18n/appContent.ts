@@ -503,7 +503,153 @@ export interface AppContent {
     backendUnavailableText: string
     resetBtn: string
   }
+  energyModule: {
+    // Page header
+    kicker: string
+    title: string
+    subtitle: string
+    // Five indicator labels
+    indicatorEMin: string
+    indicatorEIdeal: string
+    indicatorEMax: string
+    indicatorECurrent: string
+    indicatorDeltaE: string
+    // Units
+    unitKjSpot: string
+    // Window status labels
+    statusNotEstablished: string
+    statusInWindow: string
+    statusBelowMin: string
+    statusAboveMax: string
+    statusCurrentAbsent: string
+    // Validation status labels
+    validationNotValidated: string
+    validationHypothesis: string
+    validationValidated: string
+    // Form labels
+    labelCurrentKa: string
+    labelCurrentKaHint: string
+    labelResistanceUohm: string
+    labelWeldCycles: string
+    labelFrequencyHz: string
+    labelEMinKj: string
+    labelEIdealKj: string
+    labelEMaxKj: string
+    labelECurrentKj: string
+    labelSpotsPerPart: string
+    labelVolumeAnnual: string
+    labelTariffEur: string
+    labelTariffUsd: string
+    // Buttons
+    btnEstimate: string
+    btnEvaluateWindow: string
+    btnComputeCost: string
+    // Result section headers
+    resultEstimateTitle: string
+    resultWindowTitle: string
+    resultCostTitle: string
+    // Cost aggregation level labels
+    costPerSpot: string
+    costPerPart: string
+    costPer1000Parts: string
+    costAnnual: string
+    // Disclaimer
+    costDisclaimer: string
+    // Quality risk
+    qualityRiskWarning: string
+    // Governance note
+    governanceNote: string
+    // Errors / hints
+    errorTitle: string
+    notEstablishedHint: string
+    backendUnavailableTitle: string
+    backendUnavailableText: string
+  }
+  dashboardModule: {
+    tabLabel: string
+    panelPoints: string
+    btnAnalyze: string
+    panelFinancial: string
+    panelPareto: string
+    panelWindowChart: string
+    panelSensitivity: string
+    panelGroups: string
+    labelAvgExcessSpot: string
+    labelPartExcess: string
+    labelPer1000: string
+    labelAnnualExcess: string
+    labelAnnualCostEur: string
+    labelAnnualCostUsd: string
+    colExcess: string
+    colPct: string
+    colCumulative: string
+    col80Line: string
+    sensiVolume: string
+    sensiTariffEur: string
+    sensiNote: string
+    disclaimerTitle: string
+    helpTitle: string
+    helpBody: string
+  }
+  scenarioModule: {
+    tabLabel: string
+    panelPoints: string
+    labelBaseline: string
+    labelProposed: string
+    btnCompare: string
+    panelSummary: string
+    panelPerPoint: string
+    panelGroups: string
+    panelDeviationChart: string
+    colChange: string
+    colExcessChange: string
+    colImproved: string
+    colDegraded: string
+    improvedLabel: string
+    degradedLabel: string
+    noChangeLabel: string
+    warningsTitle: string
+    evaluationNote: string
+    helpTitle: string
+    helpBody: string
+  }
+  partMap: {
+    panelWeldPoints: string
+    labelX: string
+    labelY: string
+    coordsNote: string
+    btnEvaluate: string
+    panelMap: string
+    schemFallback: string
+    legendTitle: string
+    filterAll: string
+    noPointSelected: string
+    panelSelected: string
+  }
   riskLabels: Record<string, string>
+  reportModule: {
+    tabLabel: string
+    title: string
+    subtitle: string
+    formatLabel: string
+    formatCSV: string
+    formatXLSX: string
+    formatPDF: string
+    langLabel: string
+    scopeLabel: string
+    scopePart: string
+    metaProjectId: string
+    metaProjectName: string
+    metaPartId: string
+    metaPassportId: string
+    metaAnalyst: string
+    metaReportTitle: string
+    btnGenerate: string
+    generating: string
+    successPrefix: string
+    disclaimer: string
+    passportNote: string
+  }
 }
 
 /* ── Turkish ─────────────────────────────────────────────────────────── */
@@ -517,6 +663,8 @@ const TR: AppContent = {
       work: 'ÇALIŞMA',
       analysis: 'ANALİZ',
       stats: 'İSTATİSTİK',
+      energy_group: 'Punta Enerji Grupları',
+      help_group: 'YARDIM',
     },
     items: {
       dashboard: 'Gösterge Paneli',
@@ -526,6 +674,8 @@ const TR: AppContent = {
       failure: 'Hata Analizi',
       models: 'Model Kataloğu',
       statistical: 'Taguchi DOE & ANOVA',
+      energy: 'Enerji Zekası',
+      help: 'Yardım Merkezi',
     },
   },
   analysisPage: {
@@ -772,6 +922,29 @@ const TR: AppContent = {
     MEDIUM:        'Orta',
     LOW:           'Düşük',
     NOT_EVALUATED: 'Değerlendirilmedi',
+  },
+  reportModule: {
+    tabLabel: 'Rapor / Dışa Aktar',
+    title: 'Mühendislik Raporu Oluştur',
+    subtitle: 'CSV, XLSX veya PDF formatında profesyonel enerji analizi raporu indirin.',
+    formatLabel: 'Rapor Formatı',
+    formatCSV: 'CSV (Excel uyumlu, UTF-8 BOM)',
+    formatXLSX: 'XLSX (Çok sayfalı Excel)',
+    formatPDF: 'PDF (Profesyonel mühendislik belgesi)',
+    langLabel: 'Rapor Dili',
+    scopeLabel: 'Kapsam',
+    scopePart: 'Parça (tüm kaynak noktaları)',
+    metaProjectId: 'Proje ID (opsiyonel)',
+    metaProjectName: 'Proje Adı (opsiyonel)',
+    metaPartId: 'Parça ID (opsiyonel)',
+    metaPassportId: 'Dijital Kaynak Pasaportu ID (opsiyonel)',
+    metaAnalyst: 'Analist Adı (opsiyonel)',
+    metaReportTitle: 'Rapor Başlığı (opsiyonel)',
+    btnGenerate: 'Raporu Oluştur ve İndir',
+    generating: 'Rapor oluşturuluyor...',
+    successPrefix: 'Rapor indirildi:',
+    disclaimer: 'Tüm finansal değerler TAKDİRİ fazla enerji farkıdır — doğrulanmış tasarruf değildir.',
+    passportNote: 'Pasaport ID ile bağlantı kurulduğunda rapor dijital kaynak pasaportuna referans verir.',
   },
   failurePage: {
     kicker: 'Mühendislik · Punta Kaynak Parametre Analizi',
@@ -1046,6 +1219,116 @@ const TR: AppContent = {
     backendUnavailableText: 'Engineering data could not be loaded. Verify the API service and retry.',
     resetBtn: 'Sıfırla',
   },
+  energyModule: {
+    kicker: 'Enerji Zekası · Kaynak Noktası Başına kJ',
+    title: 'Enerji Gösterge Paneli',
+    subtitle: 'Beş gösterge: minimum, ideal, maksimum, mevcut ve fark enerjisi',
+    indicatorEMin: 'Hesaplanan Minimum Enerji',
+    indicatorEIdeal: 'Hesaplanan İdeal Enerji',
+    indicatorEMax: 'Hesaplanan Maksimum Enerji',
+    indicatorECurrent: 'Firmanın Mevcut Enerjisi',
+    indicatorDeltaE: 'Fark / Potansiyel Fazla Enerji',
+    unitKjSpot: 'kJ/nokta',
+    statusNotEstablished: 'Belirlenmedi',
+    statusInWindow: 'Pencere İçinde',
+    statusBelowMin: 'Minimumun Altında',
+    statusAboveMax: 'Maksimumun Üstünde',
+    statusCurrentAbsent: 'Mevcut Enerji Girilmedi',
+    validationNotValidated: 'Doğrulanmadı',
+    validationHypothesis: 'Hipotez',
+    validationValidated: 'Doğrulandı',
+    labelCurrentKa: 'Kaynak Akımı (kA)',
+    labelCurrentKaHint: 'RMS (etkin) değer — kontrol cihazı setpoint değeri, tepe değer değil',
+    labelResistanceUohm: 'Temas Direnci (µΩ)',
+    labelWeldCycles: 'Kaynak Çevrimi',
+    labelFrequencyHz: 'Frekans (Hz)',
+    labelEMinKj: 'E_min (kJ/nokta)',
+    labelEIdealKj: 'E_ideal (kJ/nokta)',
+    labelEMaxKj: 'E_max (kJ/nokta)',
+    labelECurrentKj: 'E_mevcut (kJ/nokta)',
+    labelSpotsPerPart: 'Parça Başına Nokta Sayısı',
+    labelVolumeAnnual: 'Yıllık Üretim Hacmi (parça)',
+    labelTariffEur: 'Elektrik Tarifesi (EUR/kWh)',
+    labelTariffUsd: 'Elektrik Tarifesi (USD/kWh)',
+    btnEstimate: 'Enerji Hesapla',
+    btnEvaluateWindow: 'Pencereyi Değerlendir',
+    btnComputeCost: 'Maliyet Hesapla',
+    resultEstimateTitle: 'I²Rt Enerji Tahmini',
+    resultWindowTitle: 'Enerji Penceresi Değerlendirmesi',
+    resultCostTitle: 'Teorik Enerji Farkı Maliyeti',
+    costPerSpot: 'Nokta Başına',
+    costPerPart: 'Parça Başına',
+    costPer1000Parts: '1.000 Parça Başına',
+    costAnnual: 'Yıllık',
+    costDisclaimer: 'TEORİK ENERJİ FARKI — Şebeke tarafı kayıplar, yardımcı yükler, hurda ve yeniden işleme dahil değildir. Doğrulanmış bir üretim tasarrufu değildir.',
+    qualityRiskWarning: 'Kalite riski: Mevcut enerji ideal değerin altında.',
+    governanceNote: 'KAPASİTE: ENERGY_INTELLIGENCE — Sadece elektrot tarafı enerji. Doğrulanmış deney verisi olmadan E_min/E_ideal/E_max değerleri türetilemez.',
+    errorTitle: 'Hata',
+    notEstablishedHint: 'Enerji penceresi sınırları belirlenmedi. Doğrulanmış deney verileri gereklidir.',
+    backendUnavailableTitle: 'Backend bağlantısı kullanılamıyor',
+    backendUnavailableText: 'Engineering data could not be loaded. Verify the API service and retry.',
+  },
+  dashboardModule: {
+    tabLabel: 'Gösterge Paneli / Dashboard',
+    panelPoints: 'Kaynak Noktaları / Weld Points',
+    btnAnalyze: 'Enerji Analizi Yap / Analyze Energy',
+    panelFinancial: 'Finansal Özet / Financial Summary',
+    panelPareto: 'Enerji Fazlası Pareto / Energy Excess Pareto',
+    panelWindowChart: 'Enerji Penceresi Karşılaştırması / Energy Window Chart',
+    panelSensitivity: 'Hassasiyet Analizi / Sensitivity Analysis',
+    panelGroups: 'Grup Özeti / Group Summary',
+    labelAvgExcessSpot: 'Ort. Fazla / Spot (kJ)',
+    labelPartExcess: 'Parça Başı Fazla / Part Excess (kJ)',
+    labelPer1000: '1000 Parça Fazlası / Per-1000 (kWh)',
+    labelAnnualExcess: 'Yıllık Fazla / Annual Excess (kWh)',
+    labelAnnualCostEur: 'Yıllık Maliyet EUR / Annual Cost EUR',
+    labelAnnualCostUsd: 'Yıllık Maliyet USD / Annual Cost USD',
+    colExcess: 'Fazla Enerji / Excess (kJ)',
+    colPct: '% Katkı / % Share',
+    colCumulative: 'Kümülatif / Cumulative %',
+    col80Line: '%80 Pareto',
+    sensiVolume: 'Üretim Hacmi / Volume',
+    sensiTariffEur: 'EUR/kWh →',
+    sensiNote: 'Tablo: Yıllık Teorik Maliyet (EUR) / Annual Theoretical Cost (EUR)',
+    disclaimerTitle: 'Mühendislik Uyarısı / Engineering Warning',
+    helpTitle: 'Yardım / Help',
+    helpBody: 'Gösterge paneli, çok noktalı enerji fazlasını görselleştirir.\n\nPareto: Kaynak noktaları teorik enerji fazlasına göre büyükten küçüğe sıralanır. %80 çizgisi: toplam fazlanın %80\'ini oluşturan nokta kümesini gösterir (Pareto ilkesi).\n\nFinansal özet: Tüm değerler TAKDİRİ FAZLA ENERJİ\'dir. Şebeke tarafı kayıplar (trafo verimi, elektrodu soğutma, makine yükü) dahil değildir. Üretim kararı için bağımsız enerji ölçümü gereklidir.\n\nHassasiyet tablosu: Üretim hacmi ile EUR/kWh tarifesinin birlikte değiştiğinde yıllık teorik maliyetin nasıl değiştiğini gösterir.',
+  },
+  scenarioModule: {
+    tabLabel: 'Senaryo Karşılaştırma / Scenario Compare',
+    panelPoints: 'Kaynak Noktaları — Mevcut ve Önerilen / Weld Points — Baseline & Proposed',
+    labelBaseline: 'Mevcut E_cur (kJ)',
+    labelProposed: 'Önerilen E_cur (kJ)',
+    btnCompare: 'Senaryoları Karşılaştır / Compare Scenarios',
+    panelSummary: 'Senaryo Özeti / Scenario Summary',
+    panelPerPoint: 'Nokta Bazlı Karşılaştırma / Per-Point Comparison',
+    panelGroups: 'Grup Karşılaştırması / Group Comparison',
+    panelDeviationChart: 'Enerji Sapması Grafiği / Energy Deviation Chart',
+    colChange: 'ΔE (kJ)',
+    colExcessChange: 'Fazla Değişim',
+    colImproved: 'İyileşti',
+    colDegraded: 'Geriledi',
+    improvedLabel: '↑ İyileşti',
+    degradedLabel: '↓ Geriledi',
+    noChangeLabel: '= Değişmedi',
+    warningsTitle: 'Uyarılar / Warnings',
+    evaluationNote: 'SENARYO DEĞERLENDİRMESİ — Doğrulanmış optimizasyon değildir.',
+    helpTitle: 'Senaryo Karşılaştırma Yardım',
+    helpBody: 'Senaryo karşılaştırması, mevcut (baseline) ve önerilen enerji değerlerini her kaynak noktası için karşılaştırır.\n\nBu bir senaryo değerlendirmesidir — nugget çapı, sıçrama riski ve kaplama gereksinimleri modellenmez.\n\nKalite kademesi:\n  IN_WINDOW > ABOVE_MAX > BELOW_MIN > E_CURRENT_ABSENT > NOT_ESTABLISHED\n\nTüm önerilen değerler, üretim uygulamasından önce deneysel doğrulama gerektirir.',
+  },
+  partMap: {
+    panelWeldPoints: 'Kaynak Noktaları / Weld Points',
+    labelX: 'X (0–100)',
+    labelY: 'Y (0–100)',
+    coordsNote: 'X ve Y koordinatları isteğe bağlıdır. Girildiğinde SVG haritasında konumlandırılır; girilmediğinde şematik görünüm kullanılır. / X and Y coordinates are optional. When provided, points appear on the SVG map; otherwise a schematic chip view is shown.',
+    btnEvaluate: 'Haritayı Değerlendir / Evaluate Map',
+    panelMap: 'Parça Enerji Haritası / Part Energy Map',
+    schemFallback: 'Koordinat girilmedi — şematik görünüm / No coordinates — schematic view',
+    legendTitle: 'Renk Göstergesi / Legend',
+    filterAll: 'Tüm Gruplar / All Groups',
+    noPointSelected: 'Haritada bir noktaya tıklayın. / Click a point on the map.',
+    panelSelected: 'Seçili Nokta Detayı / Selected Point Detail',
+  },
 }
 
 /* ── English ─────────────────────────────────────────────────────────── */
@@ -1059,6 +1342,8 @@ const EN: AppContent = {
       work: 'WORK',
       analysis: 'ANALYSIS',
       stats: 'STATISTICS',
+      energy_group: 'Weld Energy Groups',
+      help_group: 'HELP',
     },
     items: {
       dashboard: 'Dashboard',
@@ -1068,6 +1353,8 @@ const EN: AppContent = {
       failure: 'Failure Analysis',
       models: 'Model Catalog',
       statistical: 'Taguchi DOE & ANOVA',
+      energy: 'Energy Intelligence',
+      help: 'Help Center',
     },
   },
   analysisPage: {
@@ -1313,6 +1600,29 @@ const EN: AppContent = {
     MEDIUM:        'Medium',
     LOW:           'Low',
     NOT_EVALUATED: 'Not Evaluated',
+  },
+  reportModule: {
+    tabLabel: 'Report / Export',
+    title: 'Generate Engineering Report',
+    subtitle: 'Download a professional energy analysis report in CSV, XLSX or PDF format.',
+    formatLabel: 'Report Format',
+    formatCSV: 'CSV (Excel-compatible, UTF-8 BOM)',
+    formatXLSX: 'XLSX (Multi-sheet Excel)',
+    formatPDF: 'PDF (Professional engineering document)',
+    langLabel: 'Report Language',
+    scopeLabel: 'Scope',
+    scopePart: 'Part (all weld points)',
+    metaProjectId: 'Project ID (optional)',
+    metaProjectName: 'Project Name (optional)',
+    metaPartId: 'Part ID (optional)',
+    metaPassportId: 'Digital Weld Passport ID (optional)',
+    metaAnalyst: 'Analyst Name (optional)',
+    metaReportTitle: 'Report Title (optional)',
+    btnGenerate: 'Generate & Download Report',
+    generating: 'Generating report...',
+    successPrefix: 'Downloaded:',
+    disclaimer: 'All financial values are THEORETICAL energy difference — not a verified saving.',
+    passportNote: 'When a Passport ID is provided the report references the Digital Weld Passport.',
   },
   failurePage: {
     kicker: 'Engineering · Spot Welding Parameter Analysis',
@@ -1586,6 +1896,116 @@ const EN: AppContent = {
     backendUnavailableTitle: 'Backend connection unavailable',
     backendUnavailableText: 'Engineering data could not be loaded. Verify the API service and retry.',
     resetBtn: 'Reset',
+  },
+  energyModule: {
+    kicker: 'Energy Intelligence · kJ per Spot',
+    title: 'Energy Dashboard',
+    subtitle: 'Five indicators: minimum, ideal, maximum, current, and delta energy',
+    indicatorEMin: 'Calculated Minimum Energy',
+    indicatorEIdeal: 'Calculated Ideal Energy',
+    indicatorEMax: 'Calculated Maximum Energy',
+    indicatorECurrent: 'Company Current Energy',
+    indicatorDeltaE: 'Difference / Potential Excess Energy',
+    unitKjSpot: 'kJ/spot',
+    statusNotEstablished: 'Not Established',
+    statusInWindow: 'In Window',
+    statusBelowMin: 'Below Minimum',
+    statusAboveMax: 'Above Maximum',
+    statusCurrentAbsent: 'Current Energy Not Provided',
+    validationNotValidated: 'Not Validated',
+    validationHypothesis: 'Hypothesis',
+    validationValidated: 'Validated',
+    labelCurrentKa: 'Weld Current (kA)',
+    labelCurrentKaHint: 'RMS (effective) value — controller setpoint, not peak current',
+    labelResistanceUohm: 'Contact Resistance (µΩ)',
+    labelWeldCycles: 'Weld Cycles',
+    labelFrequencyHz: 'Frequency (Hz)',
+    labelEMinKj: 'E_min (kJ/spot)',
+    labelEIdealKj: 'E_ideal (kJ/spot)',
+    labelEMaxKj: 'E_max (kJ/spot)',
+    labelECurrentKj: 'E_current (kJ/spot)',
+    labelSpotsPerPart: 'Spots per Part',
+    labelVolumeAnnual: 'Annual Production Volume (parts)',
+    labelTariffEur: 'Electricity Tariff (EUR/kWh)',
+    labelTariffUsd: 'Electricity Tariff (USD/kWh)',
+    btnEstimate: 'Estimate Energy',
+    btnEvaluateWindow: 'Evaluate Window',
+    btnComputeCost: 'Compute Cost',
+    resultEstimateTitle: 'I²Rt Energy Estimate',
+    resultWindowTitle: 'Energy Window Evaluation',
+    resultCostTitle: 'Theoretical Energy Difference Cost',
+    costPerSpot: 'Per Spot',
+    costPerPart: 'Per Part',
+    costPer1000Parts: 'Per 1,000 Parts',
+    costAnnual: 'Annual',
+    costDisclaimer: 'THEORETICAL ENERGY DIFFERENCE ONLY — Excludes grid-side losses, auxiliary loads, scrap, and rework. Not a verified production saving.',
+    qualityRiskWarning: 'Quality risk: current energy is below ideal.',
+    governanceNote: 'CAPABILITY: ENERGY_INTELLIGENCE — Electrode-side energy only. E_min/E_ideal/E_max cannot be derived without validated experimental data.',
+    errorTitle: 'Error',
+    notEstablishedHint: 'Energy window bounds are not established. Validated experimental data is required.',
+    backendUnavailableTitle: 'Backend connection unavailable',
+    backendUnavailableText: 'Engineering data could not be loaded. Verify the API service and retry.',
+  },
+  dashboardModule: {
+    tabLabel: 'Dashboard',
+    panelPoints: 'Weld Points',
+    btnAnalyze: 'Analyze Energy',
+    panelFinancial: 'Financial Summary',
+    panelPareto: 'Energy Excess Pareto',
+    panelWindowChart: 'Energy Window Chart',
+    panelSensitivity: 'Sensitivity Analysis',
+    panelGroups: 'Group Summary',
+    labelAvgExcessSpot: 'Avg Excess / Spot (kJ)',
+    labelPartExcess: 'Part Excess (kJ)',
+    labelPer1000: 'Per-1000 Parts (kWh)',
+    labelAnnualExcess: 'Annual Excess (kWh)',
+    labelAnnualCostEur: 'Annual Cost EUR',
+    labelAnnualCostUsd: 'Annual Cost USD',
+    colExcess: 'Excess (kJ)',
+    colPct: '% Share',
+    colCumulative: 'Cumulative %',
+    col80Line: '80% Pareto',
+    sensiVolume: 'Volume',
+    sensiTariffEur: 'EUR/kWh →',
+    sensiNote: 'Table: Annual Theoretical Cost (EUR)',
+    disclaimerTitle: 'Engineering Warning',
+    helpTitle: 'Help',
+    helpBody: 'The dashboard visualizes multi-spot theoretical energy excess.\n\nPareto: Weld points ranked descending by excess energy. The 80% line marks the subset contributing 80% of total excess (Pareto principle).\n\nFinancial summary: All values are THEORETICAL EXCESS ENERGY only. Grid-side losses (transformer efficiency, electrode cooling, machine utilization) are not modelled. Independent energy metering is required for production decisions.\n\nSensitivity table: Shows how annual theoretical cost changes as production volume and EUR/kWh tariff vary together.',
+  },
+  scenarioModule: {
+    tabLabel: 'Scenario Compare',
+    panelPoints: 'Weld Points — Baseline & Proposed',
+    labelBaseline: 'Baseline E_cur (kJ)',
+    labelProposed: 'Proposed E_cur (kJ)',
+    btnCompare: 'Compare Scenarios',
+    panelSummary: 'Scenario Summary',
+    panelPerPoint: 'Per-Point Comparison',
+    panelGroups: 'Group Comparison',
+    panelDeviationChart: 'Energy Deviation Chart',
+    colChange: 'ΔE (kJ)',
+    colExcessChange: 'Excess Change',
+    colImproved: 'Improved',
+    colDegraded: 'Degraded',
+    improvedLabel: '↑ Improved',
+    degradedLabel: '↓ Degraded',
+    noChangeLabel: '= No change',
+    warningsTitle: 'Warnings',
+    evaluationNote: 'SCENARIO EVALUATION ONLY — Not a validated optimisation.',
+    helpTitle: 'Scenario Comparison Help',
+    helpBody: 'Scenario comparison evaluates baseline (current) versus proposed energy values for each weld point.\n\nThis is a SCENARIO EVALUATION — nugget diameter, expulsion risk, and coating requirements are not modelled.\n\nQuality rank (best to worst):\n  IN_WINDOW > ABOVE_MAX > BELOW_MIN > E_CURRENT_ABSENT > NOT_ESTABLISHED\n\nAll proposed values require validated experimental confirmation before production implementation.',
+  },
+  partMap: {
+    panelWeldPoints: 'Weld Points',
+    labelX: 'X (0–100)',
+    labelY: 'Y (0–100)',
+    coordsNote: 'X and Y coordinates are optional. When provided, points are placed on the SVG map; otherwise a schematic chip view is shown.',
+    btnEvaluate: 'Evaluate Map',
+    panelMap: 'Part Energy Map',
+    schemFallback: 'No coordinates — schematic view',
+    legendTitle: 'Legend',
+    filterAll: 'All Groups',
+    noPointSelected: 'Click a point on the map.',
+    panelSelected: 'Selected Point Detail',
   },
 }
 

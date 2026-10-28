@@ -1,14 +1,19 @@
 
-from pydantic import BaseModel, EmailStr, Field
+from typing import Annotated
+
+from pydantic import BaseModel, EmailStr, Field, StringConstraints
 
 from app.models.enums import UserRole
+
+# Pydantic v2: strip_whitespace via StringConstraints (not Field extra kwargs)
+_UsernameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
 
 
 class LoginRequest(BaseModel):
     # Authentication identifier is username (canonical: stripped, lowercase).
     # Password min_length not enforced here — wrong credentials return 401,
     # never a validation error that reveals password policy.
-    username: str = Field(min_length=1, max_length=100, strip_whitespace=True)
+    username: _UsernameStr
     password: str = Field(min_length=1)
 
 
@@ -25,7 +30,7 @@ class TokenResponse(BaseModel):
 class UserCreate(BaseModel):
     # Both username (auth identity) and email (contact/notification/recovery)
     # are required when creating a user. See AUTH-UX-03.
-    username: str = Field(min_length=1, max_length=100, strip_whitespace=True)
+    username: _UsernameStr
     email: EmailStr
     full_name: str = Field(min_length=2, max_length=200)
     password: str = Field(min_length=8)
