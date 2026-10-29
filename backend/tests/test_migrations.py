@@ -275,7 +275,7 @@ def test_sqlite_registry_migration_upgrades_empty_and_downgrades_cleanly(
         assert ALL_GOVERNED_TABLES <= migrated_tables
         with migrated_engine.connect() as connection:
             assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-                "0016_merge_heads"
+                "0019_import_batches"
             )
             for table_name in ALL_GOVERNED_TABLES:
                 assert connection.scalar(text(f"SELECT COUNT(*) FROM {table_name}")) == 0
@@ -616,7 +616,7 @@ def test_rule_evaluation_persistence_migration_round_trip(
         _assert_registry_schema_matches_models(upgraded_engine, ALL_GOVERNED_TABLES)
         with upgraded_engine.connect() as connection:
             assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-                "0016_merge_heads"
+                "0019_import_batches"
             )
 
     _run_downgrade(monkeypatch, database_url, "0007_rule_lifecycle_events")
@@ -648,7 +648,7 @@ def test_machine_readiness_persistence_migration_round_trip(
         _assert_registry_schema_matches_models(upgraded_engine, ALL_GOVERNED_TABLES)
         with upgraded_engine.connect() as connection:
             assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-                "0016_merge_heads"
+                "0019_import_batches"
             )
 
     _run_downgrade(monkeypatch, database_url, "0008_rule_evaluation_persistence")
