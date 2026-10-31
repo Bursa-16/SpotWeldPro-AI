@@ -24,7 +24,7 @@ function MarketingLangProvider({ children }: { children: ReactNode }) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter basename="/SpotWeldPro-AI">
+    <BrowserRouter basename="/SpotWeldPro-Web">
       <MarketingLangProvider>
         <Routes>
           <Route path="/" element={<LandingPage />} />

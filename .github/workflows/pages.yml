@@ -1,7 +1,7 @@
 # SpotWeldPro AI — GitHub Pages: Marketing Website
 #
 # Deploys the isolated static marketing build to:
-#   https://spotweldpro-ai.github.io/SpotWeldPro-AI/
+#   https://spotweldpro-ai.github.io/SpotWeldPro-Web/
 #
 # PUBLICATION GATE: trigger is workflow_dispatch only.
 # This workflow does NOT run on push to main.

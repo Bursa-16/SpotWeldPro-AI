@@ -19,7 +19,7 @@ export default defineConfig({
       },
     },
   ],
-  base: '/SpotWeldPro-AI/',
+  base: '/SpotWeldPro-Web/',
   build: {
     outDir: 'dist-marketing',
     emptyOutDir: true,
