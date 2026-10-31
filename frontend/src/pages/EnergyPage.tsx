@@ -1252,6 +1252,10 @@ export function EnergyPage() {
             </div>
           </Panel>
 
+          <div style={{ background: 'rgba(88,166,255,0.08)', border: '1px solid var(--info)', borderRadius: 'var(--r-md)', padding: 'var(--sp-3) var(--sp-4)', fontSize: 'var(--fs-xs)', color: 'var(--info)', marginBottom: 'var(--sp-3)' }}>
+            ℹ {p.multiPulseNote}
+          </div>
+
           <Panel title="Enerji Penceresi / Energy Window">
             <div style={grid2}>
               <FieldRow label={p.labelECurrentKj + ' (boş → hesaplanan / empty → computed)'}
@@ -1289,6 +1293,12 @@ export function EnergyPage() {
               <FieldRow label={p.labelTariffUsd} value={costForm.tariff_usd_per_kwh}
                 onChange={v => setCostForm(f => ({ ...f, tariff_usd_per_kwh: v }))}
                 step="0.01" min="0" />
+            </div>
+            <div style={{ marginTop: 'var(--sp-3)', fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)' }}>
+              ℹ {p.costModelNote}
+            </div>
+            <div style={{ marginTop: 'var(--sp-2)', fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
+              ℹ {p.kwhConversionNote}
             </div>
           </Panel>
 
@@ -1386,6 +1396,9 @@ export function EnergyPage() {
               )}
 
               <Panel title="I²Rt Hesap Detayı / Calculation Detail" accent="var(--border)">
+                <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', marginBottom: 'var(--sp-2)', lineHeight: 1.5 }}>
+                  ℹ {p.engLimitationsNote}
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)', fontSize: 'var(--fs-sm)', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
                   <span>E = {fmt(estimateResult.energy_j, 2)} J</span>
                   <span>= {fmt(estimateResult.energy_kj, 4)} kJ</span>
@@ -1478,10 +1491,10 @@ export function EnergyPage() {
             <>
               {/* Part KPI summary */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-3)', marginBottom: 'var(--sp-4)' }}>
-                <KpiCard label="Toplam E_current / Part" value={fmt(aggrResult.part_e_current_total_kj, 3)} unit="kJ" accent="var(--accent)" />
-                <KpiCard label="Toplam E_excess / Part" value={fmt(aggrResult.part_e_excess_total_kj, 3)} unit="kJ" accent="var(--warn)" />
-                <KpiCard label="Yıllık Enerji Farkı" value={fmt(aggrResult.annual_e_excess_total_kwh, 1)} unit="kWh/yıl" accent="var(--info)" />
-                <KpiCard label="Yıllık Maliyet EUR" value={fmt(aggrResult.annual_cost_eur, 2)} unit="EUR/yıl" accent="var(--ok)" />
+                <KpiCard label="Toplam E_current / Total E_current" value={fmt(aggrResult.part_e_current_total_kj, 3)} unit="kJ / parça · part" accent="var(--accent)" />
+                <KpiCard label="Toplam E_excess / Total Excess" value={fmt(aggrResult.part_e_excess_total_kj, 3)} unit="kJ / parça · part" accent="var(--warn)" />
+                <KpiCard label="Yıllık Enerji Farkı / Annual Energy Difference" value={fmt(aggrResult.annual_e_excess_total_kwh, 1)} unit="kWh/yıl · year" accent="var(--info)" />
+                <KpiCard label="Yıllık Maliyet EUR / Annual Cost EUR" value={fmt(aggrResult.annual_cost_eur, 2)} unit="EUR/yıl · year (TAKDİRİ · est.)" accent="var(--ok)" />
               </div>
 
               {/* Status summary chips */}
@@ -2018,13 +2031,13 @@ export function EnergyPage() {
                     unit="kWh / yıl" />
                   <KpiCard label={dm.labelAnnualCostEur}
                     value={dashResult.financial.annual_cost_eur != null ? fmt(dashResult.financial.annual_cost_eur, 2) : '—'}
-                    unit="EUR / yıl (TAKDİRİ)"
+                    unit={dm.unitEurYear}
                     accent={dashResult.financial.annual_cost_eur != null && dashResult.financial.annual_cost_eur > 0 ? 'var(--warn)' : undefined}
-                    note="Teorik — doğrulanmış tasarruf değil" />
+                    note={dm.theoreticalCostNote} />
                   <KpiCard label={dm.labelAnnualCostUsd}
                     value={dashResult.financial.annual_cost_usd != null ? fmt(dashResult.financial.annual_cost_usd, 2) : '—'}
-                    unit="USD / yıl (TAKDİRİ)"
-                    note="Teorik — doğrulanmış tasarruf değil" />
+                    unit={dm.unitUsdYear}
+                    note={dm.theoreticalCostNote} />
                 </div>
                 <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', marginTop: 8 }}>
                   Parça başı toplam: {fmt(dashResult.financial.part_excess_kwh, 6)} kWh&nbsp;|&nbsp;

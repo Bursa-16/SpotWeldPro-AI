@@ -305,8 +305,8 @@ export const HELP_MODULES: HelpModule[] = [
       ],
     },
     warnings: {
-      tr: ['E_min/E_ideal/E_max değerleri teorik olarak türetilemez — doğrulanmış deneysel çalışma gerektirir', 'I²Rt yalnızca elektrot tarafı enerjidir; trafo kayıpları ve soğutma dahil değildir'],
-      en: ['E_min/E_ideal/E_max cannot be derived theoretically — validated experimental work is required', 'I²Rt is electrode-side energy only; transformer losses and cooling are not included'],
+      tr: ['E_min/E_ideal/E_max değerleri teorik olarak türetilemez — doğrulanmış deneysel çalışma gerektirir', 'I²Rt yalnızca elektrot tarafı enerjidir; trafo kayıpları ve soğutma dahil değildir', 'Bu hesaplama tek kaynak darbesi içindir — çok darbeli uygulamalarda her darbe ayrı değerlendirilmelidir'],
+      en: ['E_min/E_ideal/E_max cannot be derived theoretically — validated experimental work is required', 'I²Rt is electrode-side energy only; transformer losses and cooling are not included', 'This calculation applies to a single pulse — evaluate each pulse separately for multi-pulse welding'],
     },
     relatedIds: ['energy-multi', 'energy-dashboard'],
   },
@@ -534,7 +534,7 @@ export const HELP_MODULES: HelpModule[] = [
 export const GLOSSARY: GlossaryTerm[] = [
   { term: 'E = I²Rt', def: { tr: 'Punta kaynak enerji formülü: E = Akım² × Direnç × Süre', en: 'Spot weld energy formula: Energy = Current² × Resistance × Time' } },
   { term: 'E_min', def: { tr: 'Minimum kabul edilebilir kaynak enerjisi (doğrulanmış deneysel veri gerektirir)', en: 'Minimum acceptable weld energy (requires validated experimental data)' } },
-  { term: 'E_ideal', def: { tr: 'Hedef ideal kaynak enerjisi (optimum nugget için)', en: 'Target ideal weld energy (for optimum nugget formation)' } },
+  { term: 'E_ideal', def: { tr: 'Hedef ideal kaynak enerjisi — doğrulanmış deneysel veri gerektirir', en: 'Target ideal weld energy — requires validated experimental data' } },
   { term: 'E_max', def: { tr: 'Maksimum kabul edilebilir kaynak enerjisi (fırlama sınırı)', en: 'Maximum acceptable weld energy (expulsion boundary)' } },
   { term: 'E_current', def: { tr: 'Mevcut ölçülen/tahmin edilen kaynak enerjisi', en: 'Current measured or estimated weld energy' } },
   { term: 'ΔE', def: { tr: 'İmzalı enerji farkı: E_current − E_ideal', en: 'Signed energy difference: E_current − E_ideal' } },

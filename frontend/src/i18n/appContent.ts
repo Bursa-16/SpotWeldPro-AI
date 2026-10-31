@@ -559,6 +559,10 @@ export interface AppContent {
     qualityRiskWarning: string
     // Governance note
     governanceNote: string
+    multiPulseNote: string
+    costModelNote: string
+    engLimitationsNote: string
+    kwhConversionNote: string
     // Errors / hints
     errorTitle: string
     notEstablishedHint: string
@@ -584,6 +588,9 @@ export interface AppContent {
     colPct: string
     colCumulative: string
     col80Line: string
+    theoreticalCostNote: string
+    unitEurYear: string
+    unitUsdYear: string
     sensiVolume: string
     sensiTariffEur: string
     sensiNote: string
@@ -1238,7 +1245,7 @@ const TR: AppContent = {
     validationHypothesis: 'Hipotez',
     validationValidated: 'Doğrulandı',
     labelCurrentKa: 'Kaynak Akımı (kA)',
-    labelCurrentKaHint: 'RMS (etkin) değer — kontrol cihazı setpoint değeri, tepe değer değil',
+    labelCurrentKaHint: 'Kaynak akımını, kaynak kontrol ünitesinde gösterilen RMS (etkin) akım değeri olarak giriniz.',
     labelResistanceUohm: 'Temas Direnci (µΩ)',
     labelWeldCycles: 'Kaynak Çevrimi',
     labelFrequencyHz: 'Frekans (Hz)',
@@ -1262,7 +1269,11 @@ const TR: AppContent = {
     costAnnual: 'Yıllık',
     costDisclaimer: 'TEORİK ENERJİ FARKI — Şebeke tarafı kayıplar, yardımcı yükler, hurda ve yeniden işleme dahil değildir. Doğrulanmış bir üretim tasarrufu değildir.',
     qualityRiskWarning: 'Kalite riski: Mevcut enerji ideal değerin altında.',
-    governanceNote: 'KAPASİTE: ENERGY_INTELLIGENCE — Sadece elektrot tarafı enerji. Doğrulanmış deney verisi olmadan E_min/E_ideal/E_max değerleri türetilemez.',
+    governanceNote: 'KAPASİTE: ENERGY_INTELLIGENCE — Model: E = I_RMS² × R × t. Sabit direnç (R) varsayımı; tek kaynak darbesi kapsamı. Elektrot tarafı enerji; şebeke tarafı kayıplar dahil değildir. E_min/E_ideal/E_max doğrulanmış deney verisi olmadan türetilemez.',
+    multiPulseNote: 'Bu hesaplama tek kaynak darbesi içindir. Çok darbeli kaynak uygulamalarında her darbenin enerjisi ayrı değerlendirilmelidir.',
+    costModelNote: 'Sonuçlar teorik enerji ve maliyet tahminleridir. Gerçek üretim tüketimi ekipman verimi, yardımcı sistemler ve proses koşullarına bağlı olarak değişebilir.',
+    engLimitationsNote: 'Model: E = I_RMS² × R × t — Sabit direnç (R) varsayımı; tek darbe kapsamı. Akım kA, direnç µΩ, süre saniye (çevrim/Hz). Hesaplanan değer teorik elektrik enerjisidir; gerçek kaynak ısısı dönüşüm kayıpları nedeniyle farklı olabilir.',
+    kwhConversionNote: 'Birim dönüşümü: 1 kJ = 1/3600 kWh. Tarife EUR/kWh veya USD/kWh (fatura değeri). Tüm maliyet çıktıları teorik fazla enerji tahminidir — ekipman ve yardımcı sistem tüketimi dahil değildir.',
     errorTitle: 'Hata',
     notEstablishedHint: 'Enerji penceresi sınırları belirlenmedi. Doğrulanmış deney verileri gereklidir.',
     backendUnavailableTitle: 'Backend bağlantısı kullanılamıyor',
@@ -1287,6 +1298,9 @@ const TR: AppContent = {
     colPct: '% Katkı / % Share',
     colCumulative: 'Kümülatif / Cumulative %',
     col80Line: '%80 Pareto',
+    theoreticalCostNote: 'Teorik — doğrulanmış tasarruf değil',
+    unitEurYear: 'EUR/yıl (TAKDİRİ)',
+    unitUsdYear: 'USD/yıl (TAKDİRİ)',
     sensiVolume: 'Üretim Hacmi / Volume',
     sensiTariffEur: 'EUR/kWh →',
     sensiNote: 'Tablo: Yıllık Teorik Maliyet (EUR) / Annual Theoretical Cost (EUR)',
@@ -1916,7 +1930,7 @@ const EN: AppContent = {
     validationHypothesis: 'Hypothesis',
     validationValidated: 'Validated',
     labelCurrentKa: 'Weld Current (kA)',
-    labelCurrentKaHint: 'RMS (effective) value — controller setpoint, not peak current',
+    labelCurrentKaHint: 'Enter the RMS welding current displayed by the welding controller.',
     labelResistanceUohm: 'Contact Resistance (µΩ)',
     labelWeldCycles: 'Weld Cycles',
     labelFrequencyHz: 'Frequency (Hz)',
@@ -1940,7 +1954,11 @@ const EN: AppContent = {
     costAnnual: 'Annual',
     costDisclaimer: 'THEORETICAL ENERGY DIFFERENCE ONLY — Excludes grid-side losses, auxiliary loads, scrap, and rework. Not a verified production saving.',
     qualityRiskWarning: 'Quality risk: current energy is below ideal.',
-    governanceNote: 'CAPABILITY: ENERGY_INTELLIGENCE — Electrode-side energy only. E_min/E_ideal/E_max cannot be derived without validated experimental data.',
+    governanceNote: 'CAPABILITY: ENERGY_INTELLIGENCE — Model: E = I_RMS² × R × t. Constant resistance (R) assumption; single-pulse scope. Electrode-side energy only; grid-side losses excluded. E_min/E_ideal/E_max cannot be derived without validated experimental data.',
+    multiPulseNote: 'This calculation applies to a single welding pulse. For multi-pulse welding, each pulse must be evaluated separately.',
+    costModelNote: 'Results are theoretical energy and cost estimates. Actual production consumption may vary depending on equipment efficiency, auxiliary systems and process conditions.',
+    engLimitationsNote: 'Model: E = I_RMS² × R × t — Constant resistance (R) assumption; single-pulse scope. Current in kA, resistance in µΩ, time in seconds (cycles/Hz). Calculated energy is theoretical electrical energy; actual heat transferred to the weld may differ due to conversion losses.',
+    kwhConversionNote: 'Unit conversion: 1 kJ = 1/3600 kWh. Tariff in EUR/kWh or USD/kWh as billed. All cost outputs are theoretical excess energy estimates — equipment and auxiliary consumption are excluded.',
     errorTitle: 'Error',
     notEstablishedHint: 'Energy window bounds are not established. Validated experimental data is required.',
     backendUnavailableTitle: 'Backend connection unavailable',
@@ -1965,6 +1983,9 @@ const EN: AppContent = {
     colPct: '% Share',
     colCumulative: 'Cumulative %',
     col80Line: '80% Pareto',
+    theoreticalCostNote: 'Theoretical — not a verified saving',
+    unitEurYear: 'EUR/year (est.)',
+    unitUsdYear: 'USD/year (est.)',
     sensiVolume: 'Volume',
     sensiTariffEur: 'EUR/kWh →',
     sensiNote: 'Table: Annual Theoretical Cost (EUR)',
