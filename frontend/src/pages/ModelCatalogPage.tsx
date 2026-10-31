@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import client from '../api/client'
 import { useAppLanguage } from '../i18n/useAppLanguage'
+import './ModelCatalogPage.css'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type ValidationEvidence = {
