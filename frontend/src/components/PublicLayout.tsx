@@ -92,27 +92,39 @@ export function PublicLayout({ children }: Props) {
             <p className="pub-footer-tagline">{f.tagline}</p>
           </div>
 
-          {/* Product navigation column */}
+          {/* Platform column */}
           <div className="pub-footer-col">
-            <h3 className="pub-footer-col-title">{f.navTitle}</h3>
+            <h3 className="pub-footer-col-title">{f.platformTitle}</h3>
             <ul className="pub-footer-links">
-              {t.nav.filter(n => !n.to.startsWith('/#')).map((n) => (
-                <li key={n.to}>
-                  <Link to={n.to}>{n.label}</Link>
-                </li>
-              ))}
+              <li><Link to="/">{t.nav[0].label}</Link></li>
+              <li><Link to="/features">{t.nav[1].label}</Link></li>
+              <li><Link to="/">{f.useCasesLabel}</Link></li>
+              <li>
+                <a href="https://spotweldpro-ai-demo.onrender.com/" target="_blank" rel="noopener noreferrer">
+                  {f.liveDemoLabel}
+                </a>
+              </li>
             </ul>
           </div>
 
-          {/* Capabilities column */}
+          {/* Engineering column */}
           <div className="pub-footer-col">
-            <h3 className="pub-footer-col-title">{f.capTitle}</h3>
+            <h3 className="pub-footer-col-title">{f.engineeringTitle}</h3>
             <ul className="pub-footer-links">
-              {t.modules.slice(0, 5).map((m) => (
-                <li key={m.slug}>
-                  <Link to={'/features#' + m.slug}>{m.name}</Link>
-                </li>
-              ))}
+              <li><Link to="/features#weld-quality">{t.modules.find(m => m.slug === 'weld-quality')?.name}</Link></li>
+              <li><Link to="/features#weld-lobe">{t.modules.find(m => m.slug === 'weld-lobe')?.name}</Link></li>
+              <li><Link to="/features#failure-analysis">{t.modules.find(m => m.slug === 'failure-analysis')?.name}</Link></li>
+              <li><Link to="/demo">{f.energyIntelLabel}</Link></li>
+            </ul>
+          </div>
+
+          {/* AI & Analytics column */}
+          <div className="pub-footer-col">
+            <h3 className="pub-footer-col-title">{f.aiTitle}</h3>
+            <ul className="pub-footer-links">
+              <li><Link to="/demo">{f.modelCatalogLabel}</Link></li>
+              <li><Link to="/demo">Taguchi DOE &amp; ANOVA</Link></li>
+              <li><Link to="/features#projects">{t.modules.find(m => m.slug === 'projects')?.name}</Link></li>
             </ul>
           </div>
 

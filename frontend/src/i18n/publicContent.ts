@@ -132,10 +132,15 @@ export interface LangContent {
 
   footerSection: {
     tagline: string
-    navTitle: string
-    capTitle: string
+    platformTitle: string
+    engineeringTitle: string
+    aiTitle: string
     contactTitle: string
     copyright: string
+    liveDemoLabel: string
+    useCasesLabel: string
+    energyIntelLabel: string
+    modelCatalogLabel: string
   }
 
   // Features page strings
@@ -643,10 +648,15 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
 
     footerSection: {
       tagline: 'Akıllı Direnç Punta Kaynağı Mühendisliği',
-      navTitle: 'Navigasyon',
-      capTitle: 'Yetenekler',
+      platformTitle: 'Platform',
+      engineeringTitle: 'Mühendislik',
+      aiTitle: 'AI & Analitik',
       contactTitle: 'İletişim',
       copyright: '© 2024–2026 SpotWeldPro AI. Tüm hakları saklıdır.',
+      liveDemoLabel: 'Canlı Demo',
+      useCasesLabel: 'Kullanım Alanları',
+      energyIntelLabel: 'Enerji Zekası',
+      modelCatalogLabel: 'Model Kataloğu',
     },
   },
 
@@ -1037,10 +1047,15 @@ export const PUBLIC_CONTENT: Record<Lang, LangContent> = {
 
     footerSection: {
       tagline: 'Intelligent Resistance Spot Welding Engineering',
-      navTitle: 'Navigation',
-      capTitle: 'Capabilities',
+      platformTitle: 'Platform',
+      engineeringTitle: 'Engineering',
+      aiTitle: 'AI & Analytics',
       contactTitle: 'Contact',
       copyright: '© 2024–2026 SpotWeldPro AI. All rights reserved.',
+      liveDemoLabel: 'Live Demo',
+      useCasesLabel: 'Use Cases',
+      energyIntelLabel: 'Energy Intelligence',
+      modelCatalogLabel: 'Model Catalog',
     },
   },
 }
