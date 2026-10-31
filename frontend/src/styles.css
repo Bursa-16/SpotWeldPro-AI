@@ -104,26 +104,26 @@ h3 { font-size: var(--fs-h4); font-weight: 600; letter-spacing: -0.005em; }
   display: grid; place-items: center;
   color: #1a1004; font-weight: 700; font-size: var(--fs-sm);
 }
-/* BRAND-LOGO-01-R10: Sidebar official logo — expanded and collapsed states */
+/* LOGO-UX-RESTORE-01: Sidebar official logo — expanded state (width-first sizing) */
 .sidebar-logo {
-  height: 40px;
-  width: auto;
+  width: 160px;
+  height: auto;
   max-width: 160px;
   object-fit: contain;
   display: block;
   flex-shrink: 0;
   opacity: 1;
 }
-/* Collapsed: clip at emblem boundary (cols 45–855 of 2172; at h=40px → 47px wide) */
+/* LOGO-UX-RESTORE-01: Collapsed — full logo scaled to fit 40px available width */
 .sidebar-logo-icon-wrap {
-  width: 47px;
-  height: 40px;
-  overflow: hidden;
+  width: 40px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 .sidebar-logo-icon-wrap img {
-  height: 40px;
-  width: auto;
+  width: 40px;
+  height: auto;
   display: block;
   opacity: 1;
 }
